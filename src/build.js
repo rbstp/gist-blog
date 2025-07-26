@@ -179,6 +179,26 @@ class GistBlogGenerator {
             <p class="copyright">© 2025 rbstp.dev • powered by github actions</p>
         </div>
     </footer>
+    <script>
+        // Convert timestamps to local time
+        document.addEventListener('DOMContentLoaded', function() {
+            const timeElements = document.querySelectorAll('.local-time');
+            timeElements.forEach(function(element) {
+                const timestamp = element.getAttribute('data-timestamp');
+                if (timestamp) {
+                    const date = new Date(timestamp);
+                    const options = { 
+                        month: 'short', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit',
+                        hour12: false
+                    };
+                    element.textContent = date.toLocaleString('en-US', options);
+                }
+            });
+        });
+    </script>
 </body>
 </html>`,
 
@@ -198,7 +218,7 @@ class GistBlogGenerator {
                 <span class="command">whoami</span>
             </div>
             <div class="terminal-output">
-                <span class="output-text">DevOps Engineer & Software Developer</span>
+                <span class="output-text">DevOps Engineer</span>
             </div>
             <div class="terminal-line">
                 <span class="prompt">rbstp@devops:~$</span>
@@ -223,7 +243,7 @@ class GistBlogGenerator {
         </h2>
         <div class="pipeline-status">
             <span class="build-status success">✓ Build Success</span>
-            <span class="deploy-time">Last deploy: {{lastUpdate}}</span>
+            <span class="deploy-time">Last deploy: <span class="local-time" data-timestamp="{{lastUpdate}}">{{lastUpdate}}</span></span>
         </div>
     </div>
     
@@ -359,7 +379,7 @@ class GistBlogGenerator {
     // Handle simple loops {{#posts}}...{{/posts}} and conditional content first
     result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, content) => {
       const items = data[key];
-      
+
       // If it's an array, treat as a loop
       if (Array.isArray(items)) {
         return items.map((item, index) => {
@@ -367,12 +387,12 @@ class GistBlogGenerator {
           return this.simpleTemplateEngine(content, item);
         }).join('');
       }
-      
+
       // If it's a truthy value, treat as conditional content
       if (items) {
         return this.simpleTemplateEngine(content, data);
       }
-      
+
       // Otherwise, return empty string
       return '';
     });
@@ -409,7 +429,7 @@ class GistBlogGenerator {
     const indexContent = this.simpleTemplateEngine(indexTemplate, {
       posts: postsWithMeta,
       postsLength: postsWithMeta.length,
-      lastUpdate: format(new Date(), 'MMM d, HH:mm')
+      lastUpdate: new Date().toISOString()
     });
     const fullPage = this.simpleTemplateEngine(layoutTemplate, {
       title: 'Home',
