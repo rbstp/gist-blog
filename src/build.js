@@ -27,10 +27,16 @@ class GistBlogGenerator {
   async fetchGists() {
     console.log(`Fetching public gists for user: ${this.gistUsername}`);
 
+    const headers = {
+      'User-Agent': 'gist-blog-generator'
+    };
+    
+    if (this.githubToken) {
+      headers['Authorization'] = `Bearer ${this.githubToken}`;
+    }
+
     const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-      headers: {
-        'User-Agent': 'gist-blog-generator'
-      }
+      headers
     });
 
     if (!response.ok) {
@@ -54,10 +60,16 @@ class GistBlogGenerator {
   async fetchGistContent(gist) {
     console.log(`Fetching content for gist: ${gist.id}`);
 
+    const headers = {
+      'User-Agent': 'gist-blog-generator'
+    };
+    
+    if (this.githubToken) {
+      headers['Authorization'] = `Bearer ${this.githubToken}`;
+    }
+
     const response = await fetch(gist.url, {
-      headers: {
-        'User-Agent': 'gist-blog-generator'
-      }
+      headers
     });
 
     if (!response.ok) {
@@ -132,6 +144,7 @@ class GistBlogGenerator {
     <title>{{title}} - rbstp.dev</title>
     <link rel="stylesheet" href="/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -151,7 +164,7 @@ class GistBlogGenerator {
                     <span>main</span>
                 </a>
                 <a href="https://github.com/rbstp" class="nav-item" target="_blank">
-                    <i class="icon-github nav-icon"></i>
+                    <i class="fab fa-github nav-icon"></i>
                     <span>github</span>
                 </a>
             </div>
@@ -373,6 +386,15 @@ class GistBlogGenerator {
     return templates[templateName] || '';
   }
 
+  escapeHtml(unsafe) {
+    return unsafe
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   simpleTemplateEngine(template, data) {
     let result = template;
 
@@ -404,7 +426,12 @@ class GistBlogGenerator {
         console.warn(`Template variable '${key}' is undefined`);
         return '';
       }
-      return value;
+      // Escape HTML for security, except for htmlContent which is already processed by marked
+      // and content which is the template content itself
+      if (key === 'htmlContent' || key === 'content') {
+        return value;
+      }
+      return typeof value === 'string' ? this.escapeHtml(value) : value;
     });
 
     return result;
