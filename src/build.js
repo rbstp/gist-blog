@@ -354,30 +354,37 @@ class GistBlogGenerator {
   }
 
   simpleTemplateEngine(template, data) {
-    // Handle simple variable substitution {{variable}}
-    let result = template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
+    let result = template;
+
+    // Handle simple loops {{#posts}}...{{/posts}} and conditional content first
+    result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, content) => {
+      const items = data[key];
+      
+      // If it's an array, treat as a loop
+      if (Array.isArray(items)) {
+        return items.map((item, index) => {
+          console.log(`Processing item ${index}:`, { id: item.id, title: item.title });
+          return this.simpleTemplateEngine(content, item);
+        }).join('');
+      }
+      
+      // If it's a truthy value, treat as conditional content
+      if (items) {
+        return this.simpleTemplateEngine(content, data);
+      }
+      
+      // Otherwise, return empty string
+      return '';
+    });
+
+    // Handle simple variable substitution {{variable}} after loops
+    result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => {
       const value = data[key];
       if (value === undefined || value === null) {
         console.warn(`Template variable '${key}' is undefined`);
         return '';
       }
       return value;
-    });
-
-    // Handle simple loops {{#posts}}...{{/posts}}
-    result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (match, key, content) => {
-      const items = data[key];
-      if (!Array.isArray(items)) return '';
-
-      return items.map((item, index) => {
-        console.log(`Processing item ${index}:`, { id: item.id, title: item.title });
-        return this.simpleTemplateEngine(content, item);
-      }).join('');
-    });
-
-    // Handle conditional content {{#variable}}...{{/variable}}
-    result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (match, key, content) => {
-      return data[key] ? this.simpleTemplateEngine(content, data) : '';
     });
 
     return result;
