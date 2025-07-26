@@ -1,0 +1,18 @@
+{
+  "name": "gist-blog",
+  "version": "1.0.0",
+  "description": "Static blog generator from GitHub gists",
+  "main": "src/build.js",
+  "scripts": {
+    "build": "node src/build.js",
+    "dev": "node src/build.js && npx http-server dist -p 3000"
+  },
+  "dependencies": {
+    "marked": "^9.1.6",
+    "highlight.js": "^11.9.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+}
