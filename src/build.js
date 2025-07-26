@@ -171,7 +171,7 @@ class GistBlogGenerator {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - rbstp.dev</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css?v={{timestamp}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -552,7 +552,8 @@ class GistBlogGenerator {
     });
     const fullPage = this.simpleTemplateEngine(layoutTemplate, {
       title: 'main',
-      content: indexContent
+      content: indexContent,
+      timestamp: Date.now()
     });
 
     await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
@@ -573,7 +574,8 @@ class GistBlogGenerator {
     const postContent = this.simpleTemplateEngine(postTemplate, postData);
     const fullPage = this.simpleTemplateEngine(layoutTemplate, {
       title: post.title,
-      content: postContent
+      content: postContent,
+      timestamp: Date.now()
     });
 
     const postsDir = path.join(this.distDir, 'posts');
@@ -690,7 +692,8 @@ header {
     padding: 1rem 0;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
 }
 
 nav {
