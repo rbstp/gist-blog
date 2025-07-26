@@ -196,8 +196,7 @@ class GistBlogGenerator {
         <nav class="container">
             <div class="logo-section">
                 <span class="terminal-prompt">$</span>
-                <a href="/" class="logo">rbstp.dev</a>
-                <span class="cursor">_</span>
+                <a href="/" class="logo">rbstp.dev<span class="cursor">_</span></a>
             </div>
             <div class="nav-links">
                 <a href="/" class="nav-item">
@@ -692,13 +691,13 @@ nav {
 .logo-section {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     font-family: var(--mono-font);
 }
 
 .terminal-prompt {
     color: var(--terminal-green);
     font-weight: 700;
+    margin-right: 0.5rem;
 }
 
 .logo {
