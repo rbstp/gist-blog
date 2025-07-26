@@ -117,7 +117,8 @@ class GistBlogGenerator {
         updatedAt: gist.updated_at,
         url: gist.html_url,
         files: Object.keys(gist.files),
-        tags: tags
+        tags: tags,
+        filename: markdownFile.filename
       };
 
       // Validate essential fields
@@ -456,7 +457,7 @@ class GistBlogGenerator {
                     <span class="control-small minimize"></span>
                     <span class="control-small maximize"></span>
                 </div>
-                <div class="terminal-title-small">{{title}}.md</div>
+                <div class="terminal-title-small">{{filename}}</div>
             </div>
             <div class="post-content-advanced">
                 {{htmlContent}}
