@@ -209,8 +209,7 @@ class GistBlogGenerator {
             </div>
             <div class="terminal-line">
                 <span class="prompt">rbstp@devops:~$</span>
-                <span class="command typing-animation">cat latest_thoughts.md</span>
-                <span class="cursor-blink">_</span>
+                <span class="command">cat latest_thoughts.md</span>
             </div>
         </div>
     </div>
@@ -357,7 +356,12 @@ class GistBlogGenerator {
   simpleTemplateEngine(template, data) {
     // Handle simple variable substitution {{variable}}
     let result = template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-      return data[key] || '';
+      const value = data[key];
+      if (value === undefined || value === null) {
+        console.warn(`Template variable '${key}' is undefined`);
+        return '';
+      }
+      return value;
     });
 
     // Handle simple loops {{#posts}}...{{/posts}}
@@ -365,7 +369,8 @@ class GistBlogGenerator {
       const items = data[key];
       if (!Array.isArray(items)) return '';
 
-      return items.map(item => {
+      return items.map((item, index) => {
+        console.log(`Processing item ${index}:`, { id: item.id, title: item.title });
         return this.simpleTemplateEngine(content, item);
       }).join('');
     });
