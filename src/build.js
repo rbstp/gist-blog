@@ -111,17 +111,23 @@ class GistBlogGenerator {
         bodyContent = lines.slice(1).join('\n').trim();
       }
 
+      // Parse tags from description (hashtags like #ai #cli #fix)
+      const rawDescription = gist.description || '';
+      const tags = this.extractTags(rawDescription);
+      const cleanDescription = this.cleanDescriptionFromTags(rawDescription);
+
       // Ensure we have valid data
       const post = {
         id: gist.id,
         title: title || 'Untitled',
-        description: gist.description || title || 'No description',
+        description: cleanDescription || title || 'No description',
         content: bodyContent,
         htmlContent: marked(bodyContent),
         createdAt: gist.created_at,
         updatedAt: gist.updated_at,
         url: gist.html_url,
-        files: Object.keys(gist.files)
+        files: Object.keys(gist.files),
+        tags: tags
       };
 
       // Validate essential fields
@@ -135,6 +141,28 @@ class GistBlogGenerator {
       console.error(`Error parsing gist ${gist?.id || 'unknown'}:`, error.message);
       return null;
     }
+  }
+
+  extractTags(description) {
+    // Extract hashtags from description
+    const tagRegex = /#(\w+)/g;
+    const tags = [];
+    let match;
+    
+    while ((match = tagRegex.exec(description)) !== null) {
+      tags.push(match[1].toLowerCase());
+    }
+    
+    // Remove duplicates and sort
+    return [...new Set(tags)].sort();
+  }
+
+  cleanDescriptionFromTags(description) {
+    // Remove hashtags from description, keeping the rest clean
+    return description
+      .replace(/#\w+/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   async loadTemplate(templateName) {
@@ -223,6 +251,75 @@ class GistBlogGenerator {
                     element.textContent = date.toLocaleString('en-US', options);
                 }
             });
+
+            // Tag filtering functionality
+            let activeTag = null;
+            const posts = document.querySelectorAll('.post-card');
+            const tags = document.querySelectorAll('.tag');
+
+            // Create filter status display
+            const section = document.querySelector('.pipeline-section');
+            const filterStatus = document.createElement('div');
+            filterStatus.className = 'filter-status';
+            filterStatus.style.display = 'none';
+            section.insertBefore(filterStatus, section.querySelector('.posts-grid'));
+
+            tags.forEach(function(tag) {
+                tag.addEventListener('click', function() {
+                    const tagName = this.getAttribute('data-tag');
+                    
+                    if (activeTag === tagName) {
+                        // Clear filter
+                        activeTag = null;
+                        posts.forEach(function(post) {
+                            post.style.display = 'block';
+                        });
+                        tags.forEach(function(t) {
+                            t.classList.remove('active');
+                        });
+                        filterStatus.style.display = 'none';
+                    } else {
+                        // Apply filter
+                        activeTag = tagName;
+                        let visibleCount = 0;
+                        
+                        posts.forEach(function(post) {
+                            const postTags = post.querySelectorAll('.tag');
+                            let hasTag = false;
+                            postTags.forEach(function(t) {
+                                if (t.getAttribute('data-tag') === tagName) {
+                                    hasTag = true;
+                                }
+                            });
+                            
+                            if (hasTag) {
+                                post.style.display = 'block';
+                                visibleCount++;
+                            } else {
+                                post.style.display = 'none';
+                            }
+                        });
+
+                        // Update tag highlighting
+                        tags.forEach(function(t) {
+                            if (t.getAttribute('data-tag') === tagName) {
+                                t.classList.add('active');
+                            } else {
+                                t.classList.remove('active');
+                            }
+                        });
+
+                        // Show filter status
+                        filterStatus.innerHTML = 
+                            '<div class="filter-info">' +
+                                '<span>Filtering by tag: <strong>#' + tagName + '</strong></span>' +
+                                '<span>(' + visibleCount + ' post' + (visibleCount !== 1 ? 's' : '') + ')</span>' +
+                                '<button class="clear-filter" onclick="location.reload()">Clear filter</button>' +
+                            '</div>';
+                        filterStatus.style.display = 'block';
+                    }
+                });
+            });
         });
     </script>
 </body>
@@ -302,6 +399,16 @@ class GistBlogGenerator {
                         <span class="description">{{description}}</span>
                     </span>
                     {{/description}}
+                    {{#tags}}
+                    <div class="tags-container">
+                        <span class="icon">🏷️</span>
+                        <div class="tags">
+                            {{#tags}}
+                            <span class="tag" data-tag="{{.}}">#{{.}}</span>
+                            {{/tags}}
+                        </div>
+                    </div>
+                    {{/tags}}
                 </div>
                 
                 <div class="post-preview">
@@ -423,6 +530,11 @@ class GistBlogGenerator {
       if (Array.isArray(items)) {
         return items.map((item, index) => {
           if (index === 0) console.log(`Processing ${items.length} ${key} items`);
+          // Handle primitive arrays (strings, numbers) with {{.}} syntax
+          if (typeof item === 'string' || typeof item === 'number') {
+            return content.replace(/\{\{\.\}\}/g, item);
+          }
+          // Handle object arrays normally
           return this.simpleTemplateEngine(content, item);
         }).join('');
       }
@@ -883,6 +995,77 @@ nav {
 .description {
     color: var(--text-muted);
     font-style: italic;
+}
+
+.tags-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent-primary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    border: 1px solid var(--accent-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--mono-font);
+}
+
+.tag:hover {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    transform: translateY(-1px);
+}
+
+.tag.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+}
+
+.filter-status {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filter-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--mono-font);
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.clear-filter {
+    background: var(--accent-error);
+    color: white;
+    border: none;
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.clear-filter:hover {
+    background: #ff6b6b;
+    transform: translateY(-1px);
 }
 
 .post-preview {
