@@ -690,10 +690,6 @@ header {
     background: var(--bg-secondary);
     border-bottom: 1px solid var(--border-primary);
     padding: 1rem 0;
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    backdrop-filter: blur(10px);
 }
 
 nav {
