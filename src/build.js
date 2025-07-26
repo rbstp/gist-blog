@@ -148,11 +148,11 @@ class GistBlogGenerator {
     const tagRegex = /#(\w+)/g;
     const tags = [];
     let match;
-    
+
     while ((match = tagRegex.exec(description)) !== null) {
       tags.push(match[1].toLowerCase());
     }
-    
+
     // Remove duplicates and sort
     return [...new Set(tags)].sort();
   }
@@ -189,6 +189,7 @@ class GistBlogGenerator {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="alternate" type="application/rss+xml" title="rbstp.dev RSS Feed" href="/feed.xml">
 </head>
 <body>
     <div class="terminal-bg"></div>
@@ -206,6 +207,10 @@ class GistBlogGenerator {
                 <a href="https://github.com/rbstp" class="nav-item" target="_blank">
                     <i class="fab fa-github nav-icon"></i>
                     <span>github</span>
+                </a>
+                <a href="/feed.xml" class="nav-item" target="_blank">
+                    <i class="fas fa-rss nav-icon"></i>
+                    <span>rss</span>
                 </a>
             </div>
         </nav>
@@ -229,7 +234,7 @@ class GistBlogGenerator {
                     <span>build: automated</span>
                 </span>
             </div>
-            <p class="copyright">© 2025 rbstp.dev • powered by github actions</p>
+            <p class="copyright">© 2025 rbstp.dev</p>
         </div>
     </footer>
     <script>
@@ -514,7 +519,7 @@ class GistBlogGenerator {
       '"': '&quot;',
       "'": '&#039;'
     };
-    
+
     return unsafe.replace(/[&<>"']/g, (match) => htmlEscapeMap[match]);
   }
 
@@ -616,6 +621,55 @@ class GistBlogGenerator {
     const postsDir = path.join(this.distDir, 'posts');
     await fs.mkdir(postsDir, { recursive: true });
     await fs.writeFile(path.join(postsDir, `${post.id}.html`), fullPage);
+  }
+
+  async generateRSSFeed(posts) {
+    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const buildDate = new Date().toUTCString();
+    const siteUrl = 'https://rbstp.dev';
+
+    // Get the latest post date for the lastBuildDate
+    const latestPostDate = sortedPosts.length > 0
+      ? new Date(sortedPosts[0].createdAt).toUTCString()
+      : buildDate;
+
+    const rssItems = sortedPosts.map(post => {
+      const postUrl = `${siteUrl}/posts/${post.id}.html`;
+      const pubDate = new Date(post.createdAt).toUTCString();
+
+      // Clean HTML content for RSS (remove HTML tags for description)
+      const description = post.content.substring(0, 200).replace(/<[^>]*>/g, '') + '...';
+
+      return `    <item>
+      <title><![CDATA[${post.title}]]></title>
+      <link>${postUrl}</link>
+      <guid>${postUrl}</guid>
+      <pubDate>${pubDate}</pubDate>
+      <description><![CDATA[${description}]]></description>
+      ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category>${tag}</category>`).join('\n      ') : ''}
+    </item>`;
+    }).join('\n');
+
+    const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>rbstp.dev</title>
+    <link>${siteUrl}</link>
+    <description>There and Back Again: A DevOps Engineer's Journey Through AI and Infrastructure</description>
+    <language>en-us</language>
+    <lastBuildDate>${buildDate}</lastBuildDate>
+    <pubDate>${latestPostDate}</pubDate>
+    <ttl>60</ttl>
+    <atom:link href="${siteUrl}/feed.xml" rel="self" type="application/rss+xml"/>
+    <generator>gist-blog-generator</generator>
+    <webMaster>rbstp@rbstp.dev</webMaster>
+    <managingEditor>rbstp@rbstp.dev</managingEditor>
+${rssItems}
+  </channel>
+</rss>`;
+
+    await fs.writeFile(path.join(this.distDir, 'feed.xml'), rssXml);
+    console.log('Generated RSS feed');
   }
 
   async copyStyles() {
@@ -1541,12 +1595,15 @@ footer {
       await this.generatePost(post);
       console.log(`Generated post: ${post.title}`);
     });
-    
+
     await Promise.all(postGenerationPromises);
 
     // Generate index page
     await this.generateIndex(posts);
     console.log('Generated index page');
+
+    // Generate RSS feed
+    await this.generateRSSFeed(posts);
 
     // Copy styles
     await this.copyStyles();
