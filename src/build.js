@@ -1037,7 +1037,7 @@ nav {
 }
 
 .filter-status {
-    background: var(--bg-tertiary);
+    background: #161b22 !important;
     border: 1px solid var(--accent-primary);
     border-radius: 6px;
     padding: 1rem 1.5rem;
