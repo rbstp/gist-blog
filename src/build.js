@@ -25,31 +25,44 @@ class GistBlogGenerator {
   }
 
   async fetchGists() {
+    console.log(`Fetching public gists for user: ${this.gistUsername}`);
+
     const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-      headers: this.githubToken ? {
-        'Authorization': `token ${this.githubToken}`,
-        'User-Agent': 'gist-blog-generator'
-      } : {
+      headers: {
         'User-Agent': 'gist-blog-generator'
       }
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch gists: ${response.statusText}`);
+      console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
+      console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
+
+      if (response.status === 403) {
+        console.error('Rate limit hit. Waiting 60 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        return this.fetchGists(); // Retry once
+      }
+
+      throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
     }
 
     const gists = await response.json();
+    console.log(`Successfully fetched ${gists.length} gists`);
     return gists.filter(gist => gist.public);
   }
 
   async fetchGistContent(gist) {
+    const headers = {
+      'User-Agent': 'gist-blog-generator'
+    };
+
+    // Add authorization header if token is available
+    if (this.githubToken) {
+      headers['Authorization'] = `Bearer ${this.githubToken}`;
+    }
+
     const response = await fetch(gist.url, {
-      headers: this.githubToken ? {
-        'Authorization': `token ${this.githubToken}`,
-        'User-Agent': 'gist-blog-generator'
-      } : {
-        'User-Agent': 'gist-blog-generator'
-      }
+      headers: headers
     });
 
     if (!response.ok) {
