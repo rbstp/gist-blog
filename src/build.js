@@ -4,6 +4,12 @@ const { marked } = require('marked');
 const hljs = require('highlight.js');
 const { format, parseISO } = require('date-fns');
 
+// Constants
+const RATE_LIMIT_DELAY = 60000; // 60 seconds
+const EXCERPT_LENGTH = 150;
+const COMMIT_HASH_LENGTH = 7;
+const USER_AGENT = 'gist-blog-generator';
+
 // Configure marked with syntax highlighting
 marked.setOptions({
   highlight: function (code, lang) {
@@ -19,7 +25,6 @@ marked.setOptions({
 class GistBlogGenerator {
   constructor() {
     this.gistUsername = process.env.GIST_USERNAME || 'rbstp';
-    this.githubToken = process.env.GITHUB_TOKEN;
     this.distDir = 'dist';
     this.templatesDir = 'templates';
   }
@@ -27,41 +32,19 @@ class GistBlogGenerator {
   async fetchGists() {
     console.log(`Fetching public gists for user: ${this.gistUsername}`);
 
-    const headers = {
-      'User-Agent': 'gist-blog-generator'
-    };
-    
-    if (this.githubToken) {
-      headers['Authorization'] = `token ${this.githubToken}`;
-    }
-
     const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-      headers
+      headers: {
+        'User-Agent': USER_AGENT
+      }
     });
 
     if (!response.ok) {
       console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
       console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
 
-      // If we get 403 and we're using a token, try without token
-      if (response.status === 403 && this.githubToken) {
-        console.log('Authentication failed, retrying without token...');
-        const headersWithoutToken = {
-          'User-Agent': 'gist-blog-generator'
-        };
-        const retryResponse = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-          headers: headersWithoutToken
-        });
-        
-        if (retryResponse.ok) {
-          console.log('Success without token authentication');
-          return await retryResponse.json();
-        }
-      }
-
       if (response.status === 403) {
         console.error('Rate limit hit. Waiting 60 seconds...');
-        await new Promise(resolve => setTimeout(resolve, 60000));
+        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
         return this.fetchGists(); // Retry once
       }
 
@@ -76,41 +59,19 @@ class GistBlogGenerator {
   async fetchGistContent(gist) {
     console.log(`Fetching content for gist: ${gist.id}`);
 
-    const headers = {
-      'User-Agent': 'gist-blog-generator'
-    };
-    
-    if (this.githubToken) {
-      headers['Authorization'] = `token ${this.githubToken}`;
-    }
-
     const response = await fetch(gist.url, {
-      headers
+      headers: {
+        'User-Agent': USER_AGENT
+      }
     });
 
     if (!response.ok) {
       console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
       console.error(`Gist URL: ${gist.url}`);
 
-      // If we get 403 and we're using a token, try without token
-      if (response.status === 403 && this.githubToken) {
-        console.log('Authentication failed for gist, retrying without token...');
-        const headersWithoutToken = {
-          'User-Agent': 'gist-blog-generator'
-        };
-        const retryResponse = await fetch(gist.url, {
-          headers: headersWithoutToken
-        });
-        
-        if (retryResponse.ok) {
-          console.log('Success without token authentication for gist');
-          return await retryResponse.json();
-        }
-      }
-
       if (response.status === 403) {
         console.error('Rate limit hit. Waiting 60 seconds...');
-        await new Promise(resolve => setTimeout(resolve, 60000));
+        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
         return this.fetchGistContent(gist); // Retry once
       }
 
@@ -121,39 +82,59 @@ class GistBlogGenerator {
   }
 
   parseGistAsPost(gist) {
-    // Use the first markdown file as the main content
-    const markdownFile = Object.values(gist.files).find(file =>
-      file.filename.endsWith('.md') || file.filename.endsWith('.markdown')
-    );
+    try {
+      // Validate gist structure
+      if (!gist?.files || typeof gist.files !== 'object') {
+        console.log(`Skipping gist ${gist?.id || 'unknown'}: Invalid gist structure`);
+        return null;
+      }
 
-    if (!markdownFile) {
-      console.log(`Skipping gist ${gist.id}: No markdown file found`);
+      // Use the first markdown file as the main content
+      const markdownFile = Object.values(gist.files).find(file =>
+        file?.filename?.endsWith('.md') || file?.filename?.endsWith('.markdown')
+      );
+
+      if (!markdownFile?.content) {
+        console.log(`Skipping gist ${gist.id}: No markdown file with content found`);
+        return null;
+      }
+
+      const content = markdownFile.content;
+      const lines = content.split('\n');
+
+      // Extract title from first line if it's a heading, otherwise use filename
+      let title = markdownFile.filename.replace(/\.(md|markdown)$/i, '');
+      let bodyContent = content;
+
+      if (lines.length > 0 && lines[0].startsWith('#')) {
+        title = lines[0].replace(/^#+\s*/, '').trim();
+        bodyContent = lines.slice(1).join('\n').trim();
+      }
+
+      // Ensure we have valid data
+      const post = {
+        id: gist.id,
+        title: title || 'Untitled',
+        description: gist.description || title || 'No description',
+        content: bodyContent,
+        htmlContent: marked(bodyContent),
+        createdAt: gist.created_at,
+        updatedAt: gist.updated_at,
+        url: gist.html_url,
+        files: Object.keys(gist.files)
+      };
+
+      // Validate essential fields
+      if (!post.id || !post.title) {
+        console.log(`Skipping gist ${gist.id}: Missing essential fields`);
+        return null;
+      }
+
+      return post;
+    } catch (error) {
+      console.error(`Error parsing gist ${gist?.id || 'unknown'}:`, error.message);
       return null;
     }
-
-    const content = markdownFile.content;
-    const lines = content.split('\n');
-
-    // Extract title from first line if it's a heading, otherwise use filename
-    let title = markdownFile.filename.replace(/\.(md|markdown)$/, '');
-    let bodyContent = content;
-
-    if (lines[0].startsWith('#')) {
-      title = lines[0].replace(/^#+\s*/, '');
-      bodyContent = lines.slice(1).join('\n').trim();
-    }
-
-    return {
-      id: gist.id,
-      title: title,
-      description: gist.description || title,
-      content: bodyContent,
-      htmlContent: marked(bodyContent),
-      createdAt: gist.created_at,
-      updatedAt: gist.updated_at,
-      url: gist.html_url,
-      files: Object.keys(gist.files)
-    };
   }
 
   async loadTemplate(templateName) {
@@ -419,12 +400,16 @@ class GistBlogGenerator {
   }
 
   escapeHtml(unsafe) {
-    return unsafe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+    // Use a more performant approach with a single replace call
+    const htmlEscapeMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    
+    return unsafe.replace(/[&<>"']/g, (match) => htmlEscapeMap[match]);
   }
 
   simpleTemplateEngine(template, data) {
@@ -437,7 +422,7 @@ class GistBlogGenerator {
       // If it's an array, treat as a loop
       if (Array.isArray(items)) {
         return items.map((item, index) => {
-          console.log(`Processing item ${index}:`, { id: item.id, title: item.title });
+          if (index === 0) console.log(`Processing ${items.length} ${key} items`);
           return this.simpleTemplateEngine(content, item);
         }).join('');
       }
@@ -480,8 +465,8 @@ class GistBlogGenerator {
     const postsWithMeta = sortedPosts.map(post => ({
       ...post,
       formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
-      excerpt: post.content.substring(0, 150) + (post.content.length > 150 ? '...' : ''),
-      shortId: post.id.substring(0, 7),
+      excerpt: post.content.substring(0, EXCERPT_LENGTH) + (post.content.length > EXCERPT_LENGTH ? '...' : ''),
+      shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
       lastUpdate: format(new Date(), 'MMM d, HH:mm')
     }));
 
@@ -507,7 +492,7 @@ class GistBlogGenerator {
       formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
       formattedUpdateDate: post.updatedAt !== post.createdAt ?
         format(parseISO(post.updatedAt), 'MMM d, yyyy') : null,
-      shortId: post.id.substring(0, 7)
+      shortId: post.id.substring(0, COMMIT_HASH_LENGTH)
     };
 
     const postContent = this.simpleTemplateEngine(postTemplate, postData);
@@ -1327,18 +1312,29 @@ footer {
     const gists = await this.fetchGists();
     console.log(`Found ${gists.length} public gists`);
 
-    // Process gists into posts
-    const posts = [];
-    for (const gist of gists) {
+    // Process gists into posts in parallel
+    console.log(`Processing ${gists.length} gists...`);
+    const gistPromises = gists.map(async (gist) => {
       console.log(`Processing gist: ${gist.id}`);
-      const fullGist = await this.fetchGistContent(gist);
-      const post = this.parseGistAsPost(fullGist);
-      if (post) {
-        posts.push(post);
-        await this.generatePost(post);
-        console.log(`Generated post: ${post.title}`);
+      try {
+        const fullGist = await this.fetchGistContent(gist);
+        return this.parseGistAsPost(fullGist);
+      } catch (error) {
+        console.error(`Failed to process gist ${gist.id}:`, error.message);
+        return null;
       }
-    }
+    });
+
+    const processedPosts = await Promise.all(gistPromises);
+    const posts = processedPosts.filter(Boolean);
+
+    // Generate post files in parallel
+    const postGenerationPromises = posts.map(async (post) => {
+      await this.generatePost(post);
+      console.log(`Generated post: ${post.title}`);
+    });
+    
+    await Promise.all(postGenerationPromises);
 
     // Generate index page
     await this.generateIndex(posts);

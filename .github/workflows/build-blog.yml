@@ -38,7 +38,6 @@ jobs:
 
     - name: Fetch gists and build site
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GIST_USERNAME: rbstp
       run: node src/build.js
 
