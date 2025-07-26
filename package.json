@@ -3,14 +3,17 @@
   "version": "1.0.0",
   "description": "Static blog generator from GitHub gists",
   "main": "src/build.js",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "build": "node src/build.js",
     "dev": "node src/build.js && npx http-server dist -p 3000"
   },
   "dependencies": {
-    "marked": "^9.1.6",
-    "highlight.js": "^11.9.0",
-    "date-fns": "^2.30.0"
+    "marked": "^16.1.1",
+    "highlight.js": "^11.10.0",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "http-server": "^14.1.1"

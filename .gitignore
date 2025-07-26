@@ -20,6 +20,7 @@ dist/
 *.swp
 *.swo
 *~
+.claude/
 
 # OS generated files
 .DS_Store
@@ -54,3 +55,4 @@ coverage/
 
 # Yarn Integrity file
 .yarn-integrity
+
