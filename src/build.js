@@ -147,11 +147,11 @@ class GistBlogGenerator {
             </div>
             <div class="nav-links">
                 <a href="/" class="nav-item">
-                    <span class="nav-icon">🏠</span>
-                    <span>home</span>
+                    <i class="fas fa-code-branch nav-icon"></i>
+                    <span>main</span>
                 </a>
                 <a href="https://github.com/rbstp" class="nav-item" target="_blank">
-                    <span class="nav-icon">⚡</span>
+                    <i class="icon-github nav-icon"></i>
                     <span>github</span>
                 </a>
             </div>
@@ -218,7 +218,7 @@ class GistBlogGenerator {
                 <span class="command">whoami</span>
             </div>
             <div class="terminal-output">
-                <span class="output-text">DevOps Engineer</span>
+                <span class="output-text">DevOps and Context Engineer</span>
             </div>
             <div class="terminal-line">
                 <span class="prompt">rbstp@devops:~$</span>
@@ -432,7 +432,7 @@ class GistBlogGenerator {
       lastUpdate: new Date().toISOString()
     });
     const fullPage = this.simpleTemplateEngine(layoutTemplate, {
-      title: 'Home',
+      title: 'Main',
       content: indexContent
     });
 

@@ -6,10 +6,9 @@ on:
     - cron: '0 */6 * * *'
   workflow_dispatch: # Allow manual trigger
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'src/**'
-      - 'templates/**'
       - '.github/workflows/**'
 
 permissions:
