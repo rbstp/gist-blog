@@ -205,7 +205,7 @@ class GistBlogGenerator {
                 <span class="command">ls -la blog/</span>
             </div>
             <div class="terminal-output">
-                <span class="output-text">total {{posts.length}} posts</span>
+                <span class="output-text">total {{postsLength}} posts</span>
             </div>
             <div class="terminal-line">
                 <span class="prompt">rbstp@devops:~$</span>
@@ -408,6 +408,7 @@ class GistBlogGenerator {
 
     const indexContent = this.simpleTemplateEngine(indexTemplate, {
       posts: postsWithMeta,
+      postsLength: postsWithMeta.length,
       lastUpdate: format(new Date(), 'MMM d, HH:mm')
     });
     const fullPage = this.simpleTemplateEngine(layoutTemplate, {
