@@ -312,9 +312,11 @@ class GistBlogGenerator {
                         // Show filter status
                         filterStatus.innerHTML = 
                             '<div class="filter-info">' +
-                                '<span>Filtering by tag: <strong>#' + tagName + '</strong></span>' +
-                                '<span>(' + visibleCount + ' post' + (visibleCount !== 1 ? 's' : '') + ')</span>' +
-                                '<button class="clear-filter" onclick="location.reload()">Clear filter</button>' +
+                                '<span class="filter-prompt">$</span>' +
+                                '<span>grep --tag</span>' +
+                                '<span class="filter-tag">#' + tagName + '</span>' +
+                                '<span class="filter-count">→ ' + visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') + '</span>' +
+                                '<button class="clear-filter" onclick="location.reload()">clear</button>' +
                             '</div>';
                         filterStatus.style.display = 'block';
                     }
@@ -402,11 +404,9 @@ class GistBlogGenerator {
                     {{#hasTags}}
                     <div class="tags-container">
                         <span class="icon">🏷️</span>
-                        <div class="tags">
-                            {{#tags}}
-                            <span class="tag" data-tag="{{.}}">#{{.}}</span>
-                            {{/tags}}
-                        </div>
+                        {{#tags}}
+                        <span class="tag" data-tag="{{.}}">#{{.}}</span>
+                        {{/tags}}
                     </div>
                     {{/hasTags}}
                 </div>
@@ -1037,11 +1037,12 @@ nav {
 }
 
 .filter-status {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    background: var(--bg-tertiary);
+    border: 1px solid var(--accent-primary);
     border-radius: 6px;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     margin-bottom: 2rem;
+    box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1);
 }
 
 .filter-info {
@@ -1049,24 +1050,48 @@ nav {
     align-items: center;
     gap: 1rem;
     font-family: var(--mono-font);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.filter-prompt {
+    color: var(--terminal-green);
+    font-weight: 600;
+}
+
+.filter-tag {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent-primary);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid var(--accent-primary);
+    font-weight: 500;
+}
+
+.filter-count {
     color: var(--text-secondary);
+    font-style: italic;
 }
 
 .clear-filter {
-    background: var(--accent-error);
-    color: white;
-    border: none;
+    background: var(--bg-primary);
+    color: var(--terminal-orange);
+    border: 1px solid var(--terminal-orange);
     padding: 0.3rem 0.8rem;
     border-radius: 4px;
-    font-size: 0.8rem;
+    font-size: 0.75rem;
+    font-family: var(--mono-font);
+    font-weight: 500;
     cursor: pointer;
     transition: all 0.2s ease;
+    text-transform: uppercase;
 }
 
 .clear-filter:hover {
-    background: #ff6b6b;
+    background: var(--terminal-orange);
+    color: var(--bg-primary);
     transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 123, 114, 0.3);
 }
 
 .post-preview {
