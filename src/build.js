@@ -399,7 +399,7 @@ class GistBlogGenerator {
                         <span class="description">{{description}}</span>
                     </span>
                     {{/description}}
-                    {{#tags}}
+                    {{#hasTags}}
                     <div class="tags-container">
                         <span class="icon">🏷️</span>
                         <div class="tags">
@@ -408,7 +408,7 @@ class GistBlogGenerator {
                             {{/tags}}
                         </div>
                     </div>
-                    {{/tags}}
+                    {{/hasTags}}
                 </div>
                 
                 <div class="post-preview">
@@ -579,7 +579,8 @@ class GistBlogGenerator {
       formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
       excerpt: post.content.substring(0, EXCERPT_LENGTH) + (post.content.length > EXCERPT_LENGTH ? '...' : ''),
       shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
-      lastUpdate: format(new Date(), 'MMM d, HH:mm')
+      lastUpdate: format(new Date(), 'MMM d, HH:mm'),
+      hasTags: post.tags && post.tags.length > 0
     }));
 
     const indexContent = this.simpleTemplateEngine(indexTemplate, {
