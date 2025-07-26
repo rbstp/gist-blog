@@ -43,6 +43,22 @@ class GistBlogGenerator {
       console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
       console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
 
+      // If we get 403 and we're using a token, try without token
+      if (response.status === 403 && this.githubToken) {
+        console.log('Authentication failed, retrying without token...');
+        const headersWithoutToken = {
+          'User-Agent': 'gist-blog-generator'
+        };
+        const retryResponse = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
+          headers: headersWithoutToken
+        });
+        
+        if (retryResponse.ok) {
+          console.log('Success without token authentication');
+          return await retryResponse.json();
+        }
+      }
+
       if (response.status === 403) {
         console.error('Rate limit hit. Waiting 60 seconds...');
         await new Promise(resolve => setTimeout(resolve, 60000));
@@ -75,6 +91,22 @@ class GistBlogGenerator {
     if (!response.ok) {
       console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
       console.error(`Gist URL: ${gist.url}`);
+
+      // If we get 403 and we're using a token, try without token
+      if (response.status === 403 && this.githubToken) {
+        console.log('Authentication failed for gist, retrying without token...');
+        const headersWithoutToken = {
+          'User-Agent': 'gist-blog-generator'
+        };
+        const retryResponse = await fetch(gist.url, {
+          headers: headersWithoutToken
+        });
+        
+        if (retryResponse.ok) {
+          console.log('Success without token authentication for gist');
+          return await retryResponse.json();
+        }
+      }
 
       if (response.status === 403) {
         console.error('Rate limit hit. Waiting 60 seconds...');
