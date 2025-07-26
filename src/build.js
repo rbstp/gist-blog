@@ -4,13 +4,10 @@ const { marked } = require('marked');
 const hljs = require('highlight.js');
 const { format, parseISO } = require('date-fns');
 
-// Constants
-const RATE_LIMIT_DELAY = 60000; // 60 seconds
+const RATE_LIMIT_DELAY = 60000;
 const EXCERPT_LENGTH = 150;
 const COMMIT_HASH_LENGTH = 7;
 const USER_AGENT = 'gist-blog-generator';
-
-// Configure marked with syntax highlighting
 marked.setOptions({
   highlight: function (code, lang) {
     if (lang && hljs.getLanguage(lang)) {
@@ -30,8 +27,6 @@ class GistBlogGenerator {
   }
 
   async fetchGists() {
-    console.log(`Fetching public gists for user: ${this.gistUsername}`);
-
     const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
       headers: {
         'User-Agent': USER_AGENT
@@ -52,13 +47,10 @@ class GistBlogGenerator {
     }
 
     const gists = await response.json();
-    console.log(`Successfully fetched ${gists.length} gists`);
     return gists.filter(gist => gist.public);
   }
 
   async fetchGistContent(gist) {
-    console.log(`Fetching content for gist: ${gist.id}`);
-
     const response = await fetch(gist.url, {
       headers: {
         'User-Agent': USER_AGENT
@@ -85,7 +77,6 @@ class GistBlogGenerator {
     try {
       // Validate gist structure
       if (!gist?.files || typeof gist.files !== 'object') {
-        console.log(`Skipping gist ${gist?.id || 'unknown'}: Invalid gist structure`);
         return null;
       }
 
@@ -95,7 +86,6 @@ class GistBlogGenerator {
       );
 
       if (!markdownFile?.content) {
-        console.log(`Skipping gist ${gist.id}: No markdown file with content found`);
         return null;
       }
 
@@ -132,7 +122,6 @@ class GistBlogGenerator {
 
       // Validate essential fields
       if (!post.id || !post.title) {
-        console.log(`Skipping gist ${gist.id}: Missing essential fields`);
         return null;
       }
 
@@ -170,7 +159,6 @@ class GistBlogGenerator {
       const templatePath = path.join(this.templatesDir, templateName);
       return await fs.readFile(templatePath, 'utf-8');
     } catch (error) {
-      console.log(`Template ${templateName} not found, using default`);
       return this.getDefaultTemplate(templateName);
     }
   }
@@ -449,44 +437,15 @@ class GistBlogGenerator {
         </div>
     </div>
 
-    <header class="post-header-advanced">
-        <div class="deployment-info">
-            <div class="deployment-badge">
-                <span class="deploy-icon">🚀</span>
-                <span class="deploy-text">DEPLOYED</span>
+    <header class="post-header-compact">
+        <div class="post-meta-line">
+            <div class="post-status">
+                <span class="status-badge">🚀 DEPLOYED</span>
+                <span class="commit-info">#{{shortId}}</span>
             </div>
-            <div class="commit-details">
-                <span class="commit-label">commit:</span>
-                <span class="commit-hash">{{shortId}}</span>
-            </div>
+            <time datetime="{{createdAt}}" class="post-date">{{formattedDate}}</time>
         </div>
-        
-        <h1 class="post-title-advanced">{{title}}</h1>
-        
-        <div class="post-metadata-advanced">
-            <div class="metadata-row">
-                <div class="metadata-group">
-                    <span class="metadata-label">deployed:</span>
-                    <time datetime="{{createdAt}}" class="metadata-value">{{formattedDate}}</time>
-                </div>
-                {{#updatedAt}}
-                <div class="metadata-group">
-                    <span class="metadata-label">updated:</span>
-                    <time datetime="{{updatedAt}}" class="metadata-value">{{formattedUpdateDate}}</time>
-                </div>
-                {{/updatedAt}}
-            </div>
-            <div class="metadata-row">
-                <div class="metadata-group">
-                    <span class="metadata-label">pipeline:</span>
-                    <span class="metadata-value">gist → actions → pages</span>
-                </div>
-                <div class="metadata-group">
-                    <span class="metadata-label">status:</span>
-                    <span class="metadata-value success">✓ operational</span>
-                </div>
-            </div>
-        </div>
+        <h1 class="post-title-compact">{{title}}</h1>
     </header>
     
     <div class="post-content-wrapper">
@@ -533,7 +492,6 @@ class GistBlogGenerator {
       // If it's an array, treat as a loop
       if (Array.isArray(items)) {
         return items.map((item, index) => {
-          if (index === 0) console.log(`Processing ${items.length} ${key} items`);
           // Handle primitive arrays (strings, numbers) with {{.}} syntax
           if (typeof item === 'string' || typeof item === 'number') {
             return content.replace(/\{\{\.\}\}/g, item);
@@ -593,7 +551,7 @@ class GistBlogGenerator {
       lastUpdate: new Date().toISOString()
     });
     const fullPage = this.simpleTemplateEngine(layoutTemplate, {
-      title: 'Main',
+      title: 'main',
       content: indexContent
     });
 
@@ -669,7 +627,6 @@ ${rssItems}
 </rss>`;
 
     await fs.writeFile(path.join(this.distDir, 'feed.xml'), rssXml);
-    console.log('Generated RSS feed');
   }
 
   async copyStyles() {
@@ -1238,84 +1195,54 @@ nav {
     color: var(--accent-primary);
 }
 
-.post-header-advanced {
+.post-header-compact {
     background: var(--bg-secondary);
     border: 1px solid var(--border-primary);
-    border-radius: 8px;
-    padding: 2rem;
-    margin-bottom: 2rem;
-}
-
-.deployment-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
     margin-bottom: 1.5rem;
 }
 
-.deployment-badge {
+.post-meta-line {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
-    background: rgba(63, 185, 80, 0.15);
-    color: var(--accent-success);
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    border: 1px solid var(--accent-success);
+    margin-bottom: 0.75rem;
     font-family: var(--mono-font);
     font-size: 0.8rem;
+}
+
+.post-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-badge {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--accent-success);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    border: 1px solid var(--accent-success);
+    font-size: 0.7rem;
     font-weight: 600;
 }
 
-.commit-details {
-    font-family: var(--mono-font);
-    font-size: 0.85rem;
-}
-
-.commit-label {
-    color: var(--text-muted);
-}
-
-.commit-hash {
+.commit-info {
     color: var(--terminal-orange);
     font-weight: 500;
 }
 
-.post-title-advanced {
-    font-size: 2.5rem;
-    font-weight: 700;
-    margin-bottom: 1.5rem;
-    color: var(--text-primary);
-}
-
-.post-metadata-advanced {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    font-family: var(--mono-font);
-    font-size: 0.85rem;
-}
-
-.metadata-row {
-    display: flex;
-    gap: 2rem;
-}
-
-.metadata-group {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.metadata-label {
-    color: var(--text-muted);
-}
-
-.metadata-value {
+.post-date {
     color: var(--text-secondary);
 }
 
-.metadata-value.success {
-    color: var(--accent-success);
+.post-title-compact {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.3;
 }
 
 .content-terminal {
@@ -1525,19 +1452,19 @@ footer {
         grid-template-columns: 1fr;
     }
     
-    .post-title-advanced {
-        font-size: 2rem;
+    .post-title-compact {
+        font-size: 1.5rem;
     }
     
-    .metadata-row {
+    .post-header-compact {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .post-meta-line {
         flex-direction: column;
         gap: 0.5rem;
-    }
-    
-    .deployment-info {
-        flex-direction: column;
         align-items: flex-start;
-        gap: 1rem;
     }
     
     .terminal-window {
@@ -1570,14 +1497,8 @@ footer {
     await fs.mkdir(this.distDir, { recursive: true });
 
     // Fetch gists
-    console.log(`Fetching gists for user: ${this.gistUsername}`);
     const gists = await this.fetchGists();
-    console.log(`Found ${gists.length} public gists`);
-
-    // Process gists into posts in parallel
-    console.log(`Processing ${gists.length} gists...`);
     const gistPromises = gists.map(async (gist) => {
-      console.log(`Processing gist: ${gist.id}`);
       try {
         const fullGist = await this.fetchGistContent(gist);
         return this.parseGistAsPost(fullGist);
@@ -1593,23 +1514,15 @@ footer {
     // Generate post files in parallel
     const postGenerationPromises = posts.map(async (post) => {
       await this.generatePost(post);
-      console.log(`Generated post: ${post.title}`);
     });
 
     await Promise.all(postGenerationPromises);
 
-    // Generate index page
     await this.generateIndex(posts);
-    console.log('Generated index page');
-
-    // Generate RSS feed
     await this.generateRSSFeed(posts);
-
-    // Copy styles
     await this.copyStyles();
-    console.log('Copied styles');
 
-    console.log(`Blog build complete! Generated ${posts.length} posts.`);
+    console.log(`✅ Build complete! Generated ${posts.length} posts.`);
   }
 }
 
