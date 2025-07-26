@@ -32,7 +32,7 @@ class GistBlogGenerator {
     };
     
     if (this.githubToken) {
-      headers['Authorization'] = `Bearer ${this.githubToken}`;
+      headers['Authorization'] = `token ${this.githubToken}`;
     }
 
     const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
@@ -65,7 +65,7 @@ class GistBlogGenerator {
     };
     
     if (this.githubToken) {
-      headers['Authorization'] = `Bearer ${this.githubToken}`;
+      headers['Authorization'] = `token ${this.githubToken}`;
     }
 
     const response = await fetch(gist.url, {
