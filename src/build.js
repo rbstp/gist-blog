@@ -52,21 +52,25 @@ class GistBlogGenerator {
   }
 
   async fetchGistContent(gist) {
-    const headers = {
-      'User-Agent': 'gist-blog-generator'
-    };
-
-    // Add authorization header if token is available
-    if (this.githubToken) {
-      headers['Authorization'] = `Bearer ${this.githubToken}`;
-    }
+    console.log(`Fetching content for gist: ${gist.id}`);
 
     const response = await fetch(gist.url, {
-      headers: headers
+      headers: {
+        'User-Agent': 'gist-blog-generator'
+      }
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch gist content: ${response.statusText}`);
+      console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
+      console.error(`Gist URL: ${gist.url}`);
+
+      if (response.status === 403) {
+        console.error('Rate limit hit. Waiting 60 seconds...');
+        await new Promise(resolve => setTimeout(resolve, 60000));
+        return this.fetchGistContent(gist); // Retry once
+      }
+
+      throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
     }
 
     return await response.json();
