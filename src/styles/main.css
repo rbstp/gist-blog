@@ -836,6 +836,8 @@ footer {
     padding: 2rem 0;
     border-top: 1px solid var(--border-primary);
     margin-top: 2rem;
+    display: flex;
+    justify-content: center;
 }
 
 .pagination-terminal {
@@ -844,6 +846,9 @@ footer {
     border-radius: 6px;
     padding: 1rem 1.5rem;
     font-family: var(--mono-font);
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
 }
 
 .pagination-line {
