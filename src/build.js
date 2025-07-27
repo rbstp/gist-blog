@@ -329,7 +329,7 @@ class GistBlogGenerator {
                 <span class="control minimize"></span>
                 <span class="control maximize"></span>
             </div>
-            <div class="terminal-title">rbstp@devops:~$</div>
+            <div class="terminal-title"></div>
         </div>
         <div class="terminal-body">
             <div class="terminal-line">
@@ -809,7 +809,7 @@ nav {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.2rem;
 }
 
 .prompt {
@@ -823,7 +823,7 @@ nav {
 
 .terminal-output {
     margin-left: 2rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.3rem;
 }
 
 .output-text {
