@@ -48,8 +48,8 @@ export interface Gist {
   user: null;
   comments_url: string;
   owner: GistOwner;
-  forks: any[];
-  history: any[];
+  forks: unknown[];
+  history: unknown[];
   truncated: boolean;
 }
 
@@ -67,9 +67,86 @@ export interface BlogPost {
   deployStatus: string;
 }
 
-export interface TemplateData {
-  [key: string]: any;
+// Interface for posts with HTML content (used by RSS and generated posts)
+export interface BlogPostWithHtml extends BlogPost {
+  htmlContent: string;
 }
+
+export interface TemplateData {
+  [key: string]: unknown;
+}
+
+// Specific template data interfaces for better type safety
+export interface IndexTemplateData extends TemplateData {
+  posts: PostWithMeta[];
+  postsLength: number;
+  lastUpdate: string;
+  pagination?: PaginationConfig | null;
+}
+
+export interface PostTemplateData extends TemplateData {
+  id: string;
+  title: string;
+  description: string;
+  htmlContent: string;
+  formattedDate: string;
+  formattedUpdateDate?: string;
+  shortId: string;
+  tags: string[];
+  url: string;
+}
+
+export interface LayoutTemplateData extends TemplateData {
+  title: string;
+  content: string;
+  timestamp: number;
+}
+
+export interface PostWithMeta extends BlogPost {
+  formattedDate: string;
+  excerpt: string;
+  shortId: string;
+  lastUpdate: string;
+  hasTags: boolean;
+  formattedUpdateDate?: string;
+}
+
+export interface PaginationConfig {
+  totalPages: number;
+  postsPerPage: number;
+}
+
+// Configuration interfaces for better dependency injection
+export interface BlogGeneratorConfig {
+  readonly gistUsername: string;
+  readonly distDir: string;
+  readonly templatesDir: string;
+  readonly stylesDir: string;
+  readonly rateLimitDelay: number;
+  readonly excerptLength: number;
+  readonly commitHashLength: number;
+  readonly postsPerPage: number;
+  readonly userAgent: string;
+}
+
+export type PartialBlogGeneratorConfig = Partial<BlogGeneratorConfig> & Pick<BlogGeneratorConfig, 'gistUsername'>;
+
+// Utility types for better type safety
+export type RequiredKeys<T> = {
+  [K in keyof T]-?: {} extends Pick<T, K> ? never : K;
+}[keyof T];
+
+export type OptionalKeys<T> = {
+  [K in keyof T]-?: {} extends Pick<T, K> ? K : never;
+}[keyof T];
+
+// Extract certain fields from BlogPost for different use cases
+export type BlogPostSummary = Pick<BlogPost, 'id' | 'title' | 'description' | 'date' | 'tags' | 'url'>;
+export type BlogPostMeta = Pick<BlogPost, 'id' | 'title' | 'date' | 'tags'>;
+
+// Template-specific data types using utility types
+export type PostContentData = Pick<BlogPost, 'title' | 'description' | 'tags'>;
+export type PostMetaData = Pick<BlogPost, 'id' | 'date' | 'url'>;
 
 export interface PaginationData {
   posts: BlogPost[];
@@ -98,4 +175,51 @@ export interface RSSItem {
   guid: string;
   pubDate: string;
   content: string;
+}
+
+// Custom error types for better error handling
+export class GitHubAPIError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly response?: Response
+  ) {
+    super(message);
+    this.name = 'GitHubAPIError';
+  }
+}
+
+export class TemplateError extends Error {
+  constructor(message: string, public readonly templateName: string) {
+    super(message);
+    this.name = 'TemplateError';
+  }
+}
+
+export class ValidationError extends Error {
+  constructor(message: string, public readonly data?: unknown) {
+    super(message);
+    this.name = 'ValidationError';
+  }
+}
+
+// Type predicate utility functions
+export function isString(value: unknown): value is string {
+  return typeof value === 'string';
+}
+
+export function isNumber(value: unknown): value is number {
+  return typeof value === 'number' && !isNaN(value);
+}
+
+export function isBoolean(value: unknown): value is boolean {
+  return typeof value === 'boolean';
+}
+
+export function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function isArray<T>(value: unknown): value is T[] {
+  return Array.isArray(value);
 }

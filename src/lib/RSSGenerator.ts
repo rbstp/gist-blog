@@ -1,11 +1,5 @@
 
-interface PostWithContent {
-  id: string;
-  title: string;
-  htmlContent: string;
-  createdAt: string;
-  tags?: string[];
-}
+import { ParsedGist } from './GistParser.js';
 
 class RSSGenerator {
   private siteUrl: string;
@@ -18,7 +12,7 @@ class RSSGenerator {
     this.description = process.env.SITE_DESCRIPTION || 'There and Back Again: A DevOps Engineer\'s Journey Through AI and Infrastructure';
   }
 
-  generateFeed(posts: PostWithContent[]): string {
+  generateFeed(posts: ParsedGist[]): string {
     const sortedPosts = posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     const buildDate = new Date().toUTCString();
 

@@ -8,7 +8,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### Core Functionality
 - **GitHub Gists Integration** - Automatically fetches and converts your public gists to blog posts
-- **TypeScript** - Full type safety with comprehensive interfaces and better IDE support
+- **100% TypeScript** - Enterprise-grade type safety with zero `any` types and runtime validation
+- **Advanced Error Handling** - Custom typed error classes and comprehensive validation
 - **Markdown Processing** - Full markdown support with syntax highlighting via highlight.js
 - **Dual Theme Support** - Light/dark mode toggle with system preference detection
 - **Terminal Theme** - Cyberpunk/DevOps aesthetic with green terminal prompts
@@ -188,6 +189,7 @@ dist/
   - `GistParser.ts` - Markdown processing and tag extraction
   - `RSSGenerator.ts` - RSS feed generation with configurable metadata
   - `TemplateEngine.ts` - Custom template rendering with pre-compiled regex
+  - `ValidationUtils.ts` - Runtime type validation utilities
   - `types/index.ts` - Comprehensive type definitions for all data structures
 - **External templates** in `src/templates/` for easy customization
 - **Rate limit handling** with automatic retries and 30s request timeouts

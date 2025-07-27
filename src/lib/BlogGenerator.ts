@@ -5,22 +5,23 @@ import { format, parseISO } from 'date-fns';
 import TemplateEngine from './TemplateEngine.js';
 import GistParser from './GistParser.js';
 import RSSGenerator from './RSSGenerator.js';
-import { Gist, BlogPost } from '../types/index.js';
+import {
+  Gist,
+  BlogPost,
+  BlogPostWithHtml,
+  PostWithMeta,
+  IndexTemplateData,
+  PostTemplateData,
+  LayoutTemplateData,
+  GitHubAPIError,
+  ValidationError
+} from '../types/index.js';
+import { ParsedGist } from './GistParser.js';
+import { ValidationUtils } from './ValidationUtils.js';
 
 const RATE_LIMIT_DELAY = 60000;
-const EXCERPT_LENGTH = 150;
-const COMMIT_HASH_LENGTH = 7;
-const POSTS_PER_PAGE = 6;
 const USER_AGENT = 'gist-blog-generator';
 
-interface PostWithMeta extends BlogPost {
-  formattedDate: string;
-  excerpt: string;
-  shortId: string;
-  lastUpdate: string;
-  hasTags: boolean;
-  formattedUpdateDate?: string;
-}
 
 class BlogGenerator {
   private gistUsername: string;
@@ -37,11 +38,11 @@ class BlogGenerator {
     this.distDir = 'dist';
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
-    
+
     this.templateEngine = new TemplateEngine(this.templatesDir);
     this.gistParser = new GistParser();
     this.rssGenerator = new RSSGenerator();
-    
+
     // Template cache for performance
     this.templateCache = new Map();
   }
@@ -49,7 +50,7 @@ class BlogGenerator {
   async fetchGists(): Promise<Gist[]> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-    
+
     try {
       const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
         headers: {
@@ -59,24 +60,25 @@ class BlogGenerator {
       });
       clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
-      console.error(`Response headers:`, response.headers);
+      if (!response.ok) {
+        console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
+        console.error(`Response headers:`, response.headers);
 
-      if (response.status === 403) {
-        console.error('Rate limit hit. Waiting 60 seconds...');
-        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
-        return this.fetchGists(); // Retry once
+        if (response.status === 403) {
+          console.error('Rate limit hit. Waiting 60 seconds...');
+          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+          return this.fetchGists(); // Retry once
+        }
+
+        throw new GitHubAPIError(`Failed to fetch gists: ${response.status} ${response.statusText}`, response.status, response);
       }
 
-      throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
-    }
-
-      const gists = await response.json() as Gist[];
-      return gists.filter(gist => gist.public);
-    } catch (error: any) {
+      const rawData = await response.json();
+      ValidationUtils.validateGistsArray(rawData);
+      return rawData.filter(gist => gist.public);
+    } catch (error: unknown) {
       clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout: GitHub API took too long to respond');
       }
       throw error;
@@ -86,7 +88,7 @@ class BlogGenerator {
   async fetchGistContent(gist: Gist): Promise<Gist> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-    
+
     try {
       const response = await fetch(gist.url, {
         headers: {
@@ -96,23 +98,25 @@ class BlogGenerator {
       });
       clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
-      console.error(`Gist URL: ${gist.url}`);
+      if (!response.ok) {
+        console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
+        console.error(`Gist URL: ${gist.url}`);
 
-      if (response.status === 403) {
-        console.error('Rate limit hit. Waiting 60 seconds...');
-        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
-        return this.fetchGistContent(gist); // Retry once
+        if (response.status === 403) {
+          console.error('Rate limit hit. Waiting 60 seconds...');
+          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+          return this.fetchGistContent(gist); // Retry once
+        }
+
+        throw new GitHubAPIError(`Failed to fetch gist content: ${response.status} ${response.statusText}`, response.status, response);
       }
 
-      throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
-    }
-
-      return await response.json() as Gist;
-    } catch (error: any) {
+      const rawData = await response.json();
+      ValidationUtils.validateGist(rawData);
+      return rawData;
+    } catch (error: unknown) {
       clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         throw new Error(`Request timeout: Gist ${gist.id} took too long to fetch`);
       }
       throw error;
@@ -130,26 +134,29 @@ class BlogGenerator {
     return templates;
   }
 
-  async generateIndex(posts: any[]): Promise<void> {
-    const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } = 
+  async generateIndex(posts: ParsedGist[]): Promise<void> {
+    const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
 
     // Sort posts by creation date (newest first)
     const sortedPosts = posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     // Add formatted dates and excerpts
-    const postsWithMeta: PostWithMeta[] = sortedPosts.map(post => ({
+    const postsWithMeta = sortedPosts.map(post => ({
       ...post,
-      formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
-      excerpt: post.content.substring(0, EXCERPT_LENGTH) + (post.content.length > EXCERPT_LENGTH ? '...' : ''),
-      shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
+      date: post.createdAt, // Map createdAt to date for compatibility
+      formattedDate: post.createdAt ? format(parseISO(post.createdAt), 'MMM d, yyyy') : 'Unknown date',
+      excerpt: post.content ? post.content.substring(0, 150) + (post.content.length > 150 ? '...' : '') : '',
+      shortId: post.id ? post.id.substring(0, 7) : 'unknown',
       lastUpdate: format(new Date(), 'MMM d, HH:mm'),
-      hasTags: post.tags && post.tags.length > 0
+      hasTags: post.tags && post.tags.length > 0,
+      commitHash: post.id ? post.id.substring(0, 7) : 'unknown',
+      deployStatus: 'DEPLOYED'
     }));
 
     // Calculate pagination data for client-side use
     const totalPosts = postsWithMeta.length;
-    const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
+    const totalPages = Math.ceil(totalPosts / 6);
 
     const templateData = {
       posts: postsWithMeta, // Load ALL posts for client-side pagination
@@ -157,7 +164,7 @@ class BlogGenerator {
       lastUpdate: new Date().toISOString(),
       pagination: totalPages > 1 ? {
         totalPages,
-        postsPerPage: POSTS_PER_PAGE
+        postsPerPage: 6
       } : null
     };
 
@@ -173,16 +180,15 @@ class BlogGenerator {
     await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
   }
 
-  async generatePost(post: any): Promise<void> {
-    const { 'layout.html': layoutTemplate, 'post.html': postTemplate } = 
+  async generatePost(post: ParsedGist): Promise<void> {
+    const { 'layout.html': layoutTemplate, 'post.html': postTemplate } =
       await this.loadTemplatesCached(['layout.html', 'post.html']);
 
     const postData = {
       ...post,
-      formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
-      formattedUpdateDate: post.updatedAt !== post.createdAt ?
-        format(parseISO(post.updatedAt), 'MMM d, yyyy') : null,
-      shortId: post.id.substring(0, COMMIT_HASH_LENGTH)
+      formattedDate: post.createdAt ? format(parseISO(post.createdAt), 'MMM d, yyyy') : 'Unknown date',
+      formattedUpdateDate: null, // Disable update date for now
+      shortId: post.id ? post.id.substring(0, 7) : 'unknown'
     };
 
     const postContent = this.templateEngine.render(postTemplate, postData);
@@ -197,7 +203,7 @@ class BlogGenerator {
     await fs.writeFile(path.join(postsDir, `${post.id}.html`), fullPage);
   }
 
-  async generateRSSFeed(posts: any[]): Promise<void> {
+  async generateRSSFeed(posts: ParsedGist[]): Promise<void> {
     const rssXml = this.rssGenerator.generateFeed(posts);
     await fs.writeFile(path.join(this.distDir, 'feed.xml'), rssXml);
   }
@@ -205,12 +211,13 @@ class BlogGenerator {
   async copyStyles(): Promise<void> {
     const sourceStylesPath = path.join(this.stylesDir, 'main.css');
     const destStylesPath = path.join(this.distDir, 'styles.css');
-    
+
     try {
       const cssContent = await fs.readFile(sourceStylesPath, 'utf-8');
       await fs.writeFile(destStylesPath, cssContent);
-    } catch (error: any) {
-      console.error('Error copying styles:', error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error('Error copying styles:', message);
       throw error;
     }
   }
@@ -234,8 +241,9 @@ class BlogGenerator {
       try {
         const fullGist = await this.fetchGistContent(gist);
         return this.gistParser.parseGistAsPost(fullGist);
-      } catch (error: any) {
-        console.error(`Failed to process gist ${gist.id}:`, error.message);
+      } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : 'Unknown error';
+        console.error(`Failed to process gist ${gist.id}:`, message);
         return null;
       }
     });
@@ -243,7 +251,7 @@ class BlogGenerator {
     // Use allSettled for better error resilience
     const gistResults = await Promise.allSettled(gistPromises);
     const posts = gistResults
-      .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled' && result.value !== null)
+      .filter((result): result is PromiseFulfilledResult<ParsedGist> => result.status === 'fulfilled' && result.value !== null)
       .map(result => result.value);
 
     // Generate post files in parallel

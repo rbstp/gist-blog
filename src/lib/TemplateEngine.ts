@@ -1,6 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
-import { TemplateData } from '../types/index.js';
+import { TemplateData, TemplateError } from '../types/index.js';
 
 class TemplateEngine {
   private templatesDir: string;
@@ -19,7 +19,7 @@ class TemplateEngine {
       const templatePath = path.join(this.templatesDir, templateName);
       return await fs.readFile(templatePath, 'utf-8');
     } catch (error) {
-      throw new Error(`Template not found: ${templateName}`);
+      throw new TemplateError(`Template not found: ${templateName}`, templateName);
     }
   }
 
@@ -45,13 +45,13 @@ class TemplateEngine {
 
       // If it's an array, treat as a loop
       if (Array.isArray(items)) {
-        return items.map((item: any, index: number) => {
+        return items.map((item: unknown, index: number) => {
           // Handle primitive arrays (strings, numbers) with {{.}} syntax
           if (typeof item === 'string' || typeof item === 'number') {
             return content.replace(/\{\{\.\}\}/g, String(item));
           }
           // Handle object arrays normally
-          return this.render(content, item);
+          return this.render(content, item as TemplateData);
         }).join('');
       }
 

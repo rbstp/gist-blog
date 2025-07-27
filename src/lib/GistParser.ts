@@ -1,6 +1,6 @@
 import { marked } from 'marked';
 import hljs from 'highlight.js';
-import { Gist, BlogPost } from '../types/index.js';
+import { Gist, BlogPost, ValidationError } from '../types/index.js';
 
 // Configure marked for syntax highlighting
 marked.setOptions({
@@ -8,15 +8,16 @@ marked.setOptions({
     if (lang && hljs.getLanguage(lang)) {
       try {
         return hljs.highlight(lang, code).value;
-      } catch (err: any) {
-        console.warn(`Failed to highlight code with language '${lang}':`, err.message);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        console.warn(`Failed to highlight code with language '${lang}':`, message);
       }
     }
     return hljs.highlightAuto(code).value;
   }
-} as any);
+} as import('marked').MarkedOptions);
 
-interface ParsedGist {
+export interface ParsedGist {
   id: string;
   title: string;
   description: string;
@@ -85,8 +86,9 @@ class GistParser {
       }
 
       return post;
-    } catch (error: any) {
-      console.error(`Error parsing gist ${gist?.id || 'unknown'}:`, error.message);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Error parsing gist ${gist?.id || 'unknown'}:`, message);
       return null;
     }
   }
