@@ -22,6 +22,9 @@
                 <a href="/" class="logo">rbstp.dev<span class="cursor">_</span></a>
             </div>
             <div class="nav-links">
+                <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+                    <i class="fas fa-sun" id="theme-icon"></i>
+                </button>
                 <a href="/" class="nav-item">
                     <i class="fas fa-code-branch nav-icon"></i>
                     <span>main</span>
@@ -60,7 +63,46 @@
         </div>
     </footer>
     <script>
+        // Theme management - must run before DOMContentLoaded to prevent flash
+        (function() {
+            const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            const getStoredTheme = () => localStorage.getItem('theme');
+            const setTheme = (theme) => {
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+                
+                const themeIcon = document.getElementById('theme-icon');
+                if (themeIcon) {
+                    themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+                }
+            };
+            
+            // Initialize theme
+            const storedTheme = getStoredTheme();
+            const initialTheme = storedTheme || getSystemTheme();
+            setTheme(initialTheme);
+            
+            // Listen for system theme changes
+            window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+                if (!getStoredTheme()) {
+                    setTheme(e.matches ? 'light' : 'dark');
+                }
+            });
+            
+            // Theme toggle function
+            window.toggleTheme = function() {
+                const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
+                const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+                setTheme(newTheme);
+            };
+        })();
+
         document.addEventListener('DOMContentLoaded', function() {
+            // Theme toggle button
+            const themeToggle = document.getElementById('theme-toggle');
+            if (themeToggle) {
+                themeToggle.addEventListener('click', window.toggleTheme);
+            }
             // Convert timestamps to local time
             const timeElements = document.querySelectorAll('.local-time');
             timeElements.forEach(function(element) {
