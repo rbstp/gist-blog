@@ -599,15 +599,15 @@ class GistBlogGenerator {
       const postUrl = `${siteUrl}/posts/${post.id}.html`;
       const pubDate = new Date(post.createdAt).toUTCString();
 
-      // Clean HTML content for RSS (remove HTML tags for description)
-      const description = post.content.substring(0, 200).replace(/<[^>]*>/g, '') + '...';
+      // Use full HTML content for RSS feed
+      const fullContent = post.htmlContent;
 
       return `    <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${postUrl}</link>
       <guid>${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${description}]]></description>
+      <description><![CDATA[${fullContent}]]></description>
       ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category>${tag}</category>`).join('\n      ') : ''}
     </item>`;
     }).join('\n');
