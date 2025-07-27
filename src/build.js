@@ -454,7 +454,7 @@ class GistBlogGenerator {
             </div>
             <div class="terminal-line">
                 <span class="prompt">rbstp@devops:~$</span>
-                <span class="command">cat latest_thoughts.md</span>
+                <span class="command">cat thoughts.md</span>
             </div>
             <div class="terminal-output">
                 <span class="output-text">There and Back Again: A DevOps Engineer's Journey Through AI and Infrastructure</span>
