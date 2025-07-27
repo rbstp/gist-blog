@@ -7,6 +7,7 @@ const { format, parseISO } = require('date-fns');
 const RATE_LIMIT_DELAY = 60000;
 const EXCERPT_LENGTH = 150;
 const COMMIT_HASH_LENGTH = 7;
+const POSTS_PER_PAGE = 6;
 const USER_AGENT = 'gist-blog-generator';
 marked.setOptions({
   highlight: function (code, lang) {
@@ -426,6 +427,36 @@ class GistBlogGenerator {
         </article>
         {{/posts}}
     </div>
+    
+    {{#pagination}}
+    <div class="pagination-section">
+        <div class="pagination-terminal">
+            <div class="pagination-line">
+                <span class="pagination-prompt">$</span>
+                <span class="pagination-command">ls posts --page {{currentPage}} --total {{totalPages}}</span>
+            </div>
+            <div class="pagination-nav">
+                {{#hasPrevious}}
+                <a href="{{previousUrl}}" class="pagination-link prev">
+                    <span class="pagination-icon">←</span>
+                    <span>prev</span>
+                </a>
+                {{/hasPrevious}}
+                <div class="pagination-pages">
+                    {{#pages}}
+                    <a href="{{url}}" class="pagination-page {{#isCurrent}}current{{/isCurrent}}">{{number}}</a>
+                    {{/pages}}
+                </div>
+                {{#hasNext}}
+                <a href="{{nextUrl}}" class="pagination-link next">
+                    <span>next</span>
+                    <span class="pagination-icon">→</span>
+                </a>
+                {{/hasNext}}
+            </div>
+        </div>
+    </div>
+    {{/pagination}}
 </section>`,
 
       'post.html': `<article class="post-container">
@@ -550,18 +581,86 @@ class GistBlogGenerator {
       hasTags: post.tags && post.tags.length > 0
     }));
 
-    const indexContent = this.simpleTemplateEngine(indexTemplate, {
-      posts: postsWithMeta,
-      postsLength: postsWithMeta.length,
-      lastUpdate: new Date().toISOString()
-    });
-    const fullPage = this.simpleTemplateEngine(layoutTemplate, {
-      title: 'main',
-      content: indexContent,
-      timestamp: Date.now()
-    });
+    // Calculate pagination
+    const totalPosts = postsWithMeta.length;
+    const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
-    await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
+    // Generate each page
+    for (let page = 1; page <= totalPages; page++) {
+      const startIndex = (page - 1) * POSTS_PER_PAGE;
+      const endIndex = startIndex + POSTS_PER_PAGE;
+      const pagesPosts = postsWithMeta.slice(startIndex, endIndex);
+
+      // Generate pagination data
+      const pagination = this.generatePaginationData(page, totalPages);
+
+      const templateData = {
+        posts: pagesPosts,
+        postsLength: totalPosts,
+        lastUpdate: new Date().toISOString(),
+        pagination: totalPages > 1 ? pagination : null
+      };
+
+      // Flatten pagination data for template access
+      if (pagination) {
+        templateData.currentPage = pagination.currentPage;
+        templateData.totalPages = pagination.totalPages;
+        templateData.hasPrevious = pagination.hasPrevious;
+        templateData.hasNext = pagination.hasNext;
+        templateData.previousUrl = pagination.previousUrl;
+        templateData.nextUrl = pagination.nextUrl;
+        templateData.pages = pagination.pages;
+      }
+
+      const indexContent = this.simpleTemplateEngine(indexTemplate, templateData);
+
+      const fullPage = this.simpleTemplateEngine(layoutTemplate, {
+        title: page === 1 ? 'main' : `main - page ${page}`,
+        content: indexContent,
+        timestamp: Date.now()
+      });
+
+      // Write to appropriate file
+      if (page === 1) {
+        await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
+      } else {
+        const pageDir = path.join(this.distDir, 'page');
+        await fs.mkdir(pageDir, { recursive: true });
+        await fs.writeFile(path.join(pageDir, `${page}.html`), fullPage);
+      }
+    }
+  }
+
+  generatePaginationData(currentPage, totalPages) {
+    const pagination = {
+      currentPage,
+      totalPages,
+      hasPrevious: currentPage > 1,
+      hasNext: currentPage < totalPages,
+      previousUrl: currentPage > 2 ? `/page/${currentPage - 1}.html` : '/',
+      nextUrl: `/page/${currentPage + 1}.html`,
+      pages: []
+    };
+
+    // Generate page numbers (show up to 5 pages centered around current)
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust start if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pagination.pages.push({
+        number: i,
+        url: i === 1 ? '/' : `/page/${i}.html`,
+        isCurrent: i === currentPage
+      });
+    }
+
+    return pagination;
   }
 
   async generatePost(post) {
@@ -1430,6 +1529,101 @@ footer {
     border-top: 1px solid var(--border-primary);
 }
 
+.pagination-section {
+    padding: 2rem 0;
+    border-top: 1px solid var(--border-primary);
+    margin-top: 2rem;
+}
+
+.pagination-terminal {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    font-family: var(--mono-font);
+}
+
+.pagination-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+.pagination-prompt {
+    color: var(--terminal-green);
+    font-weight: 600;
+}
+
+.pagination-command {
+    color: var(--terminal-blue);
+}
+
+.pagination-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.pagination-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.pagination-link:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+    transform: translateY(-1px);
+}
+
+.pagination-pages {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.pagination-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.pagination-page:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+}
+
+.pagination-page.current {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border-color: var(--accent-primary);
+}
+
+.pagination-icon {
+    font-size: 0.75rem;
+}
+
 @keyframes typing {
     0% { width: 0; }
     50% { width: 100%; }
@@ -1488,6 +1682,15 @@ footer {
     
     .card-actions {
         flex-direction: column;
+    }
+    
+    .pagination-nav {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .pagination-pages {
+        justify-content: center;
     }
 }`;
 
