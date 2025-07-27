@@ -229,8 +229,8 @@ class GistBlogGenerator {
         </div>
     </footer>
     <script>
-        // Convert timestamps to local time
         document.addEventListener('DOMContentLoaded', function() {
+            // Convert timestamps to local time
             const timeElements = document.querySelectorAll('.local-time');
             timeElements.forEach(function(element) {
                 const timestamp = element.getAttribute('data-timestamp');
@@ -247,10 +247,18 @@ class GistBlogGenerator {
                 }
             });
 
-            // Tag filtering functionality
+            // Client-side pagination and filtering system
+            const POSTS_PER_PAGE = 6;
+            let currentPage = 1;
             let activeTag = null;
-            const posts = document.querySelectorAll('.post-card');
+            
+            const allPosts = Array.from(document.querySelectorAll('.post-card'));
             const tags = document.querySelectorAll('.tag');
+            const paginationSection = document.getElementById('pagination-section');
+            const paginationCommand = document.getElementById('pagination-command');
+            const paginationPages = document.getElementById('pagination-pages');
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
 
             // Create filter status display
             const section = document.querySelector('.pipeline-section');
@@ -259,6 +267,109 @@ class GistBlogGenerator {
             filterStatus.style.display = 'none';
             section.insertBefore(filterStatus, section.querySelector('.posts-grid'));
 
+            function getFilteredPosts() {
+                if (!activeTag) return allPosts;
+                
+                return allPosts.filter(function(post) {
+                    const postTags = post.querySelectorAll('.tag');
+                    return Array.from(postTags).some(function(tag) {
+                        return tag.getAttribute('data-tag') === activeTag;
+                    });
+                });
+            }
+
+            function updatePagination() {
+                const filteredPosts = getFilteredPosts();
+                const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+                
+                // Hide all posts first
+                allPosts.forEach(function(post) {
+                    post.style.display = 'none';
+                });
+                
+                // Show posts for current page
+                const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
+                const endIndex = startIndex + POSTS_PER_PAGE;
+                const postsToShow = filteredPosts.slice(startIndex, endIndex);
+                
+                postsToShow.forEach(function(post) {
+                    post.style.display = 'block';
+                });
+
+                // Update pagination controls
+                if (paginationSection && totalPages > 1) {
+                    paginationSection.style.display = 'block';
+                    
+                    // Update command
+                    if (paginationCommand) {
+                        paginationCommand.textContent = 'ls posts --page ' + currentPage + ' --total ' + totalPages;
+                    }
+                    
+                    // Update prev/next buttons
+                    if (prevBtn) {
+                        prevBtn.disabled = currentPage === 1;
+                    }
+                    if (nextBtn) {
+                        nextBtn.disabled = currentPage === totalPages;
+                    }
+                    
+                    // Update page numbers
+                    if (paginationPages) {
+                        paginationPages.innerHTML = '';
+                        const maxVisible = 5;
+                        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                        
+                        if (endPage - startPage + 1 < maxVisible) {
+                            startPage = Math.max(1, endPage - maxVisible + 1);
+                        }
+                        
+                        for (let i = startPage; i <= endPage; i++) {
+                            const pageBtn = document.createElement('button');
+                            pageBtn.className = 'pagination-page' + (i === currentPage ? ' current' : '');
+                            pageBtn.textContent = i;
+                            pageBtn.addEventListener('click', function() {
+                                currentPage = i;
+                                updatePagination();
+                            });
+                            paginationPages.appendChild(pageBtn);
+                        }
+                    }
+                } else if (paginationSection) {
+                    paginationSection.style.display = 'none';
+                }
+            }
+
+            function updateFilterStatus() {
+                if (!activeTag) {
+                    filterStatus.style.display = 'none';
+                    return;
+                }
+                
+                const filteredCount = getFilteredPosts().length;
+                filterStatus.innerHTML = 
+                    '<div class="filter-info">' +
+                        '<span class="filter-prompt">$</span>' +
+                        '<span>grep --tag</span>' +
+                        '<span class="filter-tag">#' + activeTag + '</span>' +
+                        '<span class="filter-count">→ ' + filteredCount + ' result' + (filteredCount !== 1 ? 's' : '') + '</span>' +
+                        '<button class="clear-filter" onclick="clearFilter()">clear</button>' +
+                    '</div>';
+                filterStatus.style.display = 'block';
+            }
+
+            // Global function for clear button
+            window.clearFilter = function() {
+                activeTag = null;
+                currentPage = 1;
+                tags.forEach(function(tag) {
+                    tag.classList.remove('active');
+                });
+                updateFilterStatus();
+                updatePagination();
+            };
+
+            // Tag filtering
             tags.forEach(function(tag) {
                 tag.addEventListener('click', function() {
                     const tagName = this.getAttribute('data-tag');
@@ -266,36 +377,14 @@ class GistBlogGenerator {
                     if (activeTag === tagName) {
                         // Clear filter
                         activeTag = null;
-                        posts.forEach(function(post) {
-                            post.style.display = 'block';
-                        });
+                        currentPage = 1;
                         tags.forEach(function(t) {
                             t.classList.remove('active');
                         });
-                        filterStatus.style.display = 'none';
                     } else {
                         // Apply filter
                         activeTag = tagName;
-                        let visibleCount = 0;
-                        
-                        posts.forEach(function(post) {
-                            const postTags = post.querySelectorAll('.tag');
-                            let hasTag = false;
-                            postTags.forEach(function(t) {
-                                if (t.getAttribute('data-tag') === tagName) {
-                                    hasTag = true;
-                                }
-                            });
-                            
-                            if (hasTag) {
-                                post.style.display = 'block';
-                                visibleCount++;
-                            } else {
-                                post.style.display = 'none';
-                            }
-                        });
-
-                        // Update tag highlighting
+                        currentPage = 1; // Reset to first page when filtering
                         tags.forEach(function(t) {
                             if (t.getAttribute('data-tag') === tagName) {
                                 t.classList.add('active');
@@ -303,20 +392,36 @@ class GistBlogGenerator {
                                 t.classList.remove('active');
                             }
                         });
-
-                        // Show filter status
-                        filterStatus.innerHTML = 
-                            '<div class="filter-info">' +
-                                '<span class="filter-prompt">$</span>' +
-                                '<span>grep --tag</span>' +
-                                '<span class="filter-tag">#' + tagName + '</span>' +
-                                '<span class="filter-count">→ ' + visibleCount + ' result' + (visibleCount !== 1 ? 's' : '') + '</span>' +
-                                '<button class="clear-filter" onclick="location.reload()">clear</button>' +
-                            '</div>';
-                        filterStatus.style.display = 'block';
                     }
+                    
+                    updateFilterStatus();
+                    updatePagination();
                 });
             });
+
+            // Pagination controls
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function() {
+                    if (currentPage > 1) {
+                        currentPage--;
+                        updatePagination();
+                    }
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function() {
+                    const filteredPosts = getFilteredPosts();
+                    const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
+                    if (currentPage < totalPages) {
+                        currentPage++;
+                        updatePagination();
+                    }
+                });
+            }
+
+            // Initial load
+            updatePagination();
         });
     </script>
 </body>
@@ -429,30 +534,24 @@ class GistBlogGenerator {
     </div>
     
     {{#pagination}}
-    <div class="pagination-section">
+    <div class="pagination-section" id="pagination-section">
         <div class="pagination-terminal">
             <div class="pagination-line">
                 <span class="pagination-prompt">$</span>
-                <span class="pagination-command">ls posts --page {{currentPage}} --total {{totalPages}}</span>
+                <span class="pagination-command" id="pagination-command">ls posts --page 1 --total {{totalPages}}</span>
             </div>
-            <div class="pagination-nav">
-                {{#hasPrevious}}
-                <a href="{{previousUrl}}" class="pagination-link prev">
+            <div class="pagination-nav" id="pagination-nav">
+                <button class="pagination-link prev" id="prev-btn" disabled>
                     <span class="pagination-icon">←</span>
                     <span>prev</span>
-                </a>
-                {{/hasPrevious}}
-                <div class="pagination-pages">
-                    {{#pages}}
-                    <a href="{{url}}" class="pagination-page {{#isCurrent}}current{{/isCurrent}}">{{number}}</a>
-                    {{/pages}}
+                </button>
+                <div class="pagination-pages" id="pagination-pages">
+                    <!-- Generated by JavaScript -->
                 </div>
-                {{#hasNext}}
-                <a href="{{nextUrl}}" class="pagination-link next">
+                <button class="pagination-link next" id="next-btn">
                     <span>next</span>
                     <span class="pagination-icon">→</span>
-                </a>
-                {{/hasNext}}
+                </button>
             </div>
         </div>
     </div>
@@ -581,54 +680,30 @@ class GistBlogGenerator {
       hasTags: post.tags && post.tags.length > 0
     }));
 
-    // Calculate pagination
+    // Calculate pagination data for client-side use
     const totalPosts = postsWithMeta.length;
     const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
-    // Generate each page
-    for (let page = 1; page <= totalPages; page++) {
-      const startIndex = (page - 1) * POSTS_PER_PAGE;
-      const endIndex = startIndex + POSTS_PER_PAGE;
-      const pagesPosts = postsWithMeta.slice(startIndex, endIndex);
+    const templateData = {
+      posts: postsWithMeta, // Load ALL posts for client-side pagination
+      postsLength: totalPosts,
+      lastUpdate: new Date().toISOString(),
+      pagination: totalPages > 1 ? {
+        totalPages,
+        postsPerPage: POSTS_PER_PAGE
+      } : null
+    };
 
-      // Generate pagination data
-      const pagination = this.generatePaginationData(page, totalPages);
+    const indexContent = this.simpleTemplateEngine(indexTemplate, templateData);
 
-      const templateData = {
-        posts: pagesPosts,
-        postsLength: totalPosts,
-        lastUpdate: new Date().toISOString(),
-        pagination: totalPages > 1 ? pagination : null
-      };
+    const fullPage = this.simpleTemplateEngine(layoutTemplate, {
+      title: 'main',
+      content: indexContent,
+      timestamp: Date.now()
+    });
 
-      // Flatten pagination data for template access
-      if (pagination) {
-        templateData.currentPage = pagination.currentPage;
-        templateData.totalPages = pagination.totalPages;
-        templateData.hasPrevious = pagination.hasPrevious;
-        templateData.hasNext = pagination.hasNext;
-        templateData.previousUrl = pagination.previousUrl;
-        templateData.nextUrl = pagination.nextUrl;
-        templateData.pages = pagination.pages;
-      }
-
-      const indexContent = this.simpleTemplateEngine(indexTemplate, templateData);
-
-      const fullPage = this.simpleTemplateEngine(layoutTemplate, {
-        title: page === 1 ? 'main' : `main - page ${page}`,
-        content: indexContent,
-        timestamp: Date.now()
-      });
-
-      // Write to appropriate file
-      if (page === 1) {
-        await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
-      } else {
-        const pageDir = path.join(this.distDir, 'page');
-        await fs.mkdir(pageDir, { recursive: true });
-        await fs.writeFile(path.join(pageDir, `${page}.html`), fullPage);
-      }
-    }
+    // Only generate index.html - no separate page files needed
+    await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
   }
 
   generatePaginationData(currentPage, totalPages) {
@@ -1576,16 +1651,22 @@ footer {
     border: 1px solid var(--border-primary);
     border-radius: 4px;
     color: var(--text-secondary);
-    text-decoration: none;
+    font-family: var(--mono-font);
     font-size: 0.8rem;
     font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.pagination-link:hover {
+.pagination-link:hover:not(:disabled) {
     border-color: var(--accent-primary);
     color: var(--accent-primary);
     transform: translateY(-1px);
+}
+
+.pagination-link:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .pagination-pages {
@@ -1603,13 +1684,14 @@ footer {
     border: 1px solid var(--border-primary);
     border-radius: 4px;
     color: var(--text-secondary);
-    text-decoration: none;
+    font-family: var(--mono-font);
     font-size: 0.8rem;
     font-weight: 500;
+    cursor: pointer;
     transition: all 0.2s ease;
 }
 
-.pagination-page:hover {
+.pagination-page:hover:not(.current) {
     border-color: var(--accent-primary);
     color: var(--accent-primary);
 }
@@ -1618,6 +1700,7 @@ footer {
     background: var(--accent-primary);
     color: var(--bg-primary);
     border-color: var(--accent-primary);
+    cursor: default;
 }
 
 .pagination-icon {
@@ -1702,6 +1785,13 @@ footer {
 
     // Create dist directory
     await fs.mkdir(this.distDir, { recursive: true });
+
+    // Clean up old pagination files (we now use client-side pagination)
+    try {
+      await fs.rm(path.join(this.distDir, 'page'), { recursive: true, force: true });
+    } catch (error) {
+      // Ignore error if directory doesn't exist
+    }
 
     // Fetch gists
     const gists = await this.fetchGists();
