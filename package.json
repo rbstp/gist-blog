@@ -2,20 +2,25 @@
   "name": "gist-blog",
   "version": "1.0.0",
   "description": "Static blog generator from GitHub gists",
-  "main": "src/build.js",
+  "main": "src/build.ts",
   "engines": {
     "node": ">=24.0.0"
   },
   "scripts": {
-    "build": "node src/build.js",
-    "dev": "node src/build.js && npx http-server dist -p 3000"
+    "build": "tsx src/build.ts",
+    "dev": "tsx src/build.ts && npx http-server dist -p 3000",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "marked": "^16.1.1",
+    "date-fns": "^4.1.0",
     "highlight.js": "^11.10.0",
-    "date-fns": "^4.1.0"
+    "marked": "^16.1.1"
   },
   "devDependencies": {
-    "http-server": "^14.1.1"
+    "@types/highlight.js": "^9.12.4",
+    "@types/node": "^24.1.0",
+    "http-server": "^14.1.1",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
   }
 }

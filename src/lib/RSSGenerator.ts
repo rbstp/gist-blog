@@ -1,12 +1,25 @@
+
+interface PostWithContent {
+  id: string;
+  title: string;
+  htmlContent: string;
+  createdAt: string;
+  tags?: string[];
+}
+
 class RSSGenerator {
-  constructor(siteUrl = process.env.SITE_URL || 'https://rbstp.dev') {
+  private siteUrl: string;
+  private title: string;
+  private description: string;
+
+  constructor(siteUrl: string = process.env.SITE_URL || 'https://rbstp.dev') {
     this.siteUrl = siteUrl;
     this.title = process.env.SITE_TITLE || 'rbstp.dev';
     this.description = process.env.SITE_DESCRIPTION || 'There and Back Again: A DevOps Engineer\'s Journey Through AI and Infrastructure';
   }
 
-  generateFeed(posts) {
-    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  generateFeed(posts: PostWithContent[]): string {
+    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     const buildDate = new Date().toUTCString();
 
     // Get the latest post date for the lastBuildDate
@@ -51,4 +64,4 @@ ${rssItems}
   }
 }
 
-module.exports = RSSGenerator;
+export default RSSGenerator;

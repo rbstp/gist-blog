@@ -1,4 +1,4 @@
-const BlogGenerator = require('./lib/BlogGenerator');
+import BlogGenerator from './lib/BlogGenerator.js';
 
 // Run the build
 const generator = new BlogGenerator();
