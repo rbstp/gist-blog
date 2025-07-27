@@ -1,22 +1,37 @@
-const { marked } = require('marked');
-const hljs = require('highlight.js');
+import { marked } from 'marked';
+import hljs from 'highlight.js';
+import { Gist, BlogPost } from '../types/index.js';
 
 // Configure marked for syntax highlighting
 marked.setOptions({
-  highlight: function (code, lang) {
+  highlight: function (code: string, lang?: string): string {
     if (lang && hljs.getLanguage(lang)) {
       try {
-        return hljs.highlight(code, { language: lang }).value;
-      } catch (err) {
+        return hljs.highlight(lang, code).value;
+      } catch (err: any) {
         console.warn(`Failed to highlight code with language '${lang}':`, err.message);
       }
     }
     return hljs.highlightAuto(code).value;
   }
-});
+} as any);
+
+interface ParsedGist {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  htmlContent: string;
+  createdAt: string;
+  updatedAt: string;
+  url: string;
+  files: string[];
+  tags: string[];
+  filename: string;
+}
 
 class GistParser {
-  parseGistAsPost(gist) {
+  parseGistAsPost(gist: Gist): ParsedGist | null {
     try {
       // Validate gist structure
       if (!gist?.files || typeof gist.files !== 'object') {
@@ -50,12 +65,12 @@ class GistParser {
       const cleanDescription = this.cleanDescriptionFromTags(rawDescription);
 
       // Ensure we have valid data
-      const post = {
+      const post: ParsedGist = {
         id: gist.id,
         title: title || 'Untitled',
         description: cleanDescription || title || 'No description',
         content: bodyContent,
-        htmlContent: marked(bodyContent),
+        htmlContent: marked(bodyContent) as string,
         createdAt: gist.created_at,
         updatedAt: gist.updated_at,
         url: gist.html_url,
@@ -70,13 +85,13 @@ class GistParser {
       }
 
       return post;
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error parsing gist ${gist?.id || 'unknown'}:`, error.message);
       return null;
     }
   }
 
-  extractTags(description) {
+  extractTags(description: string): string[] {
     // Extract hashtags from description using matchAll for cleaner code
     const tagRegex = /#(\w+)/g;
     const matches = description.matchAll(tagRegex);
@@ -86,7 +101,7 @@ class GistParser {
     return [...new Set(tags)].sort();
   }
 
-  cleanDescriptionFromTags(description) {
+  cleanDescriptionFromTags(description: string): string {
     // Remove hashtags from description, keeping the rest clean
     return description
       .replace(/#\w+/g, '')
@@ -95,4 +110,4 @@ class GistParser {
   }
 }
 
-module.exports = GistParser;
+export default GistParser;

@@ -1,10 +1,11 @@
-const fs = require('fs').promises;
-const path = require('path');
-const { format, parseISO } = require('date-fns');
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { format, parseISO } from 'date-fns';
 
-const TemplateEngine = require('./TemplateEngine');
-const GistParser = require('./GistParser');
-const RSSGenerator = require('./RSSGenerator');
+import TemplateEngine from './TemplateEngine.js';
+import GistParser from './GistParser.js';
+import RSSGenerator from './RSSGenerator.js';
+import { Gist, BlogPost } from '../types/index.js';
 
 const RATE_LIMIT_DELAY = 60000;
 const EXCERPT_LENGTH = 150;
@@ -12,7 +13,25 @@ const COMMIT_HASH_LENGTH = 7;
 const POSTS_PER_PAGE = 6;
 const USER_AGENT = 'gist-blog-generator';
 
+interface PostWithMeta extends BlogPost {
+  formattedDate: string;
+  excerpt: string;
+  shortId: string;
+  lastUpdate: string;
+  hasTags: boolean;
+  formattedUpdateDate?: string;
+}
+
 class BlogGenerator {
+  private gistUsername: string;
+  private distDir: string;
+  private templatesDir: string;
+  private stylesDir: string;
+  private templateEngine: TemplateEngine;
+  private gistParser: GistParser;
+  private rssGenerator: RSSGenerator;
+  private templateCache: Map<string, string>;
+
   constructor() {
     this.gistUsername = process.env.GIST_USERNAME || 'rbstp';
     this.distDir = 'dist';
@@ -27,7 +46,7 @@ class BlogGenerator {
     this.templateCache = new Map();
   }
 
-  async fetchGists() {
+  async fetchGists(): Promise<Gist[]> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
     
@@ -42,7 +61,7 @@ class BlogGenerator {
 
     if (!response.ok) {
       console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
-      console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
+      console.error(`Response headers:`, response.headers);
 
       if (response.status === 403) {
         console.error('Rate limit hit. Waiting 60 seconds...');
@@ -53,9 +72,9 @@ class BlogGenerator {
       throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
     }
 
-      const gists = await response.json();
+      const gists = await response.json() as Gist[];
       return gists.filter(gist => gist.public);
-    } catch (error) {
+    } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         throw new Error('Request timeout: GitHub API took too long to respond');
@@ -64,7 +83,7 @@ class BlogGenerator {
     }
   }
 
-  async fetchGistContent(gist) {
+  async fetchGistContent(gist: Gist): Promise<Gist> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
     
@@ -90,8 +109,8 @@ class BlogGenerator {
       throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
     }
 
-      return await response.json();
-    } catch (error) {
+      return await response.json() as Gist;
+    } catch (error: any) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
         throw new Error(`Request timeout: Gist ${gist.id} took too long to fetch`);
@@ -100,26 +119,26 @@ class BlogGenerator {
     }
   }
 
-  async loadTemplatesCached(templateNames) {
-    const templates = {};
+  async loadTemplatesCached(templateNames: string[]): Promise<Record<string, string>> {
+    const templates: Record<string, string> = {};
     for (const name of templateNames) {
       if (!this.templateCache.has(name)) {
         this.templateCache.set(name, await this.templateEngine.loadTemplate(name));
       }
-      templates[name] = this.templateCache.get(name);
+      templates[name] = this.templateCache.get(name)!;
     }
     return templates;
   }
 
-  async generateIndex(posts) {
+  async generateIndex(posts: any[]): Promise<void> {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } = 
       await this.loadTemplatesCached(['layout.html', 'index.html']);
 
     // Sort posts by creation date (newest first)
-    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
     // Add formatted dates and excerpts
-    const postsWithMeta = sortedPosts.map(post => ({
+    const postsWithMeta: PostWithMeta[] = sortedPosts.map(post => ({
       ...post,
       formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
       excerpt: post.content.substring(0, EXCERPT_LENGTH) + (post.content.length > EXCERPT_LENGTH ? '...' : ''),
@@ -154,7 +173,7 @@ class BlogGenerator {
     await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
   }
 
-  async generatePost(post) {
+  async generatePost(post: any): Promise<void> {
     const { 'layout.html': layoutTemplate, 'post.html': postTemplate } = 
       await this.loadTemplatesCached(['layout.html', 'post.html']);
 
@@ -178,25 +197,25 @@ class BlogGenerator {
     await fs.writeFile(path.join(postsDir, `${post.id}.html`), fullPage);
   }
 
-  async generateRSSFeed(posts) {
+  async generateRSSFeed(posts: any[]): Promise<void> {
     const rssXml = this.rssGenerator.generateFeed(posts);
     await fs.writeFile(path.join(this.distDir, 'feed.xml'), rssXml);
   }
 
-  async copyStyles() {
+  async copyStyles(): Promise<void> {
     const sourceStylesPath = path.join(this.stylesDir, 'main.css');
     const destStylesPath = path.join(this.distDir, 'styles.css');
     
     try {
       const cssContent = await fs.readFile(sourceStylesPath, 'utf-8');
       await fs.writeFile(destStylesPath, cssContent);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error copying styles:', error.message);
       throw error;
     }
   }
 
-  async build() {
+  async build(): Promise<void> {
     console.log('Starting blog build...');
 
     // Create dist directory
@@ -215,7 +234,7 @@ class BlogGenerator {
       try {
         const fullGist = await this.fetchGistContent(gist);
         return this.gistParser.parseGistAsPost(fullGist);
-      } catch (error) {
+      } catch (error: any) {
         console.error(`Failed to process gist ${gist.id}:`, error.message);
         return null;
       }
@@ -224,7 +243,7 @@ class BlogGenerator {
     // Use allSettled for better error resilience
     const gistResults = await Promise.allSettled(gistPromises);
     const posts = gistResults
-      .filter(result => result.status === 'fulfilled' && result.value !== null)
+      .filter((result): result is PromiseFulfilledResult<any> => result.status === 'fulfilled' && result.value !== null)
       .map(result => result.value);
 
     // Generate post files in parallel
@@ -242,4 +261,4 @@ class BlogGenerator {
   }
 }
 
-module.exports = BlogGenerator;
+export default BlogGenerator;

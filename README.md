@@ -8,6 +8,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### Core Functionality
 - **GitHub Gists Integration** - Automatically fetches and converts your public gists to blog posts
+- **TypeScript** - Full type safety with comprehensive interfaces and better IDE support
 - **Markdown Processing** - Full markdown support with syntax highlighting via highlight.js
 - **Dual Theme Support** - Light/dark mode toggle with system preference detection
 - **Terminal Theme** - Cyberpunk/DevOps aesthetic with green terminal prompts
@@ -33,6 +34,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 ### Prerequisites
 - Node.js 24+
 - npm or yarn
+- TypeScript knowledge (optional - works out of the box)
 
 ### Installation
 
@@ -49,8 +51,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 3. **Configure your username**
    
-   Edit `src/lib/BlogGenerator.js` and update the username:
-   ```javascript
+   Edit `src/lib/BlogGenerator.ts` and update the username:
+   ```typescript
    this.gistUsername = process.env.GIST_USERNAME || 'your-github-username';
    ```
 
@@ -69,7 +71,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 5. **Build your blog**
    ```bash
    npm run build
-   # or directly: node src/build.js
+   # or directly: tsx src/build.ts
+   # type checking: npm run typecheck
    ```
 
 ## 📝 Usage
@@ -116,8 +119,8 @@ The system includes built-in templates for:
 Override by creating files in `templates/` directory.
 
 ### Site Configuration
-Edit the constants in `src/lib/BlogGenerator.js`:
-```javascript
+Edit the constants in `src/lib/BlogGenerator.ts`:
+```typescript
 const RATE_LIMIT_DELAY = 60000;  // GitHub rate limit delay
 const EXCERPT_LENGTH = 150;      // Post preview length
 const COMMIT_HASH_LENGTH = 7;    // Hash display length
@@ -179,11 +182,13 @@ dist/
 
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
+- **TypeScript** for full type safety and better development experience
 - **Modular build system** with separated concerns:
-  - `BlogGenerator.js` - Core orchestration and GitHub API with timeout handling
-  - `GistParser.js` - Markdown processing and tag extraction
-  - `RSSGenerator.js` - RSS feed generation with configurable metadata
-  - `TemplateEngine.js` - Custom template rendering with pre-compiled regex
+  - `BlogGenerator.ts` - Core orchestration and GitHub API with timeout handling
+  - `GistParser.ts` - Markdown processing and tag extraction
+  - `RSSGenerator.ts` - RSS feed generation with configurable metadata
+  - `TemplateEngine.ts` - Custom template rendering with pre-compiled regex
+  - `types/index.ts` - Comprehensive type definitions for all data structures
 - **External templates** in `src/templates/` for easy customization
 - **Rate limit handling** with automatic retries and 30s request timeouts
 - **Template caching** for improved build performance

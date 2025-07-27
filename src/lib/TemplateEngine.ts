@@ -1,15 +1,20 @@
-const fs = require('fs').promises;
-const path = require('path');
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { TemplateData } from '../types/index.js';
 
 class TemplateEngine {
-  constructor(templatesDir = 'src/templates') {
+  private templatesDir: string;
+  private blockRegex: RegExp;
+  private variableRegex: RegExp;
+
+  constructor(templatesDir: string = 'src/templates') {
     this.templatesDir = templatesDir;
     // Pre-compile regex patterns for better performance
     this.blockRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
     this.variableRegex = /\{\{(\w+)\}\}/g;
   }
 
-  async loadTemplate(templateName) {
+  async loadTemplate(templateName: string): Promise<string> {
     try {
       const templatePath = path.join(this.templatesDir, templateName);
       return await fs.readFile(templatePath, 'utf-8');
@@ -18,9 +23,9 @@ class TemplateEngine {
     }
   }
 
-  escapeHtml(unsafe) {
+  escapeHtml(unsafe: string): string {
     // Use a more performant approach with a single replace call
-    const htmlEscapeMap = {
+    const htmlEscapeMap: Record<string, string> = {
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
@@ -31,19 +36,19 @@ class TemplateEngine {
     return unsafe.replace(/[&<>"']/g, (match) => htmlEscapeMap[match]);
   }
 
-  render(template, data) {
+  render(template: string, data: TemplateData): string {
     let result = template;
 
     // Handle simple loops {{#posts}}...{{/posts}} and conditional content first
-    result = result.replace(this.blockRegex, (_, key, content) => {
+    result = result.replace(this.blockRegex, (_, key: string, content: string) => {
       const items = data[key];
 
       // If it's an array, treat as a loop
       if (Array.isArray(items)) {
-        return items.map((item, index) => {
+        return items.map((item: any, index: number) => {
           // Handle primitive arrays (strings, numbers) with {{.}} syntax
           if (typeof item === 'string' || typeof item === 'number') {
-            return content.replace(/\{\{\.\}\}/g, item);
+            return content.replace(/\{\{\.\}\}/g, String(item));
           }
           // Handle object arrays normally
           return this.render(content, item);
@@ -60,7 +65,7 @@ class TemplateEngine {
     });
 
     // Handle simple variable substitution {{variable}} after loops
-    result = result.replace(this.variableRegex, (_, key) => {
+    result = result.replace(this.variableRegex, (_, key: string) => {
       const value = data[key];
       if (value === undefined || value === null) {
         console.warn(`Template variable '${key}' is undefined`);
@@ -69,13 +74,13 @@ class TemplateEngine {
       // Escape HTML for security, except for htmlContent which is already processed by marked
       // and content which is the template content itself
       if (key === 'htmlContent' || key === 'content') {
-        return value;
+        return String(value);
       }
-      return typeof value === 'string' ? this.escapeHtml(value) : value;
+      return typeof value === 'string' ? this.escapeHtml(value) : String(value);
     });
 
     return result;
   }
 }
 
-module.exports = TemplateEngine;
+export default TemplateEngine;
