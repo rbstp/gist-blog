@@ -307,6 +307,9 @@ nav {
     overflow: hidden;
     transition: all 0.3s ease;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
 }
 
 .post-card:hover {
@@ -372,6 +375,9 @@ nav {
 
 .card-content {
     padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
 }
 
 .post-title {
@@ -516,6 +522,7 @@ nav {
     border-radius: 4px;
     padding: 1rem;
     margin: 1rem 0;
+    flex-grow: 1;
 }
 
 .preview-code {
@@ -531,6 +538,7 @@ nav {
     gap: 1rem;
     padding-top: 1rem;
     border-top: 1px solid var(--border-primary);
+    margin-top: auto;
 }
 
 .action-link {
@@ -996,6 +1004,10 @@ footer {
         align-items: flex-start;
     }
     
+    .post-card {
+        min-height: auto;
+    }
+
     .card-actions {
         flex-direction: column;
     }
