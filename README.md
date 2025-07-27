@@ -155,8 +155,12 @@ dist/
 
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
-- **Build-time processing** with Node.js
-- **GitHub API integration** for gist fetching
+- **Modular build system** with separated concerns:
+  - `BlogGenerator.js` - Core orchestration and GitHub API
+  - `GistParser.js` - Markdown processing and tag extraction
+  - `RSSGenerator.js` - RSS feed generation
+  - `TemplateEngine.js` - Custom template rendering
+- **External templates** in `src/templates/` for easy customization
 - **Rate limit handling** with automatic retries
 
 ### Features Deep Dive
@@ -175,9 +179,16 @@ dist/
 
 **Performance**
 - Parallel gist processing
+- Client-side pagination and filtering
 - Minimal CSS/JS payload
 - Static HTML generation
 - Browser caching with timestamps
+
+**Pagination & Filtering**
+- All posts loaded once for instant filtering
+- Terminal-themed pagination UI
+- Smart tag filtering across all posts
+- No server requests for navigation
 
 ## 🤝 Contributing
 

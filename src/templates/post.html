@@ -1,0 +1,41 @@
+<article class="post-container">
+    <div class="post-navigation">
+        <a href="/" class="back-link">
+            <span class="nav-arrow">←</span>
+            <span>back to pipeline</span>
+        </a>
+        <div class="post-actions">
+            <a href="{{url}}" class="source-link" target="_blank">
+                <span class="action-icon">⚡</span>
+                <span>view source</span>
+            </a>
+        </div>
+    </div>
+
+    <header class="post-header-compact">
+        <div class="post-meta-line">
+            <div class="post-status">
+                <span class="status-badge">🚀 DEPLOYED</span>
+                <span class="commit-info">#{{shortId}}</span>
+            </div>
+            <time datetime="{{createdAt}}" class="post-date">{{formattedDate}}</time>
+        </div>
+        <h1 class="post-title-compact">{{title}}</h1>
+    </header>
+    
+    <div class="post-content-wrapper">
+        <div class="content-terminal">
+            <div class="terminal-header-small">
+                <div class="terminal-controls-small">
+                    <span class="control-small close"></span>
+                    <span class="control-small minimize"></span>
+                    <span class="control-small maximize"></span>
+                </div>
+                <div class="terminal-title-small">{{filename}}</div>
+            </div>
+            <div class="post-content-advanced">
+                {{htmlContent}}
+            </div>
+        </div>
+    </div>
+</article>

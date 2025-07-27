@@ -1,0 +1,130 @@
+<div class="hero-terminal">
+    <div class="terminal-window">
+        <div class="terminal-header">
+            <div class="terminal-controls">
+                <span class="control close"></span>
+                <span class="control minimize"></span>
+                <span class="control maximize"></span>
+            </div>
+            <div class="terminal-title"></div>
+        </div>
+        <div class="terminal-body">
+            <div class="terminal-line">
+                <span class="prompt">rbstp@devops:~$</span>
+                <span class="command">whoami</span>
+            </div>
+            <div class="terminal-output">
+                <span class="output-text">DevOps and Context Engineer</span>
+            </div>
+            <div class="terminal-line">
+                <span class="prompt">rbstp@devops:~$</span>
+                <span class="command">ls -la blog/</span>
+            </div>
+            <div class="terminal-output">
+                <span class="output-text">total {{postsLength}} posts</span>
+            </div>
+            <div class="terminal-line">
+                <span class="prompt">rbstp@devops:~$</span>
+                <span class="command">cat thoughts.md</span>
+            </div>
+            <div class="terminal-output">
+                <span class="output-text">There and Back Again: A DevOps Engineer's Journey Through AI and Infrastructure</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="pipeline-section">
+    <div class="section-header">
+        <h2 class="section-title">
+            <span class="section-icon">📦</span>
+            Latest Deployments
+        </h2>
+        <div class="pipeline-status">
+            <span class="build-status success">✓ Build Success</span>
+            <span class="deploy-time">Last deploy: <span class="local-time" data-timestamp="{{lastUpdate}}">{{lastUpdate}}</span></span>
+        </div>
+    </div>
+    
+    <div class="posts-grid">
+        {{#posts}}
+        <article class="post-card">
+            <div class="card-header">
+                <div class="commit-info">
+                    <span class="commit-hash">#{{shortId}}</span>
+                    <span class="branch-name">main</span>
+                </div>
+                <div class="deploy-status">
+                    <span class="status-indicator deployed"></span>
+                    <span class="status-text">deployed</span>
+                </div>
+            </div>
+            
+            <div class="card-content">
+                <h3 class="post-title">
+                    <a href="/posts/{{id}}.html">{{title}}</a>
+                </h3>
+                <div class="post-metadata">
+                    <span class="metadata-item">
+                        <span class="icon">📅</span>
+                        <time datetime="{{createdAt}}">{{formattedDate}}</time>
+                    </span>
+                    {{#description}}
+                    <span class="metadata-item">
+                        <span class="icon">📝</span>
+                        <span class="description">{{description}}</span>
+                    </span>
+                    {{/description}}
+                    {{#hasTags}}
+                    <div class="tags-container">
+                        <span class="icon">🏷️</span>
+                        {{#tags}}
+                        <span class="tag" data-tag="{{.}}">#{{.}}</span>
+                        {{/tags}}
+                    </div>
+                    {{/hasTags}}
+                </div>
+                
+                <div class="post-preview">
+                    <code class="preview-code">{{excerpt}}</code>
+                </div>
+                
+                <div class="card-actions">
+                    <a href="/posts/{{id}}.html" class="action-link primary">
+                        <span class="action-icon">→</span>
+                        <span>deploy --read</span>
+                    </a>
+                    <a href="{{url}}" class="action-link secondary" target="_blank">
+                        <span class="action-icon">⚡</span>
+                        <span>source</span>
+                    </a>
+                </div>
+            </div>
+        </article>
+        {{/posts}}
+    </div>
+    
+    {{#pagination}}
+    <div class="pagination-section" id="pagination-section">
+        <div class="pagination-terminal">
+            <div class="pagination-line">
+                <span class="pagination-prompt">$</span>
+                <span class="pagination-command" id="pagination-command">ls posts --page 1 --total 1</span>
+            </div>
+            <div class="pagination-nav" id="pagination-nav">
+                <button class="pagination-link prev" id="prev-btn" disabled>
+                    <span class="pagination-icon">←</span>
+                    <span>prev</span>
+                </button>
+                <div class="pagination-pages" id="pagination-pages">
+                    <!-- Generated by JavaScript -->
+                </div>
+                <button class="pagination-link next" id="next-btn">
+                    <span>next</span>
+                    <span class="pagination-icon">→</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    {{/pagination}}
+</section>
