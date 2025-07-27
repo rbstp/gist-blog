@@ -7,7 +7,9 @@ marked.setOptions({
     if (lang && hljs.getLanguage(lang)) {
       try {
         return hljs.highlight(code, { language: lang }).value;
-      } catch (err) { }
+      } catch (err) {
+        console.warn(`Failed to highlight code with language '${lang}':`, err.message);
+      }
     }
     return hljs.highlightAuto(code).value;
   }
@@ -75,14 +77,10 @@ class GistParser {
   }
 
   extractTags(description) {
-    // Extract hashtags from description
+    // Extract hashtags from description using matchAll for cleaner code
     const tagRegex = /#(\w+)/g;
-    const tags = [];
-    let match;
-
-    while ((match = tagRegex.exec(description)) !== null) {
-      tags.push(match[1].toLowerCase());
-    }
+    const matches = description.matchAll(tagRegex);
+    const tags = Array.from(matches, match => match[1].toLowerCase());
 
     // Remove duplicates and sort
     return [...new Set(tags)].sort();

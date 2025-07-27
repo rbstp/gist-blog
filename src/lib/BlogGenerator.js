@@ -22,14 +22,23 @@ class BlogGenerator {
     this.templateEngine = new TemplateEngine(this.templatesDir);
     this.gistParser = new GistParser();
     this.rssGenerator = new RSSGenerator();
+    
+    // Template cache for performance
+    this.templateCache = new Map();
   }
 
   async fetchGists() {
-    const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-      headers: {
-        'User-Agent': USER_AGENT
-      }
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    
+    try {
+      const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
+        headers: {
+          'User-Agent': USER_AGENT
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
@@ -44,16 +53,29 @@ class BlogGenerator {
       throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
     }
 
-    const gists = await response.json();
-    return gists.filter(gist => gist.public);
+      const gists = await response.json();
+      return gists.filter(gist => gist.public);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout: GitHub API took too long to respond');
+      }
+      throw error;
+    }
   }
 
   async fetchGistContent(gist) {
-    const response = await fetch(gist.url, {
-      headers: {
-        'User-Agent': USER_AGENT
-      }
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    
+    try {
+      const response = await fetch(gist.url, {
+        headers: {
+          'User-Agent': USER_AGENT
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
     if (!response.ok) {
       console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
@@ -68,12 +90,30 @@ class BlogGenerator {
       throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
     }
 
-    return await response.json();
+      return await response.json();
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`Request timeout: Gist ${gist.id} took too long to fetch`);
+      }
+      throw error;
+    }
+  }
+
+  async loadTemplatesCached(templateNames) {
+    const templates = {};
+    for (const name of templateNames) {
+      if (!this.templateCache.has(name)) {
+        this.templateCache.set(name, await this.templateEngine.loadTemplate(name));
+      }
+      templates[name] = this.templateCache.get(name);
+    }
+    return templates;
   }
 
   async generateIndex(posts) {
-    const layoutTemplate = await this.templateEngine.loadTemplate('layout.html');
-    const indexTemplate = await this.templateEngine.loadTemplate('index.html');
+    const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } = 
+      await this.loadTemplatesCached(['layout.html', 'index.html']);
 
     // Sort posts by creation date (newest first)
     const sortedPosts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -115,8 +155,8 @@ class BlogGenerator {
   }
 
   async generatePost(post) {
-    const layoutTemplate = await this.templateEngine.loadTemplate('layout.html');
-    const postTemplate = await this.templateEngine.loadTemplate('post.html');
+    const { 'layout.html': layoutTemplate, 'post.html': postTemplate } = 
+      await this.loadTemplatesCached(['layout.html', 'post.html']);
 
     const postData = {
       ...post,
@@ -181,8 +221,11 @@ class BlogGenerator {
       }
     });
 
-    const processedPosts = await Promise.all(gistPromises);
-    const posts = processedPosts.filter(Boolean);
+    // Use allSettled for better error resilience
+    const gistResults = await Promise.allSettled(gistPromises);
+    const posts = gistResults
+      .filter(result => result.status === 'fulfilled' && result.value !== null)
+      .map(result => result.value);
 
     // Generate post files in parallel
     const postGenerationPromises = posts.map(async (post) => {

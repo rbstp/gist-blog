@@ -49,7 +49,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 3. **Configure your username**
    
-   Edit `src/build.js` and update the username:
+   Edit `src/lib/BlogGenerator.js` and update the username:
    ```javascript
    this.gistUsername = process.env.GIST_USERNAME || 'your-github-username';
    ```
@@ -59,9 +59,17 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
    export GIST_USERNAME=your-github-username
    ```
 
-4. **Build your blog**
+4. **Optional: Configure RSS metadata**
    ```bash
-   node src/build.js
+   export SITE_URL=https://yourdomain.com
+   export SITE_TITLE="Your Blog Title"
+   export SITE_DESCRIPTION="Your blog description"
+   ```
+
+5. **Build your blog**
+   ```bash
+   npm run build
+   # or directly: node src/build.js
    ```
 
 ## 📝 Usage
@@ -108,11 +116,19 @@ The system includes built-in templates for:
 Override by creating files in `templates/` directory.
 
 ### Site Configuration
-Edit the constants in `src/build.js`:
+Edit the constants in `src/lib/BlogGenerator.js`:
 ```javascript
 const RATE_LIMIT_DELAY = 60000;  // GitHub rate limit delay
 const EXCERPT_LENGTH = 150;      // Post preview length
 const COMMIT_HASH_LENGTH = 7;    // Hash display length
+const POSTS_PER_PAGE = 6;        // Posts per page
+```
+
+Configure RSS feed via environment variables:
+```bash
+export SITE_URL=https://yourdomain.com
+export SITE_TITLE="Your Blog Title" 
+export SITE_DESCRIPTION="Your blog description"
 ```
 
 ## 🚀 Deployment
@@ -138,9 +154,11 @@ jobs:
       with:
         node-version: '18'
     - run: npm install
-    - run: node src/build.js
+    - run: npm run build
       env:
         GIST_USERNAME: ${{ github.repository_owner }}
+        SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
+        SITE_TITLE: "${{ github.repository_owner }}'s Blog"
     - uses: actions/deploy-pages@v4
       with:
         artifact_name: dist
@@ -162,12 +180,14 @@ dist/
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:
-  - `BlogGenerator.js` - Core orchestration and GitHub API
+  - `BlogGenerator.js` - Core orchestration and GitHub API with timeout handling
   - `GistParser.js` - Markdown processing and tag extraction
-  - `RSSGenerator.js` - RSS feed generation
-  - `TemplateEngine.js` - Custom template rendering
+  - `RSSGenerator.js` - RSS feed generation with configurable metadata
+  - `TemplateEngine.js` - Custom template rendering with pre-compiled regex
 - **External templates** in `src/templates/` for easy customization
-- **Rate limit handling** with automatic retries
+- **Rate limit handling** with automatic retries and 30s request timeouts
+- **Template caching** for improved build performance
+- **Promise.allSettled** for resilient gist processing
 
 ### Features Deep Dive
 
@@ -184,7 +204,10 @@ dist/
 - Self-referencing atom:link
 
 **Performance**
-- Parallel gist processing
+- Parallel gist processing with error resilience
+- Template caching to reduce file I/O
+- Pre-compiled regex patterns in template engine
+- Request timeouts prevent hanging API calls
 - Client-side pagination and filtering
 - Minimal CSS/JS payload
 - Static HTML generation
