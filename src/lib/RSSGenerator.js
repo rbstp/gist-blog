@@ -1,6 +1,8 @@
 class RSSGenerator {
-  constructor(siteUrl = 'https://rbstp.dev') {
+  constructor(siteUrl = process.env.SITE_URL || 'https://rbstp.dev') {
     this.siteUrl = siteUrl;
+    this.title = process.env.SITE_TITLE || 'rbstp.dev';
+    this.description = process.env.SITE_DESCRIPTION || 'There and Back Again: A DevOps Engineer\'s Journey Through AI and Infrastructure';
   }
 
   generateFeed(posts) {
@@ -32,17 +34,15 @@ class RSSGenerator {
     const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>rbstp.dev</title>
+    <title>${this.title}</title>
     <link>${this.siteUrl}</link>
-    <description>There and Back Again: A DevOps Engineer's Journey Through AI and Infrastructure</description>
+    <description>${this.description}</description>
     <language>en-us</language>
     <lastBuildDate>${buildDate}</lastBuildDate>
     <pubDate>${latestPostDate}</pubDate>
     <ttl>60</ttl>
     <atom:link href="${this.siteUrl}/feed.xml" rel="self" type="application/rss+xml"/>
     <generator>gist-blog-generator</generator>
-    <webMaster>rbstp@rbstp.dev</webMaster>
-    <managingEditor>rbstp@rbstp.dev</managingEditor>
 ${rssItems}
   </channel>
 </rss>`;

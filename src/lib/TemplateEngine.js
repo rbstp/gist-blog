@@ -4,6 +4,9 @@ const path = require('path');
 class TemplateEngine {
   constructor(templatesDir = 'src/templates') {
     this.templatesDir = templatesDir;
+    // Pre-compile regex patterns for better performance
+    this.blockRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+    this.variableRegex = /\{\{(\w+)\}\}/g;
   }
 
   async loadTemplate(templateName) {
@@ -32,7 +35,7 @@ class TemplateEngine {
     let result = template;
 
     // Handle simple loops {{#posts}}...{{/posts}} and conditional content first
-    result = result.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, content) => {
+    result = result.replace(this.blockRegex, (_, key, content) => {
       const items = data[key];
 
       // If it's an array, treat as a loop
@@ -57,7 +60,7 @@ class TemplateEngine {
     });
 
     // Handle simple variable substitution {{variable}} after loops
-    result = result.replace(/\{\{(\w+)\}\}/g, (_, key) => {
+    result = result.replace(this.variableRegex, (_, key) => {
       const value = data[key];
       if (value === undefined || value === null) {
         console.warn(`Template variable '${key}' is undefined`);
