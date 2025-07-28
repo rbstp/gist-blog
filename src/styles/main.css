@@ -4,7 +4,7 @@
     --bg-secondary: #161b22;
     --bg-tertiary: #21262d;
     --bg-card: #0d1117;
-    --border-primary: #30363d;
+    --border-primary: #21262d;
     --border-accent: #f78166;
     --text-primary: #f0f6fc;
     --text-secondary: #8b949e;
@@ -1250,7 +1250,7 @@ table pre, table code {
     background: transparent;
     border: none;
     padding: 0;
-    color: var(--text-primary);
+    color: var(--terminal-green);
     font-size: 0.85rem;
     margin-left: 1rem;
 }
