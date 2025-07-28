@@ -1250,9 +1250,176 @@ table pre, table code {
     background: transparent;
     border: none;
     padding: 0;
-    color: var(--terminal-green);
+    color: var(--text-primary);
     font-size: 0.85rem;
     margin-left: 1rem;
+}
+
+/* Syntax highlighting for code blocks */
+.hljs {
+    background: transparent !important;
+    color: var(--text-primary);
+}
+
+/* Language-specific syntax highlighting - Dark theme */
+:root {
+    --syntax-comment: #6e7681;
+    --syntax-keyword: #ff7b72;
+    --syntax-string: #a5d6ff;
+    --syntax-number: #79c0ff;
+    --syntax-function: #d2a8ff;
+    --syntax-variable: #ffa657;
+    --syntax-property: #7ee787;
+    --syntax-operator: #ff7b72;
+    --syntax-type: #ffa198;
+    --syntax-tag: #7ee787;
+    --syntax-attribute: #79c0ff;
+    --syntax-value: #a5d6ff;
+    --syntax-meta: #8b949e;
+    --syntax-builtin: #ffa657;
+}
+
+/* Light theme syntax colors */
+[data-theme="light"] {
+    --syntax-comment: #6a737d;
+    --syntax-keyword: #d73a49;
+    --syntax-string: #032f62;
+    --syntax-number: #005cc5;
+    --syntax-function: #6f42c1;
+    --syntax-variable: #e36209;
+    --syntax-property: #22863a;
+    --syntax-operator: #d73a49;
+    --syntax-type: #b31d28;
+    --syntax-tag: #22863a;
+    --syntax-attribute: #005cc5;
+    --syntax-value: #032f62;
+    --syntax-meta: #6a737d;
+    --syntax-builtin: #e36209;
+}
+
+/* Apply syntax colors */
+.hljs-comment,
+.hljs-quote {
+    color: var(--syntax-comment);
+    font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-type {
+    color: var(--syntax-keyword);
+    font-weight: 600;
+}
+
+.hljs-string,
+.hljs-doctag {
+    color: var(--syntax-string);
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-selector-id {
+    color: var(--syntax-function);
+    font-weight: 600;
+}
+
+.hljs-subst {
+    color: var(--text-primary);
+}
+
+.hljs-number,
+.hljs-regexp,
+.hljs-addition {
+    color: var(--syntax-number);
+}
+
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+    color: var(--syntax-builtin);
+}
+
+.hljs-attribute {
+    color: var(--syntax-attribute);
+}
+
+.hljs-name,
+.hljs-tag {
+    color: var(--syntax-tag);
+    font-weight: 600;
+}
+
+.hljs-attr {
+    color: var(--syntax-property);
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-emphasis {
+    color: var(--syntax-variable);
+}
+
+.hljs-deletion {
+    color: var(--accent-error);
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-link {
+    color: var(--syntax-variable);
+}
+
+/* XML/HTML specific */
+.hljs-tag .hljs-name {
+    color: var(--syntax-tag);
+}
+
+.hljs-tag .hljs-attr {
+    color: var(--syntax-attribute);
+}
+
+.hljs-tag .hljs-string {
+    color: var(--syntax-string);
+}
+
+/* JSON specific */
+.hljs-attr {
+    color: var(--syntax-property);
+}
+
+/* JavaScript/TypeScript specific */
+.hljs-class .hljs-title {
+    color: var(--syntax-type);
+}
+
+.hljs-function .hljs-title {
+    color: var(--syntax-function);
+}
+
+/* CSS specific */
+.hljs-selector-class,
+.hljs-selector-attr,
+.hljs-selector-pseudo {
+    color: var(--syntax-function);
+}
+
+.hljs-property {
+    color: var(--syntax-property);
+}
+
+/* Shell/Bash specific */
+.hljs-meta.hljs-prompt {
+    color: var(--terminal-green);
+    font-weight: 700;
+}
+
+/* Python specific */
+.hljs-decorator,
+.hljs-meta {
+    color: var(--syntax-meta);
 }
 
 
