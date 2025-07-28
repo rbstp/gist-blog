@@ -1052,15 +1052,10 @@ table pre, table code {
 }
 
 .post-content h2 {
-    font-size: 2rem;
+    font-size: 1.8rem;
     color: var(--accent-primary);
-    position: relative;
-    margin: 3rem 0 1.5rem 0;
-    padding: 1rem 0;
-    border-left: 4px solid var(--terminal-green);
-    padding-left: 1.5rem;
-    background: linear-gradient(90deg, var(--bg-tertiary), transparent);
-    border-radius: 0 6px 6px 0;
+    margin: 2rem 0 1rem 0;
+    font-weight: 700;
 }
 
 .post-content h2:before {
@@ -1068,46 +1063,34 @@ table pre, table code {
     color: var(--terminal-green);
     font-family: var(--mono-font);
     font-weight: 700;
-    font-size: 1.2rem;
-    position: absolute;
-    left: -4px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: var(--bg-secondary);
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
+    margin-right: 0.5rem;
 }
 
 .post-content h3 {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
     color: var(--accent-secondary);
-    margin: 2.5rem 0 1rem 0;
-    position: relative;
-    padding-left: 1rem;
+    margin: 1.5rem 0 0.75rem 0;
+    font-weight: 700;
 }
 
 .post-content h3:before {
-    content: "▸";
+    content: "### ";
     color: var(--terminal-orange);
     font-family: var(--mono-font);
     font-weight: 700;
-    font-size: 1.2rem;
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
+    margin-right: 0.5rem;
 }
 
 .post-content p {
-    margin: 1.5rem 0;
-    line-height: 1.8;
+    margin: 1rem 0;
+    line-height: 1.7;
     color: var(--text-primary);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 400;
 }
 
 .post-content p:first-of-type {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--text-primary);
     margin-top: 0;
     font-weight: 500;
@@ -1153,15 +1136,15 @@ table pre, table code {
 
 .post-content ul,
 .post-content ol {
-    margin: 2rem 0;
+    margin: 1.5rem 0;
     padding-left: 2rem;
     color: var(--text-primary);
 }
 
 .post-content li {
-    margin: 0.75rem 0;
-    line-height: 1.7;
-    font-size: 1.05rem;
+    margin: 0.5rem 0;
+    line-height: 1.6;
+    font-size: 1rem;
     position: relative;
 }
 
@@ -1206,38 +1189,31 @@ table pre, table code {
     border: none;
     height: 2px;
     background: linear-gradient(90deg, var(--accent-primary), transparent);
-    margin: 3rem 0;
+    margin: 1.5rem 0;
     border-radius: 1px;
     width: 100%;
     display: block;
 }
 
 /* Special styling for dialogue/interview content */
-.post-content p:has(strong:first-child) {
-    margin: 1rem 0;
-    padding: 0.75rem 1rem;
-    border-radius: 4px;
-    background: var(--bg-tertiary);
-    border-left: 3px solid var(--terminal-green);
-}
-
-/* Character names in dialogue */
-.post-content strong:first-child {
+.post-content p strong:first-child {
     color: var(--terminal-green);
     font-family: var(--mono-font);
     font-weight: 700;
     text-transform: uppercase;
     font-size: 0.9rem;
     letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 0.5rem;
 }
 
-/* Special styling for different speakers */
-.post-content p:contains("INTERVIEWER") {
-    border-left-color: var(--accent-primary);
-}
-
-.post-content p:contains("TERRAFORM") {
-    border-left-color: var(--terminal-orange);
+.post-content p:has(strong:first-child) {
+    margin: 1rem 0;
+    padding: 1rem 1.25rem;
+    border-radius: 6px;
+    background: var(--bg-tertiary);
+    border-left: 4px solid var(--terminal-green);
+    position: relative;
 }
 
 /* Code blocks and inline code improvements */
@@ -1279,51 +1255,6 @@ table pre, table code {
     margin-left: 1rem;
 }
 
-/* Special content styling */
-.post-content p:contains("Field Note") {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--accent-warning);
-    border-left: 4px solid var(--accent-warning);
-    padding: 1.5rem;
-    border-radius: 0 8px 8px 0;
-    margin: 2rem 0;
-    position: relative;
-    font-weight: 500;
-}
-
-.post-content p:contains("Field Note"):before {
-    content: "📋";
-    position: absolute;
-    left: 1rem;
-    top: 1rem;
-    font-size: 1.2rem;
-}
-
-.post-content p:contains("REMEMBER") {
-    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
-    border: 2px solid var(--accent-error);
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin: 2rem 0;
-    text-align: center;
-    font-weight: 600;
-    font-size: 1.1rem;
-    box-shadow: 0 4px 20px rgba(248, 81, 73, 0.2);
-}
-
-.post-content p:contains("THE ANSWER IS YOU") {
-    background: var(--accent-primary);
-    color: var(--bg-primary);
-    border-radius: 8px;
-    padding: 2rem;
-    margin: 3rem 0;
-    text-align: center;
-    font-weight: 800;
-    font-size: 1.3rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    box-shadow: 0 8px 32px rgba(88, 166, 255, 0.3);
-}
 
 @media (max-width: 768px) {
     .container {
