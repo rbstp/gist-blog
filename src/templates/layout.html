@@ -175,7 +175,7 @@
                     
                     // Update command
                     if (paginationCommand) {
-                        paginationCommand.textContent = 'ls posts --page ' + currentPage + ' --total ' + totalPages;
+                        paginationCommand.textContent = 'ls posts | less :' + currentPage + '/' + totalPages;
                     }
                     
                     // Update prev/next buttons
