@@ -1040,48 +1040,78 @@ table pre, table code {
 }
 
 .post-content h1 {
-    font-size: 2.25rem;
-    border-bottom: 2px solid var(--accent-primary);
-    padding-bottom: 0.5rem;
-    margin-bottom: 1.5rem;
+    font-size: 2.5rem;
+    border-bottom: 3px solid var(--accent-primary);
+    padding-bottom: 0.75rem;
+    margin: 0 0 2rem 0;
+    background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-weight: 800;
 }
 
 .post-content h2 {
-    font-size: 1.75rem;
+    font-size: 2rem;
     color: var(--accent-primary);
     position: relative;
+    margin: 3rem 0 1.5rem 0;
+    padding: 1rem 0;
+    border-left: 4px solid var(--terminal-green);
+    padding-left: 1.5rem;
+    background: linear-gradient(90deg, var(--bg-tertiary), transparent);
+    border-radius: 0 6px 6px 0;
 }
 
 .post-content h2:before {
     content: "## ";
     color: var(--terminal-green);
     font-family: var(--mono-font);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.2rem;
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-secondary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
 }
 
 .post-content h3 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     color: var(--accent-secondary);
+    margin: 2.5rem 0 1rem 0;
+    position: relative;
+    padding-left: 1rem;
 }
 
 .post-content h3:before {
-    content: "### ";
+    content: "▸";
     color: var(--terminal-orange);
     font-family: var(--mono-font);
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.2rem;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
 .post-content p {
-    margin: 1.25rem 0;
-    line-height: 1.7;
-    color: var(--text-secondary);
-    font-size: 1rem;
+    margin: 1.5rem 0;
+    line-height: 1.8;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 400;
 }
 
 .post-content p:first-of-type {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     color: var(--text-primary);
     margin-top: 0;
+    font-weight: 500;
+    line-height: 1.6;
 }
 
 .post-content strong {
@@ -1123,19 +1153,41 @@ table pre, table code {
 
 .post-content ul,
 .post-content ol {
-    margin: 1.25rem 0;
+    margin: 2rem 0;
     padding-left: 2rem;
-    color: var(--text-secondary);
+    color: var(--text-primary);
 }
 
 .post-content li {
-    margin: 0.5rem 0;
-    line-height: 1.6;
+    margin: 0.75rem 0;
+    line-height: 1.7;
+    font-size: 1.05rem;
+    position: relative;
 }
 
-.post-content li::marker {
+.post-content ul li::marker {
     color: var(--terminal-green);
     font-weight: 700;
+    content: "▸ ";
+}
+
+.post-content ol li::marker {
+    color: var(--accent-primary);
+    font-weight: 700;
+}
+
+.post-content li strong {
+    color: var(--accent-primary);
+}
+
+.post-content li em {
+    color: var(--terminal-blue);
+    background: var(--bg-tertiary);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-style: normal;
+    font-family: var(--mono-font);
+    font-size: 0.9em;
 }
 
 .post-content a {
@@ -1154,8 +1206,10 @@ table pre, table code {
     border: none;
     height: 2px;
     background: linear-gradient(90deg, var(--accent-primary), transparent);
-    margin: 2rem 0;
+    margin: 3rem 0;
     border-radius: 1px;
+    width: 100%;
+    display: block;
 }
 
 /* Special styling for dialogue/interview content */
@@ -1223,6 +1277,52 @@ table pre, table code {
     color: var(--text-primary);
     font-size: 0.85rem;
     margin-left: 1rem;
+}
+
+/* Special content styling */
+.post-content p:contains("Field Note") {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--accent-warning);
+    border-left: 4px solid var(--accent-warning);
+    padding: 1.5rem;
+    border-radius: 0 8px 8px 0;
+    margin: 2rem 0;
+    position: relative;
+    font-weight: 500;
+}
+
+.post-content p:contains("Field Note"):before {
+    content: "📋";
+    position: absolute;
+    left: 1rem;
+    top: 1rem;
+    font-size: 1.2rem;
+}
+
+.post-content p:contains("REMEMBER") {
+    background: linear-gradient(135deg, var(--bg-tertiary), var(--bg-secondary));
+    border: 2px solid var(--accent-error);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    text-align: center;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 20px rgba(248, 81, 73, 0.2);
+}
+
+.post-content p:contains("THE ANSWER IS YOU") {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 3rem 0;
+    text-align: center;
+    font-weight: 800;
+    font-size: 1.3rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 8px 32px rgba(88, 166, 255, 0.3);
 }
 
 @media (max-width: 768px) {
