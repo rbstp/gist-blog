@@ -48,6 +48,55 @@
     box-sizing: border-box;
 }
 
+/* Utility classes for common patterns */
+.transition-base { transition: all 0.2s ease; }
+.transition-colors { transition: color 0.2s ease; }
+.mono-font { font-family: var(--mono-font); }
+.sans-font { font-family: var(--sans-font); }
+.border-radius-sm { border-radius: 3px; }
+.border-radius-md { border-radius: 4px; }
+.border-radius-lg { border-radius: 6px; }
+.border-radius-xl { border-radius: 8px; }
+.flex-center { display: flex; align-items: center; }
+.flex-center-between { display: flex; align-items: center; justify-content: space-between; }
+.text-hover-primary:hover { color: var(--accent-primary); }
+
+/* Common button and link patterns */
+.btn-base {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.btn-primary:hover {
+    background: var(--terminal-blue);
+    transform: translateX(2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+}
+
 body {
     font-family: var(--sans-font);
     background: var(--bg-primary);
@@ -120,7 +169,7 @@ nav {
     gap: 2rem;
 }
 
-.nav-item {
+.nav-item, .theme-toggle {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -129,9 +178,10 @@ nav {
     font-family: var(--mono-font);
     font-size: 0.9rem;
     transition: color 0.2s ease;
+    cursor: pointer;
 }
 
-.nav-item:hover {
+.nav-item:hover, .theme-toggle:hover {
     color: var(--accent-primary);
 }
 
@@ -142,20 +192,10 @@ nav {
 .theme-toggle {
     background: none;
     border: none;
-    color: var(--text-secondary);
     padding: 0.5rem;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
     justify-content: center;
     width: 2.5rem;
     height: 2.5rem;
-}
-
-.theme-toggle:hover {
-    color: var(--accent-primary);
 }
 
 .hero-terminal {
@@ -164,17 +204,21 @@ nav {
     justify-content: center;
 }
 
-.terminal-window {
+/* Terminal window base styles */
+.terminal-window, .content-terminal, .pagination-terminal {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
     border-radius: 8px;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.terminal-window {
     max-width: 600px;
     width: 100%;
 }
 
-.terminal-header {
+.terminal-header, .terminal-header-small, .pagination-header {
     background: var(--bg-secondary);
     padding: 0.75rem 1rem;
     display: flex;
@@ -183,20 +227,36 @@ nav {
     border-bottom: 1px solid var(--border-primary);
 }
 
-.terminal-controls {
+.terminal-header-small {
+    padding: 0.5rem 1rem;
+}
+
+.terminal-controls, .terminal-controls-small, .pagination-controls {
     display: flex;
     gap: 0.5rem;
+}
+
+.terminal-controls-small {
+    gap: 0.3rem;
+}
+
+.control, .control-small {
+    border-radius: 50%;
 }
 
 .control {
     width: 12px;
     height: 12px;
-    border-radius: 50%;
 }
 
-.control.close { background: var(--accent-error); }
-.control.minimize { background: var(--accent-warning); }
-.control.maximize { background: var(--accent-success); }
+.control-small {
+    width: 10px;
+    height: 10px;
+}
+
+.control.close, .control-small.close { background: var(--accent-error); }
+.control.minimize, .control-small.minimize { background: var(--accent-warning); }
+.control.maximize, .control-small.maximize { background: var(--accent-success); }
 
 .terminal-title {
     color: var(--text-secondary);
@@ -340,13 +400,7 @@ nav {
     font-weight: 500;
 }
 
-.branch-name {
-    background: rgba(88, 166, 255, 0.15);
-    color: var(--accent-primary);
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
-    border: 1px solid var(--accent-primary);
-}
+/* .branch-name styling now consolidated above */
 
 .deploy-status {
     display: flex;
@@ -433,29 +487,43 @@ nav {
     flex-wrap: wrap;
 }
 
-.tag {
+/* Base tag styling */
+.tag, .filter-tag, .branch-name {
     background: rgba(88, 166, 255, 0.15);
     color: var(--accent-primary);
     padding: 0.2rem 0.5rem;
-    border-radius: 12px;
+    border: 1px solid var(--accent-primary);
     font-size: 0.75rem;
     font-weight: 500;
-    border: 1px solid var(--accent-primary);
-    cursor: pointer;
-    transition: all 0.2s ease;
     font-family: var(--mono-font);
+    transition: all 0.2s ease;
+}
+
+.tag {
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.tag:hover, .tag.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
 }
 
 .tag:hover {
-    background: var(--accent-primary);
-    color: var(--bg-primary);
     transform: translateY(-1px);
 }
 
 .tag.active {
-    background: var(--accent-primary);
-    color: var(--bg-primary);
     box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+}
+
+.filter-tag {
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+}
+
+.branch-name {
+    border-radius: 3px;
 }
 
 .filter-status {
@@ -481,14 +549,7 @@ nav {
     font-weight: 600;
 }
 
-.filter-tag {
-    background: rgba(88, 166, 255, 0.15);
-    color: var(--accent-primary);
-    padding: 0.2rem 0.6rem;
-    border-radius: 4px;
-    border: 1px solid var(--accent-primary);
-    font-weight: 500;
-}
+/* .filter-tag styling now consolidated above */
 
 .filter-count {
     color: var(--text-secondary);
@@ -541,6 +602,7 @@ nav {
     margin-top: auto;
 }
 
+/* Action links now use consolidated button classes defined above */
 .action-link {
     display: flex;
     align-items: center;
@@ -552,6 +614,7 @@ nav {
     font-size: 0.8rem;
     font-weight: 500;
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .action-link.primary {
@@ -659,36 +722,7 @@ nav {
     line-height: 1.3;
 }
 
-.content-terminal {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-.terminal-header-small {
-    background: var(--bg-secondary);
-    padding: 0.5rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-primary);
-}
-
-.terminal-controls-small {
-    display: flex;
-    gap: 0.3rem;
-}
-
-.control-small {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}
-
-.control-small.close { background: var(--accent-error); }
-.control-small.minimize { background: var(--accent-warning); }
-.control-small.maximize { background: var(--accent-success); }
+/* Removed redundant styles - now handled by consolidated terminal styles above */
 
 .terminal-title-small {
     color: var(--text-secondary);
@@ -849,30 +883,13 @@ footer {
 }
 
 .pagination-terminal {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
-    border-radius: 8px;
     font-family: var(--mono-font);
     max-width: 600px;
     width: 100%;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     margin: 0 auto;
-    overflow: hidden;
 }
 
-.pagination-header {
-    background: var(--bg-secondary);
-    padding: 0.75rem 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-primary);
-}
-
-.pagination-controls {
-    display: flex;
-    gap: 0.5rem;
-}
+/* pagination-header and pagination-controls now use consolidated terminal styles */
 
 .pagination-body {
     padding: 1rem 1.5rem;

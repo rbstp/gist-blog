@@ -7,6 +7,17 @@ class TemplateEngine {
     // Pre-compile regex patterns for better performance
     this.blockRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
     this.variableRegex = /\{\{(\w+)\}\}/g;
+    this.dotRegex = /\{\{\.\}\}/g;
+    
+    // Cache for HTML escape lookups
+    this.htmlEscapeMap = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    this.htmlEscapeRegex = /[&<>"']/g;
   }
 
   async loadTemplate(templateName) {
@@ -19,16 +30,8 @@ class TemplateEngine {
   }
 
   escapeHtml(unsafe) {
-    // Use a more performant approach with a single replace call
-    const htmlEscapeMap = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#039;'
-    };
-
-    return unsafe.replace(/[&<>"']/g, (match) => htmlEscapeMap[match]);
+    // Use pre-compiled regex and cached map for better performance
+    return unsafe.replace(this.htmlEscapeRegex, (match) => this.htmlEscapeMap[match]);
   }
 
   render(template, data) {
@@ -40,10 +43,10 @@ class TemplateEngine {
 
       // If it's an array, treat as a loop
       if (Array.isArray(items)) {
-        return items.map((item, index) => {
-          // Handle primitive arrays (strings, numbers) with {{.}} syntax
+        return items.map((item) => {
+          // Handle primitive arrays (strings, numbers) with {{.}} syntax - use pre-compiled regex
           if (typeof item === 'string' || typeof item === 'number') {
-            return content.replace(/\{\{\.\}\}/g, item);
+            return content.replace(this.dotRegex, item);
           }
           // Handle object arrays normally
           return this.render(content, item);

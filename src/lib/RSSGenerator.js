@@ -6,7 +6,12 @@ class RSSGenerator {
   }
 
   generateFeed(posts) {
-    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    // Assume posts are already sorted (they are sorted in BlogGenerator.generateIndex)
+    // If not sorted, we could add a safety sort, but avoid redundant sorting
+    const sortedPosts = posts.length > 1 && new Date(posts[0].createdAt) < new Date(posts[1].createdAt)
+      ? posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      : posts;
+    
     const buildDate = new Date().toUTCString();
 
     // Get the latest post date for the lastBuildDate
@@ -17,17 +22,18 @@ class RSSGenerator {
     const rssItems = sortedPosts.map(post => {
       const postUrl = `${this.siteUrl}/posts/${post.id}.html`;
       const pubDate = new Date(post.createdAt).toUTCString();
-
-      // Use full HTML content for RSS feed
-      const fullContent = post.htmlContent;
+      
+      // Pre-build category tags if they exist to avoid inline conditional
+      const categoryTags = post.tags && post.tags.length > 0 
+        ? '\n      ' + post.tags.map(tag => `<category>${tag}</category>`).join('\n      ')
+        : '';
 
       return `    <item>
       <title><![CDATA[${post.title}]]></title>
       <link>${postUrl}</link>
       <guid>${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${fullContent}]]></description>
-      ${post.tags && post.tags.length > 0 ? post.tags.map(tag => `<category>${tag}</category>`).join('\n      ') : ''}
+      <description><![CDATA[${post.htmlContent}]]></description>${categoryTags}
     </item>`;
     }).join('\n');
 

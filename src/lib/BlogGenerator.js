@@ -25,6 +25,8 @@ class BlogGenerator {
     
     // Template cache for performance
     this.templateCache = new Map();
+    // Date formatting cache to avoid repeated parsing and formatting
+    this.dateCache = new Map();
   }
 
   async fetchGists() {
@@ -111,22 +113,34 @@ class BlogGenerator {
     return templates;
   }
 
+  formatDateCached(dateString, formatStr = 'MMM d, yyyy') {
+    const cacheKey = `${dateString}_${formatStr}`;
+    if (!this.dateCache.has(cacheKey)) {
+      this.dateCache.set(cacheKey, format(parseISO(dateString), formatStr));
+    }
+    return this.dateCache.get(cacheKey);
+  }
+
   async generateIndex(posts) {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } = 
       await this.loadTemplatesCached(['layout.html', 'index.html']);
 
-    // Sort posts by creation date (newest first)
-    const sortedPosts = posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    // Cache the current date formatting to avoid repeated calls
+    const lastUpdateFormatted = format(new Date(), 'MMM d, HH:mm');
 
-    // Add formatted dates and excerpts
-    const postsWithMeta = sortedPosts.map(post => ({
-      ...post,
-      formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
-      excerpt: post.content.substring(0, EXCERPT_LENGTH) + (post.content.length > EXCERPT_LENGTH ? '...' : ''),
-      shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
-      lastUpdate: format(new Date(), 'MMM d, HH:mm'),
-      hasTags: post.tags && post.tags.length > 0
-    }));
+    // Sort posts and add metadata in single operation for better performance
+    const postsWithMeta = posts
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map(post => ({
+        ...post,
+        formattedDate: this.formatDateCached(post.createdAt),
+        excerpt: post.content.length > EXCERPT_LENGTH 
+          ? post.content.substring(0, EXCERPT_LENGTH) + '...' 
+          : post.content,
+        shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
+        lastUpdate: lastUpdateFormatted,
+        hasTags: post.tags && post.tags.length > 0
+      }));
 
     // Calculate pagination data for client-side use
     const totalPosts = postsWithMeta.length;
@@ -160,9 +174,9 @@ class BlogGenerator {
 
     const postData = {
       ...post,
-      formattedDate: format(parseISO(post.createdAt), 'MMM d, yyyy'),
+      formattedDate: this.formatDateCached(post.createdAt),
       formattedUpdateDate: post.updatedAt !== post.createdAt ?
-        format(parseISO(post.updatedAt), 'MMM d, yyyy') : null,
+        this.formatDateCached(post.updatedAt) : null,
       shortId: post.id.substring(0, COMMIT_HASH_LENGTH)
     };
 
@@ -227,16 +241,17 @@ class BlogGenerator {
       .filter(result => result.status === 'fulfilled' && result.value !== null)
       .map(result => result.value);
 
-    // Generate post files in parallel
-    const postGenerationPromises = posts.map(async (post) => {
-      await this.generatePost(post);
-    });
-
-    await Promise.all(postGenerationPromises);
-
-    await this.generateIndex(posts);
-    await this.generateRSSFeed(posts);
-    await this.copyStyles();
+    // Generate all files in parallel for better performance
+    await Promise.all([
+      // Generate individual post files
+      ...posts.map(post => this.generatePost(post)),
+      // Generate index page
+      this.generateIndex(posts),
+      // Generate RSS feed
+      this.generateRSSFeed(posts),
+      // Copy styles
+      this.copyStyles()
+    ]);
 
     console.log(`✅ Build complete! Generated ${posts.length} posts.`);
   }
