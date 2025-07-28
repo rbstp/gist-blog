@@ -8,13 +8,14 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### Core Functionality
 - **GitHub Gists Integration** - Automatically fetches and converts your public gists to blog posts
-- **Markdown Processing** - Full markdown support with syntax highlighting via highlight.js
+- **Markdown Processing** - Full markdown support with GitHub-style syntax highlighting
 - **Dual Theme Support** - Light/dark mode toggle with system preference detection
 - **Terminal Theme** - Cyberpunk/DevOps aesthetic with green terminal prompts
 - **Static Generation** - Builds fast, lightweight HTML files ready for deployment
 
 ### Advanced Features
 - **Theme Toggle** - Smart light/dark mode with system preference detection and localStorage persistence
+- **Syntax Highlighting** - GitHub-style code highlighting with language-specific colors for XML, JSON, JavaScript, Python, CSS, and more
 - **Tag System** - Extract hashtags from gist descriptions for automatic categorization
 - **Interactive Filtering** - Click tags to filter posts with terminal-style status display
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
