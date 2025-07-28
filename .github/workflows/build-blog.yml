@@ -2,8 +2,8 @@ name: Build and Deploy Gist Blog
 
 on:
   schedule:
-    # Run every 6 hours to check for new gists
-    - cron: '0 */6 * * *'
+    # Run every hour to check for new gists
+    - cron: '0 * * * *'
   workflow_dispatch: # Allow manual trigger
   push:
     branches: [ master ]
