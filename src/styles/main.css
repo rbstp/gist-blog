@@ -1017,12 +1017,14 @@ footer {
     }
 
     .card-actions {
-        flex-direction: column;
+        flex-direction: row;
+        gap: 0.5rem;
     }
     
     .pagination-nav {
-        flex-direction: column;
-        gap: 1rem;
+        flex-direction: row;
+        gap: 0.5rem;
+        flex-wrap: wrap;
     }
     
     .pagination-pages {
