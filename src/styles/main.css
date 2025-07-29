@@ -242,6 +242,14 @@ nav {
 
 .control, .control-small {
     border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    overflow: hidden;
 }
 
 .control {
@@ -257,6 +265,38 @@ nav {
 .control.close, .control-small.close { background: var(--accent-error); }
 .control.minimize, .control-small.minimize { background: var(--accent-warning); }
 .control.maximize, .control-small.maximize { background: var(--accent-success); }
+
+/* Hover effects for terminal controls */
+.control:hover, .control-small:hover {
+    transform: scale(1.1);
+}
+
+.control:hover::after, .control-small:hover::after {
+    opacity: 1;
+    font-size: 8px;
+}
+
+.control::after, .control-small::after {
+    content: '';
+    position: absolute;
+    color: rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 0;
+}
+
+.control.close::after, .control-small.close::after {
+    content: '×';
+}
+
+.control.minimize::after, .control-small.minimize::after {
+    content: '−';
+}
+
+.control.maximize::after, .control-small.maximize::after {
+    content: '⇱';
+}
 
 .terminal-title {
     color: var(--text-secondary);
