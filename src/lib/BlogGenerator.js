@@ -146,10 +146,19 @@ class BlogGenerator {
     const totalPosts = postsWithMeta.length;
     const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
 
+    // Collect all unique tags from posts
+    const allTags = [...new Set(
+      postsWithMeta
+        .filter(post => post.tags && post.tags.length > 0)
+        .flatMap(post => post.tags)
+    )].sort();
+
     const templateData = {
       posts: postsWithMeta, // Load ALL posts for client-side pagination
       postsLength: totalPosts,
       lastUpdate: new Date().toISOString(),
+      allTags: allTags,
+      hasAnyTags: allTags.length > 0,
       pagination: totalPages > 1 ? {
         totalPages,
         postsPerPage: POSTS_PER_PAGE

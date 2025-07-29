@@ -126,6 +126,20 @@
                         <span class="pagination-icon">→</span>
                     </button>
                 </div>
+                {{#hasAnyTags}}
+                <div class="pagination-tags-section" id="pagination-tags-section" style="display: none;">
+                    <div class="pagination-line">
+                        <span class="pagination-prompt">$</span>
+                        <span class="pagination-command">grep --tag-filter</span>
+                    </div>
+                    <div class="pagination-tags">
+                        {{#allTags}}
+                        <span class="tag pagination-tag" data-tag="{{.}}">#{{.}}</span>
+                        {{/allTags}}
+                        <button class="clear-filter pagination-clear" onclick="clearFilter()">clear all</button>
+                    </div>
+                </div>
+                {{/hasAnyTags}}
             </div>
         </div>
     </div>

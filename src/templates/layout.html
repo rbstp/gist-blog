@@ -238,15 +238,17 @@
             window.clearFilter = function() {
                 activeTag = null;
                 currentPage = 1;
-                tags.forEach(function(tag) {
+                const allTagElements = document.querySelectorAll('.tag');
+                allTagElements.forEach(function(tag) {
                     tag.classList.remove('active');
                 });
                 updateFilterStatus();
                 updatePagination();
             };
 
-            // Tag filtering
-            tags.forEach(function(tag) {
+            // Tag filtering (including pagination tags)
+            const allTagElements = document.querySelectorAll('.tag');
+            allTagElements.forEach(function(tag) {
                 tag.addEventListener('click', function() {
                     const tagName = this.getAttribute('data-tag');
                     
@@ -254,14 +256,14 @@
                         // Clear filter
                         activeTag = null;
                         currentPage = 1;
-                        tags.forEach(function(t) {
+                        allTagElements.forEach(function(t) {
                             t.classList.remove('active');
                         });
                     } else {
                         // Apply filter
                         activeTag = tagName;
                         currentPage = 1; // Reset to first page when filtering
-                        tags.forEach(function(t) {
+                        allTagElements.forEach(function(t) {
                             if (t.getAttribute('data-tag') === tagName) {
                                 t.classList.add('active');
                             } else {
@@ -337,16 +339,28 @@
                     if (maximizeBtn && terminalWindow) {
                         maximizeBtn.style.cursor = 'pointer';
                         maximizeBtn.addEventListener('click', function() {
+                            const tagsSection = terminal.querySelector('#pagination-tags-section');
+                            
                             if (terminalWindow.dataset.maximized === 'true') {
                                 // Restore
                                 terminalWindow.style.width = '';
                                 terminalWindow.style.maxWidth = '';
                                 terminalWindow.dataset.maximized = 'false';
+                                
+                                // Hide tags section when not maximized
+                                if (tagsSection) {
+                                    tagsSection.style.display = 'none';
+                                }
                             } else {
                                 // Maximize
                                 terminalWindow.style.width = '100%';
                                 terminalWindow.style.maxWidth = 'none';
                                 terminalWindow.dataset.maximized = 'true';
+                                
+                                // Show tags section when maximized
+                                if (tagsSection) {
+                                    tagsSection.style.display = 'block';
+                                }
                             }
                         });
                     }

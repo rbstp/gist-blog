@@ -24,6 +24,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### UI/UX Highlights
 - **Theme Switching** - Seamless light/dark mode toggle in navigation bar
+- **Interactive Terminal Windows** - Functional close, minimize, and maximize buttons with hover icons
+- **Advanced Tag Filtering** - Complete tag collection with pagination terminal integration
 - **Blinking Terminal Cursor** - Authentic terminal feel in the header
 - **Pipeline Theme** - Posts displayed as "deployments" with commit hashes
 - **Compact Post Headers** - Mobile-friendly design that prioritizes content
@@ -97,6 +99,20 @@ Add hashtags anywhere in your gist description:
 - `#ai #devops #tutorial` → Creates clickable filter tags
 - Tags are extracted and removed from the display description
 - Click tags to filter posts with a terminal-style interface
+
+### Terminal Controls
+
+**Interactive Terminal Windows**:
+- **Close Button** (red) - Hides the entire terminal section
+- **Minimize Button** (yellow) - Collapses terminal to header-only view
+- **Maximize Button** (green) - Expands terminal to full width
+- **Hover Effects** - Shows macOS-style icons (×, −, ⇱) when hovering over buttons
+
+**Enhanced Tag Filtering**:
+- Maximize the pagination terminal to reveal all available tags
+- Tags in pagination terminal sync with main post area
+- Complete tag filtering without page refreshes
+- Terminal-style interface: `$ grep --tag-filter`
 
 ## 🎨 Customization
 
