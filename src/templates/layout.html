@@ -1,17 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{title}} - rbstp.dev</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 fill=%22%23000%22 rx=%222%22/><text x=%224%22 y=%2212%22 fill=%22%2300ff00%22 font-family=%22monospace%22 font-size=%228%22>$</text><text x=%224%22 y=%2222%22 fill=%22%2300ff00%22 font-family=%22monospace%22 font-size=%226%22>_</text></svg>">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 fill=%22%23000%22 rx=%222%22/><text x=%224%22 y=%2212%22 fill=%22%2300ff00%22 font-family=%22monospace%22 font-size=%228%22>$</text><text x=%224%22 y=%2222%22 fill=%22%2300ff00%22 font-family=%22monospace%22 font-size=%226%22>_</text></svg>">
     <link rel="stylesheet" href="/styles.css?v={{timestamp}}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="alternate" type="application/rss+xml" title="rbstp.dev RSS Feed" href="/feed.xml">
 </head>
+
 <body>
     <div class="terminal-bg"></div>
     <header>
@@ -64,42 +69,42 @@
     <script>
         // Initialize highlight.js
         hljs.highlightAll();
-        
+
         // Theme management - must run before DOMContentLoaded to prevent flash
-        (function() {
+        (function () {
             const getSystemTheme = () => window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
             const getStoredTheme = () => localStorage.getItem('theme');
             const setTheme = (theme) => {
                 document.documentElement.setAttribute('data-theme', theme);
                 localStorage.setItem('theme', theme);
-                
+
                 const themeIcon = document.getElementById('theme-icon');
                 if (themeIcon) {
                     themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
                 }
             };
-            
+
             // Initialize theme
             const storedTheme = getStoredTheme();
             const initialTheme = storedTheme || getSystemTheme();
             setTheme(initialTheme);
-            
+
             // Listen for system theme changes
             window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
                 if (!getStoredTheme()) {
                     setTheme(e.matches ? 'light' : 'dark');
                 }
             });
-            
+
             // Theme toggle function
-            window.toggleTheme = function() {
+            window.toggleTheme = function () {
                 const currentTheme = document.documentElement.getAttribute('data-theme') || 'dark';
                 const newTheme = currentTheme === 'light' ? 'dark' : 'light';
                 setTheme(newTheme);
             };
         })();
 
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Theme toggle button
             const themeToggle = document.getElementById('theme-toggle');
             if (themeToggle) {
@@ -107,14 +112,14 @@
             }
             // Convert timestamps to local time
             const timeElements = document.querySelectorAll('.local-time');
-            timeElements.forEach(function(element) {
+            timeElements.forEach(function (element) {
                 const timestamp = element.getAttribute('data-timestamp');
                 if (timestamp) {
                     const date = new Date(timestamp);
-                    const options = { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        hour: '2-digit', 
+                    const options = {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
                         minute: '2-digit',
                         hour12: false
                     };
@@ -126,7 +131,7 @@
             const POSTS_PER_PAGE = 6;
             let currentPage = 1;
             let activeTags = [];
-            
+
             const allPosts = Array.from(document.querySelectorAll('.post-card'));
             const tags = document.querySelectorAll('.tag');
             const paginationSection = document.getElementById('pagination-section');
@@ -144,15 +149,15 @@
 
             function getFilteredPosts() {
                 if (activeTags.length === 0) return allPosts;
-                
-                return allPosts.filter(function(post) {
+
+                return allPosts.filter(function (post) {
                     const postTags = post.querySelectorAll('.tag');
-                    const postTagNames = Array.from(postTags).map(function(tag) {
+                    const postTagNames = Array.from(postTags).map(function (tag) {
                         return tag.getAttribute('data-tag');
                     });
-                    
+
                     // Post must have ALL selected tags (AND logic)
-                    return activeTags.every(function(activeTag) {
+                    return activeTags.every(function (activeTag) {
                         return postTagNames.includes(activeTag);
                     });
                 });
@@ -161,18 +166,18 @@
             function updatePagination() {
                 const filteredPosts = getFilteredPosts();
                 const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
-                
+
                 // Hide all posts first
-                allPosts.forEach(function(post) {
+                allPosts.forEach(function (post) {
                     post.style.display = 'none';
                 });
-                
+
                 // Show posts for current page
                 const startIndex = (currentPage - 1) * POSTS_PER_PAGE;
                 const endIndex = startIndex + POSTS_PER_PAGE;
                 const postsToShow = filteredPosts.slice(startIndex, endIndex);
-                
-                postsToShow.forEach(function(post) {
+
+                postsToShow.forEach(function (post) {
                     post.style.display = 'block';
                 });
 
@@ -180,7 +185,7 @@
                 // Show pagination if more than 1 page OR if filtering is active (to keep tag controls accessible)
                 if (paginationSection && (totalPages > 1 || activeTags.length > 0)) {
                     paginationSection.style.display = 'block';
-                    
+
                     // Update command
                     if (paginationCommand) {
                         if (totalPages > 1) {
@@ -189,7 +194,7 @@
                             paginationCommand.textContent = 'ls posts | head -' + filteredPosts.length;
                         }
                     }
-                    
+
                     // Update prev/next buttons - hide if only one page
                     if (prevBtn) {
                         if (totalPages > 1) {
@@ -207,7 +212,7 @@
                             nextBtn.style.display = 'none';
                         }
                     }
-                    
+
                     // Update page numbers - hide if only one page
                     if (paginationPages) {
                         if (totalPages > 1) {
@@ -216,16 +221,16 @@
                             const maxVisible = 5;
                             let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
                             let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-                            
+
                             if (endPage - startPage + 1 < maxVisible) {
                                 startPage = Math.max(1, endPage - maxVisible + 1);
                             }
-                            
+
                             for (let i = startPage; i <= endPage; i++) {
                                 const pageBtn = document.createElement('button');
                                 pageBtn.className = 'pagination-page' + (i === currentPage ? ' current' : '');
                                 pageBtn.textContent = i;
-                                pageBtn.addEventListener('click', function() {
+                                pageBtn.addEventListener('click', function () {
                                     currentPage = i;
                                     updatePagination();
                                 });
@@ -245,41 +250,41 @@
                     filterStatus.style.display = 'none';
                     return;
                 }
-                
+
                 const filteredCount = getFilteredPosts().length;
-                const tagsDisplay = activeTags.map(function(tag) {
+                const tagsDisplay = activeTags.map(function (tag) {
                     return '<span class="filter-tag clickable-filter-tag" data-tag="' + tag + '">#' + tag + '</span>';
                 }).join(' ');
-                
-                filterStatus.innerHTML = 
+
+                filterStatus.innerHTML =
                     '<div class="filter-info">' +
-                        '<span class="filter-prompt">$</span>' +
-                        '<span>grep --tag</span>' +
-                        tagsDisplay +
-                        '<span class="filter-count">→ ' + filteredCount + ' result' + (filteredCount !== 1 ? 's' : '') + '</span>' +
-                        '<button class="clear-filter" onclick="clearFilter()">clear</button>' +
+                    '<span class="filter-prompt">$</span>' +
+                    '<span>grep --tag</span>' +
+                    tagsDisplay +
+                    '<span class="filter-count">→ ' + filteredCount + ' result' + (filteredCount !== 1 ? 's' : '') + '</span>' +
+                    '<button class="clear-filter" onclick="clearFilter()">clear</button>' +
                     '</div>';
                 filterStatus.style.display = 'block';
-                
+
                 // Add click listeners to filter status tags
                 const clickableFilterTags = filterStatus.querySelectorAll('.clickable-filter-tag');
-                clickableFilterTags.forEach(function(filterTag) {
-                    filterTag.addEventListener('click', function() {
+                clickableFilterTags.forEach(function (filterTag) {
+                    filterTag.addEventListener('click', function () {
                         const tagName = this.getAttribute('data-tag');
                         const tagIndex = activeTags.indexOf(tagName);
-                        
+
                         if (tagIndex > -1) {
                             // Remove this tag from filter
                             activeTags.splice(tagIndex, 1);
-                            
+
                             // Update all tag elements with this tag to remove active class
                             const allTagElements = document.querySelectorAll('.tag');
-                            allTagElements.forEach(function(t) {
+                            allTagElements.forEach(function (t) {
                                 if (t.getAttribute('data-tag') === tagName) {
                                     t.classList.remove('active');
                                 }
                             });
-                            
+
                             currentPage = 1;
                             updateFilterStatus();
                             updatePagination();
@@ -289,11 +294,11 @@
             }
 
             // Global function for clear button
-            window.clearFilter = function() {
+            window.clearFilter = function () {
                 activeTags = [];
                 currentPage = 1;
                 const allTagElements = document.querySelectorAll('.tag');
-                allTagElements.forEach(function(tag) {
+                allTagElements.forEach(function (tag) {
                     tag.classList.remove('active');
                 });
                 updateFilterStatus();
@@ -302,16 +307,16 @@
 
             // Tag filtering (including pagination tags)
             const allTagElements = document.querySelectorAll('.tag');
-            allTagElements.forEach(function(tag) {
-                tag.addEventListener('click', function() {
+            allTagElements.forEach(function (tag) {
+                tag.addEventListener('click', function () {
                     const tagName = this.getAttribute('data-tag');
                     const tagIndex = activeTags.indexOf(tagName);
-                    
+
                     if (tagIndex > -1) {
                         // Remove tag from filter
                         activeTags.splice(tagIndex, 1);
                         // Update all elements with this tag to remove active class
-                        allTagElements.forEach(function(t) {
+                        allTagElements.forEach(function (t) {
                             if (t.getAttribute('data-tag') === tagName) {
                                 t.classList.remove('active');
                             }
@@ -320,13 +325,13 @@
                         // Add tag to filter
                         activeTags.push(tagName);
                         // Update all elements with this tag to add active class
-                        allTagElements.forEach(function(t) {
+                        allTagElements.forEach(function (t) {
                             if (t.getAttribute('data-tag') === tagName) {
                                 t.classList.add('active');
                             }
                         });
                     }
-                    
+
                     currentPage = 1; // Reset to first page when filtering changes
                     updateFilterStatus();
                     updatePagination();
@@ -335,7 +340,7 @@
 
             // Pagination controls
             if (prevBtn) {
-                prevBtn.addEventListener('click', function() {
+                prevBtn.addEventListener('click', function () {
                     if (currentPage > 1) {
                         currentPage--;
                         updatePagination();
@@ -344,7 +349,7 @@
             }
 
             if (nextBtn) {
-                nextBtn.addEventListener('click', function() {
+                nextBtn.addEventListener('click', function () {
                     const filteredPosts = getFilteredPosts();
                     const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
                     if (currentPage < totalPages) {
@@ -356,27 +361,44 @@
 
             // Terminal control functionality
             function setupTerminalControls() {
-                const terminals = document.querySelectorAll('.hero-terminal, .pagination-section');
-                
-                terminals.forEach(function(terminal) {
-                    const closeBtn = terminal.querySelector('.control.close');
-                    const minimizeBtn = terminal.querySelector('.control.minimize');
-                    const maximizeBtn = terminal.querySelector('.control.maximize');
-                    const terminalWindow = terminal.querySelector('.terminal-window, .pagination-terminal');
+                const terminals = document.querySelectorAll('.hero-terminal, .pagination-section, .content-terminal');
+
+                terminals.forEach(function (terminal) {
+                    const closeBtn = terminal.querySelector('.control.close, .control-small.close');
+                    const minimizeBtn = terminal.querySelector('.control.minimize, .control-small.minimize');
+                    const maximizeBtn = terminal.querySelector('.control.maximize, .control-small.maximize');
                     
+                    // For regular terminals, find the window; for content-terminal, use the terminal itself
+                    let terminalWindow;
+                    if (terminal.classList.contains('content-terminal')) {
+                        terminalWindow = terminal;
+                    } else {
+                        terminalWindow = terminal.querySelector('.terminal-window, .pagination-terminal');
+                    }
+
                     // Close button - hide the entire section
                     if (closeBtn) {
                         closeBtn.style.cursor = 'pointer';
-                        closeBtn.addEventListener('click', function() {
-                            terminal.style.display = 'none';
+                        closeBtn.addEventListener('click', function () {
+                            if (terminal.classList.contains('content-terminal')) {
+                                // For post terminals, hide the wrapper
+                                const wrapper = terminal.closest('.post-content-wrapper');
+                                if (wrapper) {
+                                    wrapper.style.display = 'none';
+                                } else {
+                                    terminal.style.display = 'none';
+                                }
+                            } else {
+                                terminal.style.display = 'none';
+                            }
                         });
                     }
-                    
+
                     // Minimize button - collapse to header only
                     if (minimizeBtn && terminalWindow) {
                         minimizeBtn.style.cursor = 'pointer';
-                        minimizeBtn.addEventListener('click', function() {
-                            const body = terminalWindow.querySelector('.terminal-body, .pagination-body');
+                        minimizeBtn.addEventListener('click', function () {
+                            const body = terminalWindow.querySelector('.terminal-body, .pagination-body, .post-content-advanced');
                             if (body) {
                                 if (terminalWindow.dataset.minimized === 'true') {
                                     // Restore
@@ -390,25 +412,25 @@
                             }
                         });
                     }
-                    
+
                     // Maximize button - toggle full width
                     if (maximizeBtn && terminalWindow) {
                         maximizeBtn.style.cursor = 'pointer';
-                        maximizeBtn.addEventListener('click', function() {
+                        maximizeBtn.addEventListener('click', function () {
                             const tagsSection = terminal.querySelector('#pagination-tags-section');
                             const heroExpanded = terminal.querySelector('#hero-terminal-expanded');
-                            
+
                             if (terminalWindow.dataset.maximized === 'true') {
                                 // Restore
                                 terminalWindow.style.width = '';
                                 terminalWindow.style.maxWidth = '';
                                 terminalWindow.dataset.maximized = 'false';
-                                
+
                                 // Hide tags section when not maximized
                                 if (tagsSection) {
                                     tagsSection.style.display = 'none';
                                 }
-                                
+
                                 // Hide hero terminal expanded content when not maximized
                                 if (heroExpanded) {
                                     heroExpanded.style.display = 'none';
@@ -418,12 +440,12 @@
                                 terminalWindow.style.width = '100%';
                                 terminalWindow.style.maxWidth = 'none';
                                 terminalWindow.dataset.maximized = 'true';
-                                
+
                                 // Show tags section when maximized
                                 if (tagsSection) {
                                     tagsSection.style.display = 'block';
                                 }
-                                
+
                                 // Show hero terminal expanded content when maximized
                                 if (heroExpanded) {
                                     heroExpanded.style.display = 'block';
@@ -440,4 +462,5 @@
         });
     </script>
 </body>
+
 </html>

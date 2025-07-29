@@ -640,7 +640,7 @@ nav {
     box-shadow: 0 2px 8px rgba(255, 123, 114, 0.3);
 }
 
-.post-preview {
+.post-stats {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
     border-radius: 4px;
@@ -649,12 +649,36 @@ nav {
     flex-grow: 1;
 }
 
-.preview-code {
+.stat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.stat-line:last-child {
+    margin-bottom: 0;
+}
+
+.stat-command {
+    font-family: var(--mono-font);
+    font-size: 0.75rem;
+    color: var(--terminal-blue);
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.stat-command::before {
+    content: "$ ";
+    color: var(--terminal-green);
+}
+
+.stat-value {
     font-family: var(--mono-font);
     font-size: 0.8rem;
-    color: var(--text-secondary);
-    line-height: 1.4;
-    display: block;
+    color: var(--terminal-green);
+    font-weight: 500;
 }
 
 .card-actions {
@@ -791,6 +815,14 @@ nav {
     color: var(--text-secondary);
     font-family: var(--mono-font);
     font-size: 0.8rem;
+}
+
+.terminal-prompt {
+    color: var(--terminal-green);
+}
+
+.terminal-command {
+    color: var(--terminal-blue);
 }
 
 .post-content-advanced {

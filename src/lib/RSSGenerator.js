@@ -11,7 +11,7 @@ class RSSGenerator {
     const sortedPosts = posts.length > 1 && new Date(posts[0].createdAt) < new Date(posts[1].createdAt)
       ? posts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       : posts;
-    
+
     const buildDate = new Date().toUTCString();
 
     // Get the latest post date for the lastBuildDate
@@ -22,9 +22,9 @@ class RSSGenerator {
     const rssItems = sortedPosts.map(post => {
       const postUrl = `${this.siteUrl}/posts/${post.id}.html`;
       const pubDate = new Date(post.createdAt).toUTCString();
-      
+
       // Pre-build category tags if they exist to avoid inline conditional
-      const categoryTags = post.tags && post.tags.length > 0 
+      const categoryTags = post.tags && post.tags.length > 0
         ? '\n      ' + post.tags.map(tag => `<category>${tag}</category>`).join('\n      ')
         : '';
 

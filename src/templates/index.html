@@ -22,7 +22,8 @@
                     <span class="command">cat thoughts.md</span>
                 </div>
                 <div class="terminal-output">
-                    <span class="output-text">There and Back Again: A DevOps Engineer's Journey Through AI and Infrastructure</span>
+                    <span class="output-text">There and Back Again: A DevOps Engineer's Journey Through AI and
+                        Infrastructure</span>
                 </div>
             </div>
         </div>
@@ -36,10 +37,11 @@
         </h2>
         <div class="pipeline-status">
             <span class="build-status success">✓ Build Success</span>
-            <span class="deploy-time">Last deploy: <span class="local-time" data-timestamp="{{lastUpdate}}">{{lastUpdate}}</span></span>
+            <span class="deploy-time">Last deploy: <span class="local-time"
+                    data-timestamp="{{lastUpdate}}">{{lastUpdate}}</span></span>
         </div>
     </div>
-    
+
     <div class="posts-grid">
         {{#posts}}
         <article class="post-card">
@@ -53,7 +55,7 @@
                     <span class="status-text">deployed</span>
                 </div>
             </div>
-            
+
             <div class="card-content">
                 <h3 class="post-title">
                     <a href="/posts/{{id}}.html">{{title}}</a>
@@ -75,11 +77,18 @@
                     </div>
                     {{/hasTags}}
                 </div>
-                
-                <div class="post-preview">
-                    <code class="preview-code">{{excerpt}}</code>
+
+                <div class="post-stats">
+                    <div class="stat-line">
+                        <code class="stat-command">wc -w {{filename}}</code>
+                        <span class="stat-value">{{wordCount}} words</span>
+                    </div>
+                    <div class="stat-line">
+                        <code class="stat-command">time --read {{filename}}</code>
+                        <span class="stat-value">{{readingTime}} read</span>
+                    </div>
                 </div>
-                
+
                 <div class="card-actions">
                     <a href="/posts/{{id}}.html" class="action-link primary">
                         <span class="action-icon">→</span>
@@ -94,7 +103,7 @@
         </article>
         {{/posts}}
     </div>
-    
+
     {{#pagination}}
     <div class="pagination-section" id="pagination-section">
         <div class="pagination-terminal">

@@ -18,11 +18,11 @@ class BlogGenerator {
     this.distDir = 'dist';
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
-    
+
     this.templateEngine = new TemplateEngine(this.templatesDir);
     this.gistParser = new GistParser();
     this.rssGenerator = new RSSGenerator();
-    
+
     // Template cache for performance
     this.templateCache = new Map();
     // Date formatting cache to avoid repeated parsing and formatting
@@ -32,7 +32,7 @@ class BlogGenerator {
   async fetchGists() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-    
+
     try {
       const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
         headers: {
@@ -42,18 +42,18 @@ class BlogGenerator {
       });
       clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
-      console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
+      if (!response.ok) {
+        console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
+        console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
 
-      if (response.status === 403) {
-        console.error('Rate limit hit. Waiting 60 seconds...');
-        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
-        return this.fetchGists(); // Retry once
+        if (response.status === 403) {
+          console.error('Rate limit hit. Waiting 60 seconds...');
+          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+          return this.fetchGists(); // Retry once
+        }
+
+        throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
       }
-
-      throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
-    }
 
       const gists = await response.json();
       return gists.filter(gist => gist.public);
@@ -69,7 +69,7 @@ class BlogGenerator {
   async fetchGistContent(gist) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-    
+
     try {
       const response = await fetch(gist.url, {
         headers: {
@@ -79,18 +79,18 @@ class BlogGenerator {
       });
       clearTimeout(timeoutId);
 
-    if (!response.ok) {
-      console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
-      console.error(`Gist URL: ${gist.url}`);
+      if (!response.ok) {
+        console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
+        console.error(`Gist URL: ${gist.url}`);
 
-      if (response.status === 403) {
-        console.error('Rate limit hit. Waiting 60 seconds...');
-        await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
-        return this.fetchGistContent(gist); // Retry once
+        if (response.status === 403) {
+          console.error('Rate limit hit. Waiting 60 seconds...');
+          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
+          return this.fetchGistContent(gist); // Retry once
+        }
+
+        throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
       }
-
-      throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
-    }
 
       return await response.json();
     } catch (error) {
@@ -122,7 +122,7 @@ class BlogGenerator {
   }
 
   async generateIndex(posts) {
-    const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } = 
+    const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
 
     // Cache the current date formatting to avoid repeated calls
@@ -134,8 +134,8 @@ class BlogGenerator {
       .map(post => ({
         ...post,
         formattedDate: this.formatDateCached(post.createdAt),
-        excerpt: post.content.length > EXCERPT_LENGTH 
-          ? post.content.substring(0, EXCERPT_LENGTH) + '...' 
+        excerpt: post.content.length > EXCERPT_LENGTH
+          ? post.content.substring(0, EXCERPT_LENGTH) + '...'
           : post.content,
         shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
         lastUpdate: lastUpdateFormatted,
@@ -178,7 +178,7 @@ class BlogGenerator {
   }
 
   async generatePost(post) {
-    const { 'layout.html': layoutTemplate, 'post.html': postTemplate } = 
+    const { 'layout.html': layoutTemplate, 'post.html': postTemplate } =
       await this.loadTemplatesCached(['layout.html', 'post.html']);
 
     const postData = {
@@ -209,7 +209,7 @@ class BlogGenerator {
   async copyStyles() {
     const sourceStylesPath = path.join(this.stylesDir, 'main.css');
     const destStylesPath = path.join(this.distDir, 'styles.css');
-    
+
     try {
       const cssContent = await fs.readFile(sourceStylesPath, 'utf-8');
       await fs.writeFile(destStylesPath, cssContent);

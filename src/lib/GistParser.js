@@ -64,6 +64,10 @@ class GistParser {
         this.markdownCache.set(contentKey, htmlContent);
       }
 
+      // Calculate word count and reading time
+      const wordCount = this.calculateWordCount(bodyContent);
+      const readingTime = this.calculateReadingTime(wordCount);
+
       // Ensure we have valid data
       const post = {
         id: gist.id,
@@ -76,7 +80,9 @@ class GistParser {
         url: gist.html_url,
         files: Object.keys(gist.files),
         tags: tags,
-        filename: markdownFile.filename
+        filename: markdownFile.filename,
+        wordCount: wordCount,
+        readingTime: readingTime
       };
 
       // Validate essential fields
@@ -101,7 +107,7 @@ class GistParser {
     const tagRegex = /#(\w+)/g;
     const tagsSet = new Set();
     let match;
-    
+
     while ((match = tagRegex.exec(description)) !== null) {
       tagsSet.add(match[1].toLowerCase());
     }
@@ -119,6 +125,32 @@ class GistParser {
       .replace(/#\w+\b/g, '')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  calculateWordCount(content) {
+    // Remove markdown syntax and count actual words
+    const cleanContent = content
+      .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+      .replace(/`[^`]*`/g, '') // Remove inline code
+      .replace(/\[([^\]]*)\]\([^\)]*\)/g, '$1') // Replace links with just text
+      .replace(/[#*_~`]/g, '') // Remove markdown formatting
+      .replace(/\s+/g, ' ') // Normalize whitespace
+      .trim();
+
+    if (!cleanContent) return 0;
+
+    return cleanContent.split(/\s+/).length;
+  }
+
+  calculateReadingTime(wordCount) {
+    // Average reading speed is 200-250 words per minute
+    // Using 225 WPM as a reasonable average
+    const wordsPerMinute = 225;
+    const minutes = Math.ceil(wordCount / wordsPerMinute);
+
+    if (minutes < 1) return '< 1 min';
+    if (minutes === 1) return '1 min';
+    return `${minutes} min`;
   }
 }
 

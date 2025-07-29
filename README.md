@@ -18,6 +18,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Syntax Highlighting** - GitHub-style code highlighting with language-specific colors for XML, JSON, JavaScript, Python, CSS, and more
 - **Multi-Tag System** - Extract hashtags from gist descriptions for automatic categorization
 - **Advanced Filtering** - Select multiple tags with AND logic for precise content discovery
+- **Reading Analytics** - Terminal-themed word count and estimated reading time for each post
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
 - **Cache Busting** - Automatic CSS versioning for instant updates
@@ -26,6 +27,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Theme Switching** - Seamless light/dark mode toggle in navigation bar
 - **Interactive Terminal Windows** - Functional close, minimize, and maximize buttons with hover icons
 - **Multi-Tag Filtering** - Select multiple tags with AND logic for precise content discovery
+- **Reading Metrics** - Terminal commands show word count and reading time: `$ wc -w file.md` → `1151 words`
 - **Blinking Terminal Cursor** - Authentic terminal feel in the header
 - **Pipeline Theme** - Posts displayed as "deployments" with commit hashes
 - **Compact Post Headers** - Mobile-friendly design that prioritizes content
@@ -102,11 +104,12 @@ Add hashtags anywhere in your gist description:
 
 ### Terminal Controls
 
-**Interactive Terminal Windows**:
+**Interactive Terminal Windows** (Available on both index and individual post pages):
 - **Close Button** (red) - Hides the entire terminal section
 - **Minimize Button** (yellow) - Collapses terminal to header-only view
 - **Maximize Button** (green) - Expands terminal to full width
 - **Hover Effects** - Shows macOS-style icons (×, −, ⇱) when hovering over buttons
+- **Post Page Headers** - Individual posts show `$ cat filename.md` with green prompt and blue command
 
 **Multi-Tag Filtering System**:
 - **Multiple Selection**: Click multiple tags to combine filters using AND logic
@@ -218,6 +221,13 @@ dist/
 - Terminal-style filter status display showing all active tags
 - Synchronized state across post area and pagination terminal
 - Maintains clean descriptions without hashtags
+
+**Reading Analytics**
+- Calculates word count by removing markdown syntax and code blocks
+- Estimates reading time based on 225 words per minute average
+- Displays as terminal commands with color-coded output
+- Green `$` prompt and blue command text for authenticity
+- Two-line format: word count and reading time separately
 
 **RSS Feed**
 - Full RSS 2.0 compliance

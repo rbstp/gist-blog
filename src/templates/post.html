@@ -22,7 +22,7 @@
         </div>
         <h1 class="post-title-compact">{{title}}</h1>
     </header>
-    
+
     <div class="post-content-wrapper">
         <div class="content-terminal">
             <div class="terminal-header-small">
@@ -31,7 +31,9 @@
                     <span class="control-small minimize"></span>
                     <span class="control-small maximize"></span>
                 </div>
-                <div class="terminal-title-small">{{filename}}</div>
+                <div class="terminal-title-small">
+                    <span class="terminal-prompt">$</span><span class="terminal-command">cat {{filename}}</span>
+                </div>
             </div>
             <div class="post-content-advanced">
                 {{htmlContent}}

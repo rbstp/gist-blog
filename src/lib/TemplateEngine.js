@@ -8,7 +8,7 @@ class TemplateEngine {
     this.blockRegex = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
     this.variableRegex = /\{\{(\w+)\}\}/g;
     this.dotRegex = /\{\{\.\}\}/g;
-    
+
     // Cache for HTML escape lookups
     this.htmlEscapeMap = {
       '&': '&amp;',
