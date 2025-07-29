@@ -1611,6 +1611,20 @@ table pre, table code {
         justify-content: center;
     }
     
+    /* Fix filter container overflow on mobile */
+    .filter-info {
+        flex-wrap: wrap;
+    }
+    
+    .pagination-tags {
+        width: 100%;
+        overflow: hidden;
+    }
+    
+    .pagination-terminal {
+        min-width: 0;
+    }
+    
     /* Mobile table styles */
     table {
         font-size: 0.75rem;
