@@ -562,6 +562,29 @@ nav {
     padding: 0.2rem 0.6rem;
 }
 
+.clickable-filter-tag {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.clickable-filter-tag:hover {
+    background: var(--terminal-orange);
+    color: var(--bg-primary);
+    transform: translateY(-1px);
+}
+
+.clickable-filter-tag:hover::after {
+    content: "×";
+    position: absolute;
+    right: 0.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--bg-primary);
+}
+
 .branch-name {
     border-radius: 3px;
 }

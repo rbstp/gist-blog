@@ -249,7 +249,7 @@
                 
                 const filteredCount = getFilteredPosts().length;
                 const tagsDisplay = activeTags.map(function(tag) {
-                    return '<span class="filter-tag">#' + tag + '</span>';
+                    return '<span class="filter-tag clickable-filter-tag" data-tag="' + tag + '">#' + tag + '</span>';
                 }).join(' ');
                 
                 filterStatus.innerHTML = 
@@ -261,6 +261,32 @@
                         '<button class="clear-filter" onclick="clearFilter()">clear</button>' +
                     '</div>';
                 filterStatus.style.display = 'block';
+                
+                // Add click listeners to filter status tags
+                const clickableFilterTags = filterStatus.querySelectorAll('.clickable-filter-tag');
+                clickableFilterTags.forEach(function(filterTag) {
+                    filterTag.addEventListener('click', function() {
+                        const tagName = this.getAttribute('data-tag');
+                        const tagIndex = activeTags.indexOf(tagName);
+                        
+                        if (tagIndex > -1) {
+                            // Remove this tag from filter
+                            activeTags.splice(tagIndex, 1);
+                            
+                            // Update all tag elements with this tag to remove active class
+                            const allTagElements = document.querySelectorAll('.tag');
+                            allTagElements.forEach(function(t) {
+                                if (t.getAttribute('data-tag') === tagName) {
+                                    t.classList.remove('active');
+                                }
+                            });
+                            
+                            currentPage = 1;
+                            updateFilterStatus();
+                            updatePagination();
+                        }
+                    });
+                });
             }
 
             // Global function for clear button
