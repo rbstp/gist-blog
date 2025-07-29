@@ -104,12 +104,15 @@ Add hashtags anywhere in your gist description:
 
 ### Terminal Controls
 
-**Interactive Terminal Windows** (Available on both index and individual post pages):
+**Interactive Terminal Windows** (Available on index page):
 - **Close Button** (red) - Hides the entire terminal section
 - **Minimize Button** (yellow) - Collapses terminal to header-only view
 - **Maximize Button** (green) - Expands terminal to full width
 - **Hover Effects** - Shows macOS-style icons (×, −, ⇱) when hovering over buttons
-- **Post Page Headers** - Individual posts show `$ cat filename.md` with green prompt and blue command
+
+**Post Page Terminals**:
+- **Terminal Header** - Shows `$ cat filename.md` with green prompt and blue command
+- **Static Display** - No interactive controls for cleaner reading experience
 
 **Multi-Tag Filtering System**:
 - **Multiple Selection**: Click multiple tags to combine filters using AND logic

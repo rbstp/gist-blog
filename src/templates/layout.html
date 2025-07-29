@@ -361,36 +361,19 @@
 
             // Terminal control functionality
             function setupTerminalControls() {
-                const terminals = document.querySelectorAll('.hero-terminal, .pagination-section, .content-terminal');
+                const terminals = document.querySelectorAll('.hero-terminal, .pagination-section');
 
                 terminals.forEach(function (terminal) {
-                    const closeBtn = terminal.querySelector('.control.close, .control-small.close');
-                    const minimizeBtn = terminal.querySelector('.control.minimize, .control-small.minimize');
-                    const maximizeBtn = terminal.querySelector('.control.maximize, .control-small.maximize');
-                    
-                    // For regular terminals, find the window; for content-terminal, use the terminal itself
-                    let terminalWindow;
-                    if (terminal.classList.contains('content-terminal')) {
-                        terminalWindow = terminal;
-                    } else {
-                        terminalWindow = terminal.querySelector('.terminal-window, .pagination-terminal');
-                    }
+                    const closeBtn = terminal.querySelector('.control.close');
+                    const minimizeBtn = terminal.querySelector('.control.minimize');
+                    const maximizeBtn = terminal.querySelector('.control.maximize');
+                    const terminalWindow = terminal.querySelector('.terminal-window, .pagination-terminal');
 
                     // Close button - hide the entire section
                     if (closeBtn) {
                         closeBtn.style.cursor = 'pointer';
                         closeBtn.addEventListener('click', function () {
-                            if (terminal.classList.contains('content-terminal')) {
-                                // For post terminals, hide the wrapper
-                                const wrapper = terminal.closest('.post-content-wrapper');
-                                if (wrapper) {
-                                    wrapper.style.display = 'none';
-                                } else {
-                                    terminal.style.display = 'none';
-                                }
-                            } else {
-                                terminal.style.display = 'none';
-                            }
+                            terminal.style.display = 'none';
                         });
                     }
 
@@ -398,7 +381,7 @@
                     if (minimizeBtn && terminalWindow) {
                         minimizeBtn.style.cursor = 'pointer';
                         minimizeBtn.addEventListener('click', function () {
-                            const body = terminalWindow.querySelector('.terminal-body, .pagination-body, .post-content-advanced');
+                            const body = terminalWindow.querySelector('.terminal-body, .pagination-body');
                             if (body) {
                                 if (terminalWindow.dataset.minimized === 'true') {
                                     // Restore
