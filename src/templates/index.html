@@ -32,7 +32,6 @@
 <section class="pipeline-section">
     <div class="section-header">
         <h2 class="section-title">
-            <span class="section-icon">📦</span>
             Latest Deployments
         </h2>
         <div class="pipeline-status">
@@ -61,18 +60,15 @@
                 </h3>
                 <div class="post-metadata">
                     <span class="metadata-item">
-                        <span class="icon">📅</span>
                         <time datetime="{{createdAt}}">{{formattedDate}}</time>
                     </span>
                     {{#description}}
                     <span class="metadata-item">
-                        <span class="icon">📝</span>
                         <span class="description">{{description}}</span>
                     </span>
                     {{/description}}
                     {{#hasTags}}
                     <div class="tags-container">
-                        <span class="icon">🏷️</span>
                         {{#tags}}
                         <span class="tag" data-tag="{{.}}">#{{.}}</span>
                         {{/tags}}
