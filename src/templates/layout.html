@@ -296,8 +296,66 @@
                 });
             }
 
+            // Terminal control functionality
+            function setupTerminalControls() {
+                const terminals = document.querySelectorAll('.hero-terminal, .pagination-section');
+                
+                terminals.forEach(function(terminal) {
+                    const closeBtn = terminal.querySelector('.control.close');
+                    const minimizeBtn = terminal.querySelector('.control.minimize');
+                    const maximizeBtn = terminal.querySelector('.control.maximize');
+                    const terminalWindow = terminal.querySelector('.terminal-window, .pagination-terminal');
+                    
+                    // Close button - hide the entire section
+                    if (closeBtn) {
+                        closeBtn.style.cursor = 'pointer';
+                        closeBtn.addEventListener('click', function() {
+                            terminal.style.display = 'none';
+                        });
+                    }
+                    
+                    // Minimize button - collapse to header only
+                    if (minimizeBtn && terminalWindow) {
+                        minimizeBtn.style.cursor = 'pointer';
+                        minimizeBtn.addEventListener('click', function() {
+                            const body = terminalWindow.querySelector('.terminal-body, .pagination-body');
+                            if (body) {
+                                if (terminalWindow.dataset.minimized === 'true') {
+                                    // Restore
+                                    body.style.display = 'block';
+                                    terminalWindow.dataset.minimized = 'false';
+                                } else {
+                                    // Minimize
+                                    body.style.display = 'none';
+                                    terminalWindow.dataset.minimized = 'true';
+                                }
+                            }
+                        });
+                    }
+                    
+                    // Maximize button - toggle full width
+                    if (maximizeBtn && terminalWindow) {
+                        maximizeBtn.style.cursor = 'pointer';
+                        maximizeBtn.addEventListener('click', function() {
+                            if (terminalWindow.dataset.maximized === 'true') {
+                                // Restore
+                                terminalWindow.style.width = '';
+                                terminalWindow.style.maxWidth = '';
+                                terminalWindow.dataset.maximized = 'false';
+                            } else {
+                                // Maximize
+                                terminalWindow.style.width = '100%';
+                                terminalWindow.style.maxWidth = 'none';
+                                terminalWindow.dataset.maximized = 'true';
+                            }
+                        });
+                    }
+                });
+            }
+
             // Initial load
             updatePagination();
+            setupTerminalControls();
         });
     </script>
 </body>
