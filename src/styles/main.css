@@ -590,7 +590,7 @@ nav {
 }
 
 .filter-status {
-    background: #161b22 !important;
+    background: var(--bg-tertiary);
     border: 1px solid var(--accent-primary);
     border-radius: 6px;
     padding: 1rem 1.5rem;
