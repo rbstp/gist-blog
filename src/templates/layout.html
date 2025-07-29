@@ -397,6 +397,7 @@
                         maximizeBtn.style.cursor = 'pointer';
                         maximizeBtn.addEventListener('click', function() {
                             const tagsSection = terminal.querySelector('#pagination-tags-section');
+                            const heroExpanded = terminal.querySelector('#hero-terminal-expanded');
                             
                             if (terminalWindow.dataset.maximized === 'true') {
                                 // Restore
@@ -408,6 +409,11 @@
                                 if (tagsSection) {
                                     tagsSection.style.display = 'none';
                                 }
+                                
+                                // Hide hero terminal expanded content when not maximized
+                                if (heroExpanded) {
+                                    heroExpanded.style.display = 'none';
+                                }
                             } else {
                                 // Maximize
                                 terminalWindow.style.width = '100%';
@@ -417,6 +423,11 @@
                                 // Show tags section when maximized
                                 if (tagsSection) {
                                     tagsSection.style.display = 'block';
+                                }
+                                
+                                // Show hero terminal expanded content when maximized
+                                if (heroExpanded) {
+                                    heroExpanded.style.display = 'block';
                                 }
                             }
                         });
