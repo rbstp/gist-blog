@@ -886,12 +886,16 @@ footer {
     border-top: 1px solid var(--border-primary);
     padding: 2rem 0;
     margin-top: 4rem;
+    width: 100%;
 }
 
 .footer-content {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
 }
 
 .status-bar {
