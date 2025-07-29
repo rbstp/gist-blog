@@ -126,7 +126,7 @@
             // Client-side pagination and filtering system
             const POSTS_PER_PAGE = 6;
             let currentPage = 1;
-            let activeTag = null;
+            let activeTags = [];
             
             const allPosts = Array.from(document.querySelectorAll('.post-card'));
             const tags = document.querySelectorAll('.tag');
@@ -144,12 +144,17 @@
             section.insertBefore(filterStatus, section.querySelector('.posts-grid'));
 
             function getFilteredPosts() {
-                if (!activeTag) return allPosts;
+                if (activeTags.length === 0) return allPosts;
                 
                 return allPosts.filter(function(post) {
                     const postTags = post.querySelectorAll('.tag');
-                    return Array.from(postTags).some(function(tag) {
-                        return tag.getAttribute('data-tag') === activeTag;
+                    const postTagNames = Array.from(postTags).map(function(tag) {
+                        return tag.getAttribute('data-tag');
+                    });
+                    
+                    // Post must have ALL selected tags (AND logic)
+                    return activeTags.every(function(activeTag) {
+                        return postTagNames.includes(activeTag);
                     });
                 });
             }
@@ -173,42 +178,62 @@
                 });
 
                 // Update pagination controls
-                if (paginationSection && totalPages > 1) {
+                // Show pagination if more than 1 page OR if filtering is active (to keep tag controls accessible)
+                if (paginationSection && (totalPages > 1 || activeTags.length > 0)) {
                     paginationSection.style.display = 'block';
                     
                     // Update command
                     if (paginationCommand) {
-                        paginationCommand.textContent = 'ls posts | less :' + currentPage + '/' + totalPages;
+                        if (totalPages > 1) {
+                            paginationCommand.textContent = 'ls posts | less :' + currentPage + '/' + totalPages;
+                        } else {
+                            paginationCommand.textContent = 'ls posts | head -' + filteredPosts.length;
+                        }
                     }
                     
-                    // Update prev/next buttons
+                    // Update prev/next buttons - hide if only one page
                     if (prevBtn) {
-                        prevBtn.disabled = currentPage === 1;
+                        if (totalPages > 1) {
+                            prevBtn.style.display = 'flex';
+                            prevBtn.disabled = currentPage === 1;
+                        } else {
+                            prevBtn.style.display = 'none';
+                        }
                     }
                     if (nextBtn) {
-                        nextBtn.disabled = currentPage === totalPages;
+                        if (totalPages > 1) {
+                            nextBtn.style.display = 'flex';
+                            nextBtn.disabled = currentPage === totalPages;
+                        } else {
+                            nextBtn.style.display = 'none';
+                        }
                     }
                     
-                    // Update page numbers
+                    // Update page numbers - hide if only one page
                     if (paginationPages) {
-                        paginationPages.innerHTML = '';
-                        const maxVisible = 5;
-                        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-                        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-                        
-                        if (endPage - startPage + 1 < maxVisible) {
-                            startPage = Math.max(1, endPage - maxVisible + 1);
-                        }
-                        
-                        for (let i = startPage; i <= endPage; i++) {
-                            const pageBtn = document.createElement('button');
-                            pageBtn.className = 'pagination-page' + (i === currentPage ? ' current' : '');
-                            pageBtn.textContent = i;
-                            pageBtn.addEventListener('click', function() {
-                                currentPage = i;
-                                updatePagination();
-                            });
-                            paginationPages.appendChild(pageBtn);
+                        if (totalPages > 1) {
+                            paginationPages.style.display = 'flex';
+                            paginationPages.innerHTML = '';
+                            const maxVisible = 5;
+                            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+                            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+                            
+                            if (endPage - startPage + 1 < maxVisible) {
+                                startPage = Math.max(1, endPage - maxVisible + 1);
+                            }
+                            
+                            for (let i = startPage; i <= endPage; i++) {
+                                const pageBtn = document.createElement('button');
+                                pageBtn.className = 'pagination-page' + (i === currentPage ? ' current' : '');
+                                pageBtn.textContent = i;
+                                pageBtn.addEventListener('click', function() {
+                                    currentPage = i;
+                                    updatePagination();
+                                });
+                                paginationPages.appendChild(pageBtn);
+                            }
+                        } else {
+                            paginationPages.style.display = 'none';
                         }
                     }
                 } else if (paginationSection) {
@@ -217,17 +242,21 @@
             }
 
             function updateFilterStatus() {
-                if (!activeTag) {
+                if (activeTags.length === 0) {
                     filterStatus.style.display = 'none';
                     return;
                 }
                 
                 const filteredCount = getFilteredPosts().length;
+                const tagsDisplay = activeTags.map(function(tag) {
+                    return '<span class="filter-tag">#' + tag + '</span>';
+                }).join(' ');
+                
                 filterStatus.innerHTML = 
                     '<div class="filter-info">' +
                         '<span class="filter-prompt">$</span>' +
                         '<span>grep --tag</span>' +
-                        '<span class="filter-tag">#' + activeTag + '</span>' +
+                        tagsDisplay +
                         '<span class="filter-count">→ ' + filteredCount + ' result' + (filteredCount !== 1 ? 's' : '') + '</span>' +
                         '<button class="clear-filter" onclick="clearFilter()">clear</button>' +
                     '</div>';
@@ -236,7 +265,7 @@
 
             // Global function for clear button
             window.clearFilter = function() {
-                activeTag = null;
+                activeTags = [];
                 currentPage = 1;
                 const allTagElements = document.querySelectorAll('.tag');
                 allTagElements.forEach(function(tag) {
@@ -251,27 +280,29 @@
             allTagElements.forEach(function(tag) {
                 tag.addEventListener('click', function() {
                     const tagName = this.getAttribute('data-tag');
+                    const tagIndex = activeTags.indexOf(tagName);
                     
-                    if (activeTag === tagName) {
-                        // Clear filter
-                        activeTag = null;
-                        currentPage = 1;
+                    if (tagIndex > -1) {
+                        // Remove tag from filter
+                        activeTags.splice(tagIndex, 1);
+                        // Update all elements with this tag to remove active class
                         allTagElements.forEach(function(t) {
-                            t.classList.remove('active');
+                            if (t.getAttribute('data-tag') === tagName) {
+                                t.classList.remove('active');
+                            }
                         });
                     } else {
-                        // Apply filter
-                        activeTag = tagName;
-                        currentPage = 1; // Reset to first page when filtering
+                        // Add tag to filter
+                        activeTags.push(tagName);
+                        // Update all elements with this tag to add active class
                         allTagElements.forEach(function(t) {
                             if (t.getAttribute('data-tag') === tagName) {
                                 t.classList.add('active');
-                            } else {
-                                t.classList.remove('active');
                             }
                         });
                     }
                     
+                    currentPage = 1; // Reset to first page when filtering changes
                     updateFilterStatus();
                     updatePagination();
                 });

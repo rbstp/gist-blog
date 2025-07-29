@@ -16,8 +16,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 ### Advanced Features
 - **Theme Toggle** - Smart light/dark mode with system preference detection and localStorage persistence
 - **Syntax Highlighting** - GitHub-style code highlighting with language-specific colors for XML, JSON, JavaScript, Python, CSS, and more
-- **Tag System** - Extract hashtags from gist descriptions for automatic categorization
-- **Interactive Filtering** - Click tags to filter posts with terminal-style status display
+- **Multi-Tag System** - Extract hashtags from gist descriptions for automatic categorization
+- **Advanced Filtering** - Select multiple tags with AND logic for precise content discovery
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
 - **Cache Busting** - Automatic CSS versioning for instant updates
@@ -25,11 +25,11 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 ### UI/UX Highlights
 - **Theme Switching** - Seamless light/dark mode toggle in navigation bar
 - **Interactive Terminal Windows** - Functional close, minimize, and maximize buttons with hover icons
-- **Advanced Tag Filtering** - Complete tag collection with pagination terminal integration
+- **Multi-Tag Filtering** - Select multiple tags with AND logic for precise content discovery
 - **Blinking Terminal Cursor** - Authentic terminal feel in the header
 - **Pipeline Theme** - Posts displayed as "deployments" with commit hashes
 - **Compact Post Headers** - Mobile-friendly design that prioritizes content
-- **Tag Filtering UI** - Terminal-style filter display: `$ grep --tag #ai → 1 result`
+- **Advanced Tag Filtering UI** - Multi-tag display: `$ grep --tag #ai #devops → 3 results`
 
 ## 🛠 Setup
 
@@ -108,11 +108,14 @@ Add hashtags anywhere in your gist description:
 - **Maximize Button** (green) - Expands terminal to full width
 - **Hover Effects** - Shows macOS-style icons (×, −, ⇱) when hovering over buttons
 
-**Enhanced Tag Filtering**:
-- Maximize the pagination terminal to reveal all available tags
-- Tags in pagination terminal sync with main post area
-- Complete tag filtering without page refreshes
-- Terminal-style interface: `$ grep --tag-filter`
+**Multi-Tag Filtering System**:
+- **Multiple Selection**: Click multiple tags to combine filters using AND logic
+- **Toggle Behavior**: Click active tags to remove them, inactive tags to add them
+- **Maximize Access**: Maximize the pagination terminal to reveal all available tags
+- **Synchronized State**: Tags in pagination terminal sync with main post area
+- **Smart Display**: Filter status shows all active tags: `$ grep --tag #ai #devops → 3 results`
+- **Persistent Terminal**: Pagination terminal stays visible when tags are active
+- **Precise Filtering**: Posts must contain ALL selected tags to appear in results
 
 ## 🎨 Customization
 
@@ -208,10 +211,12 @@ dist/
 
 ### Features Deep Dive
 
-**Tag System**
+**Multi-Tag System**
 - Extracts `#tagname` from gist descriptions
-- Creates interactive filter buttons
-- Terminal-style filter status display
+- Supports multiple tag selection with AND logic
+- Interactive filter buttons with toggle behavior
+- Terminal-style filter status display showing all active tags
+- Synchronized state across post area and pagination terminal
 - Maintains clean descriptions without hashtags
 
 **RSS Feed**
