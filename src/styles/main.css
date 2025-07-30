@@ -587,6 +587,7 @@ nav {
 
 .branch-name {
     border-radius: 3px;
+    border: none;
 }
 
 .filter-status {
