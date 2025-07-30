@@ -20,7 +20,7 @@ class BlogGenerator {
     this.stylesDir = 'src/styles';
 
     this.templateEngine = new TemplateEngine(this.templatesDir);
-    this.gistParser = new GistParser();
+    this.gistParser = new GistParser(this.gistUsername);
     this.rssGenerator = new RSSGenerator();
 
     // Template cache for performance

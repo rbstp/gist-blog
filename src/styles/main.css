@@ -1725,8 +1725,6 @@ table pre, table code {
     color: var(--accent-error) !important;
 }
 
-.dev-mode .nav-item[href="/"] .nav-icon {
-}
 
 @keyframes shake {
     0%, 100% { transform: translateX(0); }

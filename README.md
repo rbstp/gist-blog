@@ -19,6 +19,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Multi-Tag System** - Extract hashtags from gist descriptions for automatic categorization
 - **Advanced Filtering** - Select multiple tags with AND logic for precise content discovery
 - **Reading Analytics** - Terminal-themed word count and estimated reading time for each post
+- **Internal Gist Links** - Automatically converts your gist URLs to internal blog post links for seamless navigation
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
 - **Cache Busting** - Automatic CSS versioning for instant updates
@@ -101,6 +102,26 @@ Add hashtags anywhere in your gist description:
 - `#ai #devops #tutorial` → Creates clickable filter tags
 - Tags are extracted and removed from the display description
 - Click tags to filter posts with a terminal-style interface
+
+### Internal Gist Links
+
+When you reference your own gists in markdown content, they automatically become internal links:
+
+**Before (in your markdown):**
+```markdown
+Check out my other post: https://gist.github.com/rbstp/abc123def456
+```
+
+**After (in generated HTML):**
+```markdown
+Check out my other post: /posts/abc123def456.html
+```
+
+**Features:**
+- **Username-specific**: Only your gist URLs are converted (preserves external links to other users' gists)
+- **All markdown formats**: Works with inline links, reference links, and plain URLs
+- **Build-time transformation**: No performance impact on site visitors
+- **Cross-post navigation**: Create seamless content series and references
 
 ### Terminal Controls
 
@@ -216,7 +237,7 @@ dist/
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:
   - `BlogGenerator.js` - Core orchestration and GitHub API with timeout handling
-  - `GistParser.js` - Markdown processing and tag extraction
+  - `GistParser.js` - Markdown processing, tag extraction, and gist link transformation
   - `RSSGenerator.js` - RSS feed generation with configurable metadata
   - `TemplateEngine.js` - Custom template rendering with pre-compiled regex
 - **External templates** in `src/templates/` for easy customization
@@ -225,6 +246,13 @@ dist/
 - **Promise.allSettled** for resilient gist processing
 
 ### Features Deep Dive
+
+**Internal Gist Link Transformation**
+- Regex-based URL transformation during markdown processing
+- Username-specific filtering preserves external links to other users' gists
+- Supports all markdown link formats (inline, reference, plain URLs)
+- Build-time transformation for zero runtime performance impact
+- Pattern matching: `https://gist.github.com/{username}/{gistId}` → `/posts/{gistId}.html`
 
 **Multi-Tag System**
 - Extracts `#tagname` from gist descriptions

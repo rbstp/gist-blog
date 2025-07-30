@@ -16,11 +16,13 @@ marked.setOptions({
 });
 
 class GistParser {
-  constructor() {
+  constructor(gistUsername = null) {
     // Cache for processed markdown content to avoid re-rendering
     this.markdownCache = new Map();
     // Cache for tag extraction to avoid re-processing descriptions
     this.tagCache = new Map();
+    // Store the gist username for link transformation
+    this.gistUsername = gistUsername;
   }
 
   parseGistAsPost(gist) {
@@ -56,11 +58,15 @@ class GistParser {
       const tags = this.extractTags(rawDescription);
       const cleanDescription = this.cleanDescriptionFromTags(rawDescription);
 
+      // Transform gist links to internal blog post links before processing markdown (only for own username)
+      const transformedContent = this.gistUsername ? 
+        this.transformGistLinks(bodyContent, this.gistUsername) : bodyContent;
+
       // Cache markdown processing to avoid re-rendering same content
       const contentKey = `${gist.id}_${gist.updated_at}`;
       let htmlContent = this.markdownCache.get(contentKey);
       if (!htmlContent) {
-        htmlContent = marked(bodyContent);
+        htmlContent = marked(transformedContent);
         this.markdownCache.set(contentKey, htmlContent);
       }
 
@@ -151,6 +157,17 @@ class GistParser {
     if (minutes < 1) return '< 1 min';
     if (minutes === 1) return '1 min';
     return `${minutes} min`;
+  }
+
+  transformGistLinks(content, gistUsername) {
+    // Transform GitHub gist URLs to internal blog post links (only for the specified username)
+    // Matches: https://gist.github.com/username/gistid
+    const gistUrlRegex = new RegExp(`https:\\/\\/gist\\.github\\.com\\/${gistUsername}\\/([a-f0-9]+)(?:\\#[^)\\s]*)?`, 'g');
+    
+    return content.replace(gistUrlRegex, (match, gistId) => {
+      // Replace with internal blog post link
+      return `/posts/${gistId}.html`;
+    });
   }
 }
 
