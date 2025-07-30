@@ -123,6 +123,15 @@ Add hashtags anywhere in your gist description:
 - **Persistent Terminal**: Pagination terminal stays visible when tags are active
 - **Precise Filtering**: Posts must contain ALL selected tags to appear in results
 
+**Dev Mode Easter Egg** 🎯:
+- **Activation**: Click the "main" branch button in the top navigation
+- **Chaos Mode**: Instantly transforms the site into a DevOps disaster scenario
+- **Visual Changes**: Build failures, error indicators, emergency rollback messages
+- **Branch Switch**: Navigation and post cards change from "main" to "dev" branch
+- **Authentic Errors**: Realistic terminal output with deployment failures and database issues
+- **Toggle Back**: Click "dev" button to restore normal operation
+- **No Persistence**: Easter egg resets on page reload for clean demo experience
+
 ## 🎨 Customization
 
 ### Styling

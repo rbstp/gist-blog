@@ -105,11 +105,161 @@
         })();
 
         document.addEventListener('DOMContentLoaded', function () {
+            // Dev mode easter egg state
+            let isDevMode = false;
+            
+            // Dev mode toggle functionality
+            function initializeDevModeEasterEgg() {
+                const mainButton = document.querySelector('a.nav-item[href="/"]');
+                if (mainButton) {
+                    mainButton.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        toggleDevMode();
+                    });
+                }
+            }
+            
+            function toggleDevMode() {
+                isDevMode = !isDevMode;
+                
+                if (isDevMode) {
+                    activateDevMode();
+                } else {
+                    deactivateDevMode();
+                }
+            }
+            
+            function activateDevMode() {
+                document.body.classList.add('dev-mode');
+                
+                // Store original content for restoration
+                if (!window.originalContent) {
+                    window.originalContent = {
+                        title: document.title,
+                        buildStatus: document.querySelector('.build-status'),
+                        heroTerminal: document.querySelector('.hero-terminal .terminal-body'),
+                        footerStatus: document.querySelector('.status-bar'),
+                        postCards: document.querySelectorAll('.post-card')
+                    };
+                }
+                
+                // Change page title
+                document.title = 'SYSTEM FAILURE - rbstp.dev';
+                
+                // Transform build status
+                const buildStatus = document.querySelector('.build-status');
+                if (buildStatus) {
+                    buildStatus.className = 'build-status error';
+                    buildStatus.innerHTML = '✗ Build Failed';
+                }
+                
+                // Transform hero terminal
+                const heroTerminalBody = document.querySelector('.hero-terminal .terminal-body');
+                if (heroTerminalBody) {
+                    heroTerminalBody.innerHTML = `
+                        <div class="terminal-line">
+                            <span class="prompt">rbstp@devops:~$</span>
+                            <span class="command">deploy --production</span>
+                        </div>
+                        <div class="terminal-output error-output">
+                            <span class="output-text error">ERROR: Deployment failed at 2025-07-30T15:42:31Z</span>
+                        </div>
+                        <div class="terminal-output error-output">
+                            <span class="output-text error">CRITICAL: Database connection lost</span>
+                        </div>
+                        <div class="terminal-line">
+                            <span class="prompt">rbstp@devops:~$</span>
+                            <span class="command">rollback --emergency</span>
+                        </div>
+                        <div class="terminal-output error-output">
+                            <span class="output-text warning">INITIATING EMERGENCY ROLLBACK...</span>
+                        </div>
+                        <div class="terminal-output error-output">
+                            <span class="output-text error">47 services affected</span>
+                        </div>
+                    `;
+                }
+                
+                // Transform footer status
+                const footerStatus = document.querySelector('.status-bar');  
+                if (footerStatus) {
+                    footerStatus.innerHTML = `
+                        <span class="status-item">
+                            <span class="status-dot error"></span>
+                            <span>system: degraded</span>
+                        </span>
+                        <span class="status-item">
+                            <span class="status-dot error"></span>
+                            <span>alerts: <a href="#" style="color: var(--accent-error);">47 active</a></span>
+                        </span>
+                        <span class="status-item">
+                            <span class="status-dot warning"></span>
+                            <span>rollback: in progress</span>
+                        </span>
+                    `;
+                }
+                
+                // Transform post cards
+                const postCards = document.querySelectorAll('.post-card');
+                postCards.forEach(card => {
+                    const statusIndicator = card.querySelector('.status-indicator');
+                    const statusText = card.querySelector('.status-text');
+                    const branchName = card.querySelector('.branch-name');
+                    
+                    if (statusIndicator) {
+                        statusIndicator.className = 'status-indicator error';
+                    }
+                    if (statusText) {
+                        statusText.textContent = 'failed';
+                        statusText.style.color = 'var(--accent-error)';
+                    }
+                    if (branchName) {
+                        branchName.textContent = 'dev';
+                    }
+                });
+                
+                // Update section header
+                const sectionTitle = document.querySelector('.section-title');
+                if (sectionTitle) {
+                    sectionTitle.textContent = 'Failed Deployments';
+                }
+                
+                // Update pipeline status 
+                const pipelineStatus = document.querySelector('.pipeline-status');
+                if (pipelineStatus) {
+                    pipelineStatus.innerHTML = `
+                        <span class="build-status error">✗ Build Failed</span>
+                        <span class="deploy-time">Last failure: <span class="local-time">2 min ago</span></span>
+                    `;
+                }
+                
+                // Update main branch button text
+                const mainButton = document.querySelector('a.nav-item[href="/"] span');
+                if (mainButton) {
+                    mainButton.textContent = 'dev';
+                }
+            }
+            
+            function deactivateDevMode() {
+                document.body.classList.remove('dev-mode');
+                
+                if (window.originalContent) {
+                    // Restore original content
+                    document.title = window.originalContent.title;
+                    
+                    // Simply reload the page to restore everything properly
+                    window.location.reload();
+                }
+            }
+            
             // Theme toggle button
             const themeToggle = document.getElementById('theme-toggle');
             if (themeToggle) {
                 themeToggle.addEventListener('click', window.toggleTheme);
             }
+            
+            // Initialize dev mode easter egg
+            initializeDevModeEasterEgg();
             // Convert timestamps to local time
             const timeElements = document.querySelectorAll('.local-time');
             timeElements.forEach(function (element) {
