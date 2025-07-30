@@ -1629,7 +1629,6 @@ table pre, table code {
 }
 
 .dev-mode .hero-terminal .terminal-body {
-    border: 2px solid var(--accent-error);
     box-shadow: 0 0 20px rgba(248, 81, 73, 0.3);
 }
 
@@ -1691,7 +1690,6 @@ table pre, table code {
 
 .dev-mode .terminal-line .command {
     color: var(--accent-warning);
-    text-decoration: line-through;
 }
 
 .dev-mode .pagination-prompt {
@@ -1725,11 +1723,9 @@ table pre, table code {
 
 .dev-mode .nav-item[href="/"] {
     color: var(--accent-error) !important;
-    animation: pulse-error 2s infinite;
 }
 
 .dev-mode .nav-item[href="/"] .nav-icon {
-    animation: shake 0.5s infinite;
 }
 
 @keyframes shake {
