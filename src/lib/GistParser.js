@@ -1,8 +1,48 @@
 const { marked } = require('marked');
 const hljs = require('highlight.js');
 
-// Configure marked for syntax highlighting
+// Configure marked for syntax highlighting and custom heading renderer
+const renderer = new marked.Renderer();
+
+// Custom heading renderer to handle anchor IDs
+renderer.heading = function(text, level, raw) {
+  // Handle different parameter formats based on marked version
+  let headingLevel = 1;
+  let textStr = '';
+  
+  if (typeof text === 'object' && text.depth && text.text) {
+    // New format: text is a token object
+    headingLevel = text.depth;
+    textStr = text.text;
+  } else {
+    // Old format: separate parameters
+    headingLevel = level || 1;
+    if (typeof text === 'string') {
+      textStr = text;
+    } else if (Array.isArray(text)) {
+      textStr = text.map(token => token.text || token).join('');
+    } else if (text && typeof text === 'object' && text.text) {
+      textStr = text.text;
+    } else {
+      textStr = raw || '';
+    }
+  }
+  
+  // Check for custom anchor syntax {#anchor-id}
+  const anchorMatch = textStr.match(/^(.*?)\s*\{#([^}]+)\}$/);
+  if (anchorMatch) {
+    const cleanText = anchorMatch[1].trim();
+    const anchor = anchorMatch[2];
+    return `<h${headingLevel} id="${anchor}">${cleanText}<a href="#${anchor}" class="permalink" aria-label="Permalink">#</a></h${headingLevel}>`;
+  }
+  
+  // Default heading without custom anchor
+  const anchor = textStr.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return `<h${headingLevel} id="${anchor}">${textStr}<a href="#${anchor}" class="permalink" aria-label="Permalink">#</a></h${headingLevel}>`;
+};
+
 marked.setOptions({
+  renderer: renderer,
   highlight: function (code, lang) {
     if (lang && hljs.getLanguage(lang)) {
       try {
@@ -62,11 +102,16 @@ class GistParser {
       const transformedContent = this.gistUsername ? 
         this.transformGistLinks(bodyContent, this.gistUsername) : bodyContent;
 
+      // Extract table of contents before processing markdown
+      const toc = this.generateTableOfContents(transformedContent);
+      
       // Cache markdown processing to avoid re-rendering same content
       const contentKey = `${gist.id}_${gist.updated_at}`;
       let htmlContent = this.markdownCache.get(contentKey);
       if (!htmlContent) {
-        htmlContent = marked(transformedContent);
+        // Add permalink anchors to headings before markdown processing
+        const contentWithAnchors = this.addPermalinkAnchors(transformedContent);
+        htmlContent = marked(contentWithAnchors);
         this.markdownCache.set(contentKey, htmlContent);
       }
 
@@ -88,7 +133,9 @@ class GistParser {
         tags: tags,
         filename: markdownFile.filename,
         wordCount: wordCount,
-        readingTime: readingTime
+        readingTime: readingTime,
+        toc: toc,
+        hasToc: toc.length > 0
       };
 
       // Validate essential fields
@@ -164,10 +211,51 @@ class GistParser {
     // Matches: https://gist.github.com/username/gistid
     const gistUrlRegex = new RegExp(`https:\\/\\/gist\\.github\\.com\\/${gistUsername}\\/([a-f0-9]+)(?:\\#[^)\\s]*)?`, 'g');
     
-    return content.replace(gistUrlRegex, (match, gistId) => {
+    return content.replace(gistUrlRegex, (_, gistId) => {
       // Replace with internal blog post link
       return `/posts/${gistId}.html`;
     });
+  }
+
+  generateTableOfContents(content) {
+    // Extract headings (## and beyond) for ToC
+    const headingRegex = /^(#{2,6})\s+(.+)$/gm;
+    const headings = [];
+    let match;
+    let lineNumber = 1;
+
+    while ((match = headingRegex.exec(content)) !== null) {
+      const level = match[1].length;
+      const title = match[2].trim();
+      const anchor = this.createAnchor(title);
+      
+      headings.push({
+        level: level,
+        title: title,
+        anchor: anchor,
+        lineNumber: lineNumber++
+      });
+    }
+
+    return headings;
+  }
+
+  addPermalinkAnchors(content) {
+    // Add anchor IDs to headings (## and beyond)
+    return content.replace(/^(#{2,6})\s+(.+)$/gm, (_, hashes, title) => {
+      const anchor = this.createAnchor(title);
+      return `${hashes} ${title} {#${anchor}}`;
+    });
+  }
+
+  createAnchor(title) {
+    // Convert heading title to URL-friendly anchor
+    return title
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
   }
 }
 

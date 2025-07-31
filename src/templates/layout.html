@@ -589,9 +589,58 @@
                 });
             }
 
+            // ToC active section highlighting
+            function setupTocActiveHighlighting() {
+                const tocLinks = document.querySelectorAll('.toc-link');
+                if (!tocLinks.length) return;
+                
+                const headings = Array.from(document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]'));
+                if (!headings.length) return;
+                
+                function updateActiveLink() {
+                    const scrollPosition = window.scrollY + 100; // Offset for header
+                    
+                    let activeHeading = null;
+                    for (const heading of headings) {
+                        if (heading.offsetTop <= scrollPosition) {
+                            activeHeading = heading;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // Remove active class from all links
+                    tocLinks.forEach(link => link.classList.remove('active'));
+                    
+                    // Add active class to current section
+                    if (activeHeading) {
+                        const activeLink = document.querySelector(`.toc-link[href="#${activeHeading.id}"]`);
+                        if (activeLink) {
+                            activeLink.classList.add('active');
+                        }
+                    }
+                }
+                
+                // Update on scroll with throttling
+                let ticking = false;
+                function throttledUpdate() {
+                    if (!ticking) {
+                        requestAnimationFrame(() => {
+                            updateActiveLink();
+                            ticking = false;
+                        });
+                        ticking = true;
+                    }
+                }
+                
+                window.addEventListener('scroll', throttledUpdate);
+                updateActiveLink(); // Initial call
+            }
+
             // Initial load
             updatePagination();
             setupTerminalControls();
+            setupTocActiveHighlighting();
         });
     </script>
 </body>

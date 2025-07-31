@@ -24,6 +24,27 @@
     </header>
 
     <div class="post-content-wrapper">
+        {{#hasToc}}
+        <div class="toc-sidebar">
+            <div class="toc-terminal">
+                <div class="terminal-header-small">
+                    <div class="terminal-title-small">
+                        <span class="terminal-prompt">$</span><span class="terminal-command">grep -n "^##" {{filename}}</span>
+                    </div>
+                </div>
+                <div class="toc-content">
+                    <nav class="table-of-contents">
+                        {{#toc}}
+                        <div class="toc-item toc-level-{{level}}">
+                            <span class="toc-line-number">{{lineNumber}}</span>
+                            <a href="#{{anchor}}" class="toc-link">{{title}}</a>
+                        </div>
+                        {{/toc}}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {{/hasToc}}
         <div class="content-terminal">
             <div class="terminal-header-small">
                 <div class="terminal-title-small">
