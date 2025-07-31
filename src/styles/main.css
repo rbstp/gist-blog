@@ -921,26 +921,22 @@ nav {
 /* Post Content Layout with Sidebar ToC */
 .post-content-wrapper {
     position: relative;
-    display: flex;
-    gap: 2rem;
 }
 
 /* Table of Contents Sidebar - Desktop Only */
 .toc-sidebar {
-    position: sticky;
-    top: 2rem;
+    position: fixed;
+    top: 12rem;
+    right: 2rem;
     width: 280px;
     height: fit-content;
-    flex-shrink: 0;
-    order: 2;
-    max-height: calc(100vh - 4rem);
+    max-height: calc(100vh - 14rem);
     overflow-y: auto;
+    z-index: 10;
 }
 
 .content-terminal {
-    flex: 1;
-    order: 1;
-    min-width: 0; /* Prevents flex item from overflowing */
+    /* Remove width constraint - let content use full width */
 }
 
 .toc-terminal {
@@ -958,29 +954,38 @@ nav {
 .table-of-contents {
     font-family: var(--mono-font);
     font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .toc-item {
     display: flex;
-    align-items: center;
-    margin-bottom: 0.5rem;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
     padding: 0.25rem 0;
+    width: 100%;
+}
+
+.toc-item:last-child {
+    margin-bottom: 0;
 }
 
 .toc-line-number {
     color: var(--terminal-green);
     margin-right: 0.75rem;
-    min-width: 1.2rem;
     font-weight: 500;
     font-size: 0.8rem;
+    flex-shrink: 0;
+    min-width: 1.2rem;
 }
 
 .toc-link {
     color: var(--text-primary);
     text-decoration: none;
     transition: color 0.2s ease;
-    flex: 1;
     line-height: 1.4;
+    flex: 1;
+    word-wrap: break-word;
 }
 
 .toc-link:hover {
@@ -1997,18 +2002,9 @@ table pre, table code {
         font-size: 0.8rem;
     }
     
-    /* Hide ToC on mobile and stack content */
-    .post-content-wrapper {
-        flex-direction: column;
-        gap: 0;
-    }
-    
+    /* Hide ToC on mobile */
     .toc-sidebar {
         display: none;
-    }
-    
-    .content-terminal {
-        order: 1;
     }
     
     /* Permalink mobile styles */
