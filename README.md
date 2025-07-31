@@ -20,6 +20,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Advanced Filtering** - Select multiple tags with AND logic for precise content discovery
 - **Reading Analytics** - Terminal-themed word count and estimated reading time for each post
 - **Internal Gist Links** - Automatically converts your gist URLs to internal blog post links for seamless navigation
+- **Table of Contents** - Automatic ToC generation with sticky sidebar navigation and active section highlighting
+- **Permalink Navigation** - Click-to-copy section links with smooth scrolling
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
 - **Cache Busting** - Automatic CSS versioning for instant updates
@@ -29,6 +31,8 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Interactive Terminal Windows** - Functional close, minimize, and maximize buttons with hover icons
 - **Multi-Tag Filtering** - Select multiple tags with AND logic for precise content discovery
 - **Reading Metrics** - Terminal commands show word count and reading time: `$ wc -w file.md` → `1151 words`
+- **Sticky Table of Contents** - Desktop-only floating sidebar with active section highlighting
+- **Permalink Anchors** - Hover-activated # links for easy section sharing
 - **Blinking Terminal Cursor** - Authentic terminal feel in the header
 - **Pipeline Theme** - Posts displayed as "deployments" with commit hashes
 - **Compact Post Headers** - Mobile-friendly design that prioritizes content
@@ -122,6 +126,24 @@ Check out my other post: /posts/abc123def456.html
 - **All markdown formats**: Works with inline links, reference links, and plain URLs
 - **Build-time transformation**: No performance impact on site visitors
 - **Cross-post navigation**: Create seamless content series and references
+
+### Table of Contents & Navigation
+
+**Automatic ToC Generation:**
+- **Smart Detection** - Automatically generates ToC for posts with heading levels 2-6 (`##`, `###`, etc.)
+- **Terminal Styling** - ToC styled as terminal window with `$ grep -n "^##" filename.md` command
+- **Desktop Only** - ToC appears as floating sidebar on desktop, hidden on mobile for clean mobile experience
+
+**Interactive Features:**
+- **Sticky Positioning** - ToC follows along as you scroll, always accessible
+- **Active Section Highlighting** - Current section highlighted in blue with bold text
+- **Smooth Scrolling** - Clicking ToC links smoothly scrolls to target section
+- **Permalink Anchors** - Hover over headings to reveal clickable # symbols for easy link sharing
+
+**Layout:**
+- **Non-Intrusive** - ToC overlays as true sidebar without affecting post content width
+- **Responsive Behavior** - Completely hidden on tablets and mobile devices
+- **Proper Positioning** - Fixed positioning ensures ToC doesn't interfere with content layout
 
 ### Terminal Controls
 
@@ -268,6 +290,15 @@ dist/
 - Displays as terminal commands with color-coded output
 - Green `$` prompt and blue command text for authenticity
 - Two-line format: word count and reading time separately
+
+**Table of Contents System**
+- Extracts headings (levels 2-6) from markdown content during build
+- Generates URL-friendly anchor IDs with proper slug formatting
+- Custom marked.js renderer adds permalink anchors with hover effects
+- JavaScript scroll tracking with throttled active section detection
+- Fixed positioning with proper z-index management for overlay behavior
+- CSS media queries ensure desktop-only display (hidden below 768px)
+- Performance optimized with requestAnimationFrame for smooth scroll updates
 
 **RSS Feed**
 - Full RSS 2.0 compliance
