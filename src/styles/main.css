@@ -53,17 +53,52 @@ html {
 }
 
 /* Utility classes for common patterns */
-.transition-base { transition: all 0.2s ease; }
-.transition-colors { transition: color 0.2s ease; }
-.mono-font { font-family: var(--mono-font); }
-.sans-font { font-family: var(--sans-font); }
-.border-radius-sm { border-radius: 3px; }
-.border-radius-md { border-radius: 4px; }
-.border-radius-lg { border-radius: 6px; }
-.border-radius-xl { border-radius: 8px; }
-.flex-center { display: flex; align-items: center; }
-.flex-center-between { display: flex; align-items: center; justify-content: space-between; }
-.text-hover-primary:hover { color: var(--accent-primary); }
+.transition-base {
+    transition: all 0.2s ease;
+}
+
+.transition-colors {
+    transition: color 0.2s ease;
+}
+
+.mono-font {
+    font-family: var(--mono-font);
+}
+
+.sans-font {
+    font-family: var(--sans-font);
+}
+
+.border-radius-sm {
+    border-radius: 3px;
+}
+
+.border-radius-md {
+    border-radius: 4px;
+}
+
+.border-radius-lg {
+    border-radius: 6px;
+}
+
+.border-radius-xl {
+    border-radius: 8px;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
+.flex-center-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.text-hover-primary:hover {
+    color: var(--accent-primary);
+}
 
 /* Common button and link patterns */
 .btn-base {
@@ -164,8 +199,16 @@ nav {
 }
 
 @keyframes blink {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0; }
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
 }
 
 .nav-links {
@@ -173,7 +216,8 @@ nav {
     gap: 2rem;
 }
 
-.nav-item, .theme-toggle {
+.nav-item,
+.theme-toggle {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -185,7 +229,8 @@ nav {
     cursor: pointer;
 }
 
-.nav-item:hover, .theme-toggle:hover {
+.nav-item:hover,
+.theme-toggle:hover {
     color: var(--accent-primary);
 }
 
@@ -209,7 +254,9 @@ nav {
 }
 
 /* Terminal window base styles */
-.terminal-window, .content-terminal, .pagination-terminal {
+.terminal-window,
+.content-terminal,
+.pagination-terminal {
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
     border-radius: 8px;
@@ -222,7 +269,9 @@ nav {
     width: 100%;
 }
 
-.terminal-header, .terminal-header-small, .pagination-header {
+.terminal-header,
+.terminal-header-small,
+.pagination-header {
     background: var(--bg-secondary);
     padding: 0.75rem 1rem;
     display: flex;
@@ -235,7 +284,9 @@ nav {
     padding: 0.5rem 1rem;
 }
 
-.terminal-controls, .terminal-controls-small, .pagination-controls {
+.terminal-controls,
+.terminal-controls-small,
+.pagination-controls {
     display: flex;
     gap: 0.5rem;
 }
@@ -244,7 +295,8 @@ nav {
     gap: 0.3rem;
 }
 
-.control, .control-small {
+.control,
+.control-small {
     border-radius: 50%;
     position: relative;
     cursor: pointer;
@@ -266,21 +318,35 @@ nav {
     height: 10px;
 }
 
-.control.close, .control-small.close { background: var(--accent-error); }
-.control.minimize, .control-small.minimize { background: var(--accent-warning); }
-.control.maximize, .control-small.maximize { background: var(--accent-success); }
+.control.close,
+.control-small.close {
+    background: var(--accent-error);
+}
+
+.control.minimize,
+.control-small.minimize {
+    background: var(--accent-warning);
+}
+
+.control.maximize,
+.control-small.maximize {
+    background: var(--accent-success);
+}
 
 /* Hover effects for terminal controls */
-.control:hover, .control-small:hover {
+.control:hover,
+.control-small:hover {
     transform: scale(1.1);
 }
 
-.control:hover::after, .control-small:hover::after {
+.control:hover::after,
+.control-small:hover::after {
     opacity: 1;
     font-size: 8px;
 }
 
-.control::after, .control-small::after {
+.control::after,
+.control-small::after {
     content: '';
     position: absolute;
     color: rgba(0, 0, 0, 0.8);
@@ -290,15 +356,18 @@ nav {
     font-size: 0;
 }
 
-.control.close::after, .control-small.close::after {
+.control.close::after,
+.control-small.close::after {
     content: '×';
 }
 
-.control.minimize::after, .control-small.minimize::after {
+.control.minimize::after,
+.control-small.minimize::after {
     content: '−';
 }
 
-.control.maximize::after, .control-small.maximize::after {
+.control.maximize::after,
+.control-small.maximize::after {
     content: '⇱';
 }
 
@@ -532,7 +601,9 @@ nav {
 }
 
 /* Base tag styling */
-.tag, .filter-tag, .branch-name {
+.tag,
+.filter-tag,
+.branch-name {
     background: rgba(88, 166, 255, 0.15);
     color: var(--accent-primary);
     padding: 0.2rem 0.5rem;
@@ -548,7 +619,8 @@ nav {
     cursor: pointer;
 }
 
-.tag:hover, .tag.active {
+.tag:hover,
+.tag.active {
     background: var(--accent-primary);
     color: var(--bg-primary);
 }
@@ -749,7 +821,8 @@ nav {
     border-bottom: 1px solid var(--border-primary);
 }
 
-.back-link, .source-link {
+.back-link,
+.source-link {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -760,7 +833,8 @@ nav {
     transition: color 0.2s ease;
 }
 
-.back-link:hover, .source-link:hover {
+.back-link:hover,
+.source-link:hover {
     color: var(--accent-primary);
 }
 
@@ -844,9 +918,17 @@ nav {
     font-weight: 600;
 }
 
-.post-content-advanced h1 { font-size: 2rem; }
-.post-content-advanced h2 { font-size: 1.5rem; }
-.post-content-advanced h3 { font-size: 1.25rem; }
+.post-content-advanced h1 {
+    font-size: 2rem;
+}
+
+.post-content-advanced h2 {
+    font-size: 1.5rem;
+}
+
+.post-content-advanced h3 {
+    font-size: 1.25rem;
+}
 
 .post-content-advanced p {
     margin-bottom: 1.5rem;
@@ -933,10 +1015,6 @@ nav {
     max-height: calc(100vh - 14rem);
     overflow-y: auto;
     z-index: 10;
-}
-
-.content-terminal {
-    /* Remove width constraint - let content use full width */
 }
 
 .toc-terminal {
@@ -1254,9 +1332,17 @@ footer {
 }
 
 @keyframes typing {
-    0% { width: 0; }
-    50% { width: 100%; }
-    100% { width: 0; }
+    0% {
+        width: 0;
+    }
+
+    50% {
+        width: 100%;
+    }
+
+    100% {
+        width: 0;
+    }
 }
 
 /* Table Styling */
@@ -1276,7 +1362,8 @@ thead {
     background: var(--bg-secondary);
 }
 
-th, td {
+th,
+td {
     padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid var(--border-primary);
@@ -1303,7 +1390,8 @@ tbody tr:last-child td {
 }
 
 /* Terminal-style table borders */
-table pre, table code {
+table pre,
+table code {
     background: transparent;
     color: var(--terminal-green);
     font-family: var(--mono-font);
@@ -1787,33 +1875,59 @@ table pre, table code {
 
 /* Dev mode animations */
 @keyframes pulse-error {
-    0%, 100% { 
+
+    0%,
+    100% {
         box-shadow: 0 0 5px rgba(248, 81, 73, 0.3);
         transform: scale(1);
     }
-    50% { 
+
+    50% {
         box-shadow: 0 0 15px rgba(248, 81, 73, 0.8);
         transform: scale(1.02);
     }
 }
 
 @keyframes blink-error {
-    0%, 50% { opacity: 1; }
-    51%, 100% { opacity: 0.3; }
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0.3;
+    }
 }
 
 @keyframes flash-error {
-    0%, 90% { opacity: 1; }
-    91%, 95% { opacity: 0.3; }
-    96%, 100% { opacity: 1; }
+
+    0%,
+    90% {
+        opacity: 1;
+    }
+
+    91%,
+    95% {
+        opacity: 0.3;
+    }
+
+    96%,
+    100% {
+        opacity: 1;
+    }
 }
 
 @keyframes pulse-warning {
-    0%, 100% { 
+
+    0%,
+    100% {
         opacity: 1;
         transform: scale(1);
     }
-    50% { 
+
+    50% {
         opacity: 0.7;
         transform: scale(1.05);
     }
@@ -1864,67 +1978,113 @@ table pre, table code {
 
 
 @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
 }
 
+
+/* Tablet and smaller desktop screens - Hide ToC to prevent overlap */
+@media (max-width: 1400px) {
+    .toc-sidebar {
+        display: none;
+    }
+
+    /* Ensure main content uses full width when ToC is hidden */
+    .post-content-wrapper {
+        margin-right: 0;
+    }
+
+    .content-terminal {
+        max-width: none;
+    }
+}
+
+/* Optional: Intermediate breakpoint for smaller ToC */
+@media (min-width: 1401px) and (max-width: 1600px) {
+    .toc-sidebar {
+        width: 240px;
+        /* Smaller ToC width */
+        right: 1rem;
+        /* Closer to edge */
+    }
+
+    .toc-content {
+        padding: 1rem;
+        /* Reduced padding */
+    }
+
+    .table-of-contents {
+        font-size: 0.8rem;
+        /* Smaller font */
+    }
+}
 
 @media (max-width: 768px) {
     .container {
         padding: 0 1rem;
     }
-    
+
     nav {
         flex-direction: column;
         gap: 1rem;
     }
-    
+
     .nav-links {
         justify-content: space-between;
         align-items: center;
     }
-    
+
     .section-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 1rem;
     }
-    
+
     .posts-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .post-title-compact {
         font-size: 1.5rem;
     }
-    
+
     .post-header-compact {
         padding: 0.75rem 1rem;
         margin-bottom: 1rem;
     }
-    
+
     .post-meta-line {
         flex-direction: column;
         gap: 0.5rem;
         align-items: flex-start;
     }
-    
+
     .terminal-window {
         margin: 0 1rem;
     }
-    
+
     .status-bar {
         flex-direction: column;
         gap: 0.5rem;
     }
-    
+
     .post-navigation {
         flex-direction: column;
         gap: 1rem;
         align-items: flex-start;
     }
-    
+
     .post-card {
         min-height: auto;
     }
@@ -1933,31 +2093,31 @@ table pre, table code {
         flex-direction: row;
         gap: 0.5rem;
     }
-    
+
     .pagination-nav {
         flex-direction: row;
         gap: 0.5rem;
         flex-wrap: wrap;
     }
-    
+
     .pagination-pages {
         justify-content: center;
     }
-    
+
     /* Fix filter container overflow on mobile */
     .filter-info {
         flex-wrap: wrap;
     }
-    
+
     .pagination-tags {
         width: 100%;
         overflow: hidden;
     }
-    
+
     .pagination-terminal {
         min-width: 0;
     }
-    
+
     /* Mobile table styles */
     table {
         font-size: 0.75rem;
@@ -1966,47 +2126,43 @@ table pre, table code {
         white-space: nowrap;
         border-radius: 4px;
     }
-    
-    th, td {
+
+    th,
+    td {
         padding: 0.5rem 0.75rem;
     }
-    
+
     /* Mobile typography improvements */
     .post-content h1 {
         font-size: 1.75rem;
     }
-    
+
     .post-content h2 {
         font-size: 1.5rem;
     }
-    
+
     .post-content h3 {
         font-size: 1.25rem;
     }
-    
+
     .post-content p {
         font-size: 0.95rem;
         line-height: 1.6;
     }
-    
+
     .post-content p:first-of-type {
         font-size: 1rem;
     }
-    
+
     .post-content pre {
         padding: 0.75rem 1rem;
         margin: 1rem 0;
     }
-    
+
     .post-content pre code {
         font-size: 0.8rem;
     }
-    
-    /* Hide ToC on mobile */
-    .toc-sidebar {
-        display: none;
-    }
-    
+
     /* Permalink mobile styles */
     .post-content-advanced .permalink {
         left: -1.2rem;
