@@ -8,14 +8,17 @@
   },
   "scripts": {
     "build": "node src/build.js",
-    "dev": "node src/build.js && npx http-server dist -p 3000"
+    "dev": "node src/build.js && npx http-server dist -p 3000",
+    "minify": "node scripts/minify.js"
   },
   "dependencies": {
-    "marked": "^16.1.1",
+    "date-fns": "^4.1.0",
     "highlight.js": "^11.10.0",
-    "date-fns": "^4.1.0"
+    "marked": "^16.1.1"
   },
   "devDependencies": {
+    "esbuild": "^0.25.8",
+    "html-minifier-terser": "^7.2.0",
     "http-server": "^14.1.1"
   }
 }
