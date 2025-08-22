@@ -29,6 +29,38 @@ class BlogGenerator {
     this.dateCache = new Map();
   }
 
+  // Build a minimalist graph from tags: nodes are tags with frequency, edges are co-occurrences
+  async generateGraphData(posts) {
+    const nodeCount = new Map();
+    const edgeCount = new Map(); // key: a|b
+
+    for (const post of posts) {
+      const tags = Array.isArray(post.tags) ? [...new Set(post.tags.map(t => String(t).toLowerCase()))] : [];
+      if (tags.length === 0) continue;
+      for (const t of tags) nodeCount.set(t, (nodeCount.get(t) || 0) + 1);
+      for (let i = 0; i < tags.length; i++) {
+        for (let j = i + 1; j < tags.length; j++) {
+          const a = tags[i];
+          const b = tags[j];
+          const key = a < b ? `${a}|${b}` : `${b}|${a}`;
+          edgeCount.set(key, (edgeCount.get(key) || 0) + 1);
+        }
+      }
+    }
+
+    // Reduce to a compact graph (top N nodes by frequency)
+    const MAX_NODES = 20;
+    const sortedNodes = Array.from(nodeCount.entries()).sort((a, b) => b[1] - a[1]).slice(0, MAX_NODES);
+    const allowed = new Set(sortedNodes.map(([id]) => id));
+    const nodes = sortedNodes.map(([id, count]) => ({ id, count }));
+    const edges = Array.from(edgeCount.entries())
+      .map(([key, weight]) => { const [source, target] = key.split('|'); return { source, target, weight }; })
+      .filter(e => allowed.has(e.source) && allowed.has(e.target));
+
+    const graph = { nodes, edges };
+    await fs.writeFile(path.join(this.distDir, 'graph.json'), JSON.stringify(graph));
+  }
+
   async fetchGists() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
@@ -181,12 +213,21 @@ class BlogGenerator {
     const { 'layout.html': layoutTemplate, 'post.html': postTemplate } =
       await this.loadTemplatesCached(['layout.html', 'post.html']);
 
+    // Determine the primary topic for this post (used by the sidebar graph)
+    function choosePrimaryTopic(p) {
+      if (Array.isArray(p.tags) && p.tags.length) return String(p.tags[0]);
+      return '';
+    }
+    const currentTopic = choosePrimaryTopic(post);
+
     const postData = {
       ...post,
       formattedDate: this.formatDateCached(post.createdAt),
       formattedUpdateDate: post.updatedAt !== post.createdAt ?
         this.formatDateCached(post.updatedAt) : null,
-      shortId: post.id.substring(0, COMMIT_HASH_LENGTH)
+      shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
+      currentTopic,
+      tagsCsv: Array.isArray(post.tags) ? post.tags.join(',') : ''
     };
 
     const postContent = this.templateEngine.render(postTemplate, postData);
@@ -258,6 +299,8 @@ class BlogGenerator {
       this.generateIndex(posts),
       // Generate RSS feed
       this.generateRSSFeed(posts),
+      // Generate tag graph data
+      this.generateGraphData(posts),
       // Copy styles
       this.copyStyles()
     ]);

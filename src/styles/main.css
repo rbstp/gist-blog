@@ -1008,11 +1008,13 @@ nav {
 /* Table of Contents Sidebar - Desktop Only */
 .toc-sidebar {
     position: fixed;
-    top: 12rem;
+    top: 4.5rem;
+    /* Safe default below header; JS refines this */
     right: 2rem;
     width: 280px;
     height: fit-content;
-    max-height: calc(100vh - 14rem);
+    max-height: calc(100vh - 5.5rem);
+    /* Safe default; JS refines this */
     overflow-y: auto;
     z-index: 10;
 }
@@ -1024,6 +1026,81 @@ nav {
     overflow: hidden;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
+
+/* Minimalist topic graph (desktop sidebar) */
+.graph-terminal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 1rem;
+}
+
+.graph-content {
+    padding: 0.75rem;
+}
+
+.graph-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+.graph-svg.panning {
+    cursor: grabbing;
+}
+
+.graph-node {
+    fill: var(--accent-primary);
+    opacity: 0.9;
+}
+
+.graph-node circle {
+    fill: var(--accent-primary);
+}
+
+/* Highlight topic tags for this post */
+.graph-node.topic circle {
+    fill: var(--terminal-green);
+}
+
+.graph-node text {
+    font-family: var(--mono-font);
+    font-size: 10px;
+    fill: var(--text-secondary);
+}
+
+.graph-link {
+    stroke: var(--text-muted);
+    stroke-opacity: 0.6;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 2px rgba(88, 166, 255, 0.25));
+}
+
+.graph-node:hover {
+    filter: drop-shadow(0 0 6px rgba(88, 166, 255, 0.6));
+}
+
+.graph-node.active circle {
+    stroke: var(--accent-secondary);
+    stroke-width: 2;
+}
+
+.graph-node.dimmed circle,
+.graph-node.dimmed text,
+.graph-link.dimmed {
+    opacity: 0.25;
+}
+
+/* consolidated .graph-link styles above */
 
 .toc-content {
     padding: 1.5rem;
@@ -1064,6 +1141,9 @@ nav {
     line-height: 1.4;
     flex: 1;
     word-wrap: break-word;
+    padding: 0.1rem 0.25rem;
+    /* ensure active state doesn't reflow */
+    border-radius: 4px;
 }
 
 .toc-link:hover {
@@ -1072,7 +1152,7 @@ nav {
 
 .toc-link.active {
     color: var(--accent-primary);
-    font-weight: 600;
+    background: rgba(88, 166, 255, 0.12);
 }
 
 .toc-level-2 {

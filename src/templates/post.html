@@ -26,10 +26,22 @@
     <div class="post-content-wrapper">
         {{#hasToc}}
         <div class="toc-sidebar">
+            <div class="graph-terminal" id="topic-graph-terminal">
+                <div class="terminal-header-small">
+                    <div class="terminal-title-small">
+                        <span class="terminal-prompt">$</span><span class="terminal-command">graph --tags</span>
+                    </div>
+                </div>
+                <div class="graph-content" data-current-topic="{{currentTopic}}" data-all-topics="{{tagsCsv}}">
+                    <svg id="topic-graph" class="graph-svg" viewBox="0 0 220 232" width="220" height="232"
+                        aria-label="Topic graph"></svg>
+                </div>
+            </div>
             <div class="toc-terminal">
                 <div class="terminal-header-small">
                     <div class="terminal-title-small">
-                        <span class="terminal-prompt">$</span><span class="terminal-command">grep -n "^##" {{filename}}</span>
+                        <span class="terminal-prompt">$</span><span class="terminal-command">grep -n "^##"
+                            {{filename}}</span>
                     </div>
                 </div>
                 <div class="toc-content">

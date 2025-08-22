@@ -107,31 +107,31 @@
         document.addEventListener('DOMContentLoaded', function () {
             // Dev mode easter egg state
             let isDevMode = false;
-            
+
             // Dev mode toggle functionality
             function initializeDevModeEasterEgg() {
                 const mainButton = document.querySelector('a.nav-item[href="/"]');
                 if (mainButton) {
-                    mainButton.addEventListener('click', function(e) {
+                    mainButton.addEventListener('click', function (e) {
                         e.preventDefault();
                         toggleDevMode();
                     });
                 }
             }
-            
+
             function toggleDevMode() {
                 isDevMode = !isDevMode;
-                
+
                 if (isDevMode) {
                     activateDevMode();
                 } else {
                     deactivateDevMode();
                 }
             }
-            
+
             function activateDevMode() {
                 document.body.classList.add('dev-mode');
-                
+
                 // Store original content for restoration
                 if (!window.originalContent) {
                     window.originalContent = {
@@ -142,17 +142,17 @@
                         postCards: document.querySelectorAll('.post-card')
                     };
                 }
-                
+
                 // Change page title
                 document.title = 'SYSTEM FAILURE - rbstp.dev';
-                
+
                 // Transform build status
                 const buildStatus = document.querySelector('.build-status');
                 if (buildStatus) {
                     buildStatus.className = 'build-status error';
                     buildStatus.innerHTML = '✗ Build Failed';
                 }
-                
+
                 // Transform hero terminal
                 const heroTerminalBody = document.querySelector('.hero-terminal .terminal-body');
                 if (heroTerminalBody) {
@@ -179,9 +179,9 @@
                         </div>
                     `;
                 }
-                
+
                 // Transform footer status
-                const footerStatus = document.querySelector('.status-bar');  
+                const footerStatus = document.querySelector('.status-bar');
                 if (footerStatus) {
                     footerStatus.innerHTML = `
                         <span class="status-item">
@@ -198,14 +198,14 @@
                         </span>
                     `;
                 }
-                
+
                 // Transform post cards
                 const postCards = document.querySelectorAll('.post-card');
                 postCards.forEach(card => {
                     const statusIndicator = card.querySelector('.status-indicator');
                     const statusText = card.querySelector('.status-text');
                     const branchName = card.querySelector('.branch-name');
-                    
+
                     if (statusIndicator) {
                         statusIndicator.className = 'status-indicator error';
                     }
@@ -217,13 +217,13 @@
                         branchName.textContent = 'dev';
                     }
                 });
-                
+
                 // Update section header
                 const sectionTitle = document.querySelector('.section-title');
                 if (sectionTitle) {
                     sectionTitle.textContent = 'Failed Deployments';
                 }
-                
+
                 // Update pipeline status 
                 const pipelineStatus = document.querySelector('.pipeline-status');
                 if (pipelineStatus) {
@@ -232,32 +232,32 @@
                         <span class="deploy-time">Last failure: <span class="local-time">2 min ago</span></span>
                     `;
                 }
-                
+
                 // Update main branch button text
                 const mainButton = document.querySelector('a.nav-item[href="/"] span');
                 if (mainButton) {
                     mainButton.textContent = 'dev';
                 }
             }
-            
+
             function deactivateDevMode() {
                 document.body.classList.remove('dev-mode');
-                
+
                 if (window.originalContent) {
                     // Restore original content
                     document.title = window.originalContent.title;
-                    
+
                     // Simply reload the page to restore everything properly
                     window.location.reload();
                 }
             }
-            
+
             // Theme toggle button
             const themeToggle = document.getElementById('theme-toggle');
             if (themeToggle) {
                 themeToggle.addEventListener('click', window.toggleTheme);
             }
-            
+
             // Initialize dev mode easter egg
             initializeDevModeEasterEgg();
             // Convert timestamps to local time
@@ -277,27 +277,32 @@
                 }
             });
 
-            // Client-side pagination and filtering system
-            const POSTS_PER_PAGE = 6;
+            // Client-side pagination and filtering system (index page only)
+            const section = document.querySelector('.pipeline-section');
+            const isIndexPage = !!section;
             let currentPage = 1;
             let activeTags = [];
+            let allPosts = [];
+            let paginationSection = null, paginationCommand = null, paginationPages = null, prevBtn = null, nextBtn = null, filterStatus = null;
 
-            const allPosts = Array.from(document.querySelectorAll('.post-card'));
-            const tags = document.querySelectorAll('.tag');
-            const paginationSection = document.getElementById('pagination-section');
-            const paginationCommand = document.getElementById('pagination-command');
-            const paginationPages = document.getElementById('pagination-pages');
-            const prevBtn = document.getElementById('prev-btn');
-            const nextBtn = document.getElementById('next-btn');
+            if (isIndexPage) {
+                const POSTS_PER_PAGE = 6;
+                allPosts = Array.from(document.querySelectorAll('.post-card'));
+                paginationSection = document.getElementById('pagination-section');
+                paginationCommand = document.getElementById('pagination-command');
+                paginationPages = document.getElementById('pagination-pages');
+                prevBtn = document.getElementById('prev-btn');
+                nextBtn = document.getElementById('next-btn');
 
-            // Create filter status display
-            const section = document.querySelector('.pipeline-section');
-            const filterStatus = document.createElement('div');
-            filterStatus.className = 'filter-status';
-            filterStatus.style.display = 'none';
-            section.insertBefore(filterStatus, section.querySelector('.posts-grid'));
+                // Create filter status display
+                filterStatus = document.createElement('div');
+                filterStatus.className = 'filter-status';
+                filterStatus.style.display = 'none';
+                section.insertBefore(filterStatus, section.querySelector('.posts-grid'));
+            }
 
             function getFilteredPosts() {
+                if (!isIndexPage) return [];
                 if (activeTags.length === 0) return allPosts;
 
                 return allPosts.filter(function (post) {
@@ -314,7 +319,9 @@
             }
 
             function updatePagination() {
+                if (!isIndexPage) return;
                 const filteredPosts = getFilteredPosts();
+                const POSTS_PER_PAGE = 6;
                 const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
 
                 // Hide all posts first
@@ -396,6 +403,7 @@
             }
 
             function updateFilterStatus() {
+                if (!isIndexPage) return;
                 if (activeTags.length === 0) {
                     filterStatus.style.display = 'none';
                     return;
@@ -457,39 +465,41 @@
 
             // Tag filtering (including pagination tags)
             const allTagElements = document.querySelectorAll('.tag');
-            allTagElements.forEach(function (tag) {
-                tag.addEventListener('click', function () {
-                    const tagName = this.getAttribute('data-tag');
-                    const tagIndex = activeTags.indexOf(tagName);
+            if (isIndexPage) {
+                allTagElements.forEach(function (tag) {
+                    tag.addEventListener('click', function () {
+                        const tagName = this.getAttribute('data-tag');
+                        const tagIndex = activeTags.indexOf(tagName);
 
-                    if (tagIndex > -1) {
-                        // Remove tag from filter
-                        activeTags.splice(tagIndex, 1);
-                        // Update all elements with this tag to remove active class
-                        allTagElements.forEach(function (t) {
-                            if (t.getAttribute('data-tag') === tagName) {
-                                t.classList.remove('active');
-                            }
-                        });
-                    } else {
-                        // Add tag to filter
-                        activeTags.push(tagName);
-                        // Update all elements with this tag to add active class
-                        allTagElements.forEach(function (t) {
-                            if (t.getAttribute('data-tag') === tagName) {
-                                t.classList.add('active');
-                            }
-                        });
-                    }
+                        if (tagIndex > -1) {
+                            // Remove tag from filter
+                            activeTags.splice(tagIndex, 1);
+                            // Update all elements with this tag to remove active class
+                            allTagElements.forEach(function (t) {
+                                if (t.getAttribute('data-tag') === tagName) {
+                                    t.classList.remove('active');
+                                }
+                            });
+                        } else {
+                            // Add tag to filter
+                            activeTags.push(tagName);
+                            // Update all elements with this tag to add active class
+                            allTagElements.forEach(function (t) {
+                                if (t.getAttribute('data-tag') === tagName) {
+                                    t.classList.add('active');
+                                }
+                            });
+                        }
 
-                    currentPage = 1; // Reset to first page when filtering changes
-                    updateFilterStatus();
-                    updatePagination();
+                        currentPage = 1; // Reset to first page when filtering changes
+                        updateFilterStatus();
+                        updatePagination();
+                    });
                 });
-            });
+            }
 
             // Pagination controls
-            if (prevBtn) {
+            if (isIndexPage && prevBtn) {
                 prevBtn.addEventListener('click', function () {
                     if (currentPage > 1) {
                         currentPage--;
@@ -498,9 +508,10 @@
                 });
             }
 
-            if (nextBtn) {
+            if (isIndexPage && nextBtn) {
                 nextBtn.addEventListener('click', function () {
                     const filteredPosts = getFilteredPosts();
+                    const POSTS_PER_PAGE = 6;
                     const totalPages = Math.ceil(filteredPosts.length / POSTS_PER_PAGE);
                     if (currentPage < totalPages) {
                         currentPage++;
@@ -593,13 +604,28 @@
             function setupTocActiveHighlighting() {
                 const tocLinks = document.querySelectorAll('.toc-link');
                 if (!tocLinks.length) return;
-                
+
                 const headings = Array.from(document.querySelectorAll('h2[id], h3[id], h4[id], h5[id], h6[id]'));
                 if (!headings.length) return;
-                
+
+                const sidebar = document.querySelector('.toc-sidebar');
+
+                function ensureVisible(link) {
+                    if (!sidebar || !link) return;
+                    // Only adjust when it's actually out of view to avoid fighting page scroll
+                    const sbRect = sidebar.getBoundingClientRect();
+                    const lRect = link.getBoundingClientRect();
+                    const margin = 8; // small visual buffer
+                    if (lRect.top < sbRect.top + margin) {
+                        sidebar.scrollTop -= (sbRect.top + margin) - lRect.top;
+                    } else if (lRect.bottom > sbRect.bottom - margin) {
+                        sidebar.scrollTop += lRect.bottom - (sbRect.bottom - margin);
+                    }
+                }
+
                 function updateActiveLink() {
                     const scrollPosition = window.scrollY + 100; // Offset for header
-                    
+
                     let activeHeading = null;
                     for (const heading of headings) {
                         if (heading.offsetTop <= scrollPosition) {
@@ -608,19 +634,20 @@
                             break;
                         }
                     }
-                    
+
                     // Remove active class from all links
                     tocLinks.forEach(link => link.classList.remove('active'));
-                    
+
                     // Add active class to current section
                     if (activeHeading) {
                         const activeLink = document.querySelector(`.toc-link[href="#${activeHeading.id}"]`);
                         if (activeLink) {
                             activeLink.classList.add('active');
+                            ensureVisible(activeLink);
                         }
                     }
                 }
-                
+
                 // Update on scroll with throttling
                 let ticking = false;
                 function throttledUpdate() {
@@ -632,16 +659,269 @@
                         ticking = true;
                     }
                 }
-                
+
                 window.addEventListener('scroll', throttledUpdate);
                 updateActiveLink(); // Initial call
             }
 
             // Initial load
-            updatePagination();
+            if (isIndexPage) updatePagination();
             setupTerminalControls();
             setupTocActiveHighlighting();
+
+            // Position the sidebar below the header with equal gaps
+            function adjustTocSidebar() {
+                const sidebar = document.querySelector('.toc-sidebar');
+                const header = document.querySelector('header');
+                if (!sidebar) return;
+                const gap = 16; // 1rem in px
+                const headerRect = header ? header.getBoundingClientRect() : null;
+                const headerBottom = headerRect ? Math.ceil(headerRect.bottom) : 0; // distance from viewport top
+                // Use the actual bottom position so the sidebar slides up smoothly as the header scrolls out
+                const top = Math.max(gap, headerBottom + gap);
+                sidebar.style.top = top + 'px';
+                // keep a 1rem bottom gap
+                const maxH = Math.max(120, window.innerHeight - top - gap);
+                sidebar.style.maxHeight = maxH + 'px';
+            }
+            adjustTocSidebar();
+            window.addEventListener('resize', adjustTocSidebar, { passive: true });
+            // Also respond to scroll so the gap reduces as the header goes off-screen
+            window.addEventListener('scroll', adjustTocSidebar, { passive: true });
+
+            // Initialize topic graph when sidebar exists (on post pages)
+            initTopicGraph();
+
+            // Apply preselected tags on index if any
+            if (isIndexPage) applyPreselectedTags();
         });
+
+        // Minimalist interactive tag graph
+        function initTopicGraph() {
+            const svg = document.getElementById('topic-graph');
+            if (!svg) return; // not on post page
+            const container = svg.parentElement;
+            const currentTopic = (container && container.getAttribute('data-current-topic')) ? container.getAttribute('data-current-topic') : '';
+            // Read all topics for this post (CSV), used to color topic nodes
+            const allTopicsCsv = container && container.getAttribute('data-all-topics');
+            const topicsSet = new Set((allTopicsCsv || '')
+                .split(',')
+                .map(s => s.trim().toLowerCase())
+                .filter(Boolean));
+
+            fetch('/graph.json?v={{timestamp}}')
+                .then(r => r.ok ? r.json() : null)
+                .then(graph => {
+                    if (!graph || !graph.nodes) { console.warn('topic-graph: no graph data'); return; }
+
+                    const width = 220, height = 232, cx = width / 2, cy = height / 2;
+                    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+                    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+                    // Root group for pan/zoom
+                    const root = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                    root.setAttribute('id', 'graph-root');
+                    svg.appendChild(root);
+
+                    if (graph.nodes.length === 0) {
+                        console.warn('topic-graph: empty nodes array');
+                        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        t.setAttribute('x', String(cx));
+                        t.setAttribute('y', String(cy));
+                        t.setAttribute('text-anchor', 'middle');
+                        t.textContent = 'No topics';
+                        t.setAttribute('class', 'graph-empty');
+                        svg.appendChild(t);
+                        return;
+                    }
+
+                    // Build adjacency
+                    const neighbors = new Map();
+                    graph.nodes.forEach(n => neighbors.set(n.id, new Set()));
+                    graph.edges.forEach(e => {
+                        neighbors.get(e.source)?.add(e.target);
+                        neighbors.get(e.target)?.add(e.source);
+                    });
+
+                    // Focus mode: center the current topic, arrange only its neighbors around it
+                    const centerId = currentTopic && neighbors.has(currentTopic) ? currentTopic : (graph.nodes[0]?.id || '');
+                    const neighborIds = Array.from(neighbors.get(centerId) || []);
+                    const visibleIds = [centerId, ...neighborIds];
+                    const visibleSet = new Set(visibleIds);
+
+                    const nodesPos = new Map();
+                    // Center node
+                    nodesPos.set(centerId, { x: cx, y: cy });
+                    // Arrange neighbors on a circle
+                    const radius = 70;
+                    neighborIds.forEach((id, i) => {
+                        const angle = (i / Math.max(1, neighborIds.length)) * Math.PI * 2 - Math.PI / 2;
+                        nodesPos.set(id, { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) });
+                    });
+
+                    // Draw links and keep a map for highlighting
+                    const maxWeight = Math.max(1, ...graph.edges.map(e => e.weight || 1));
+                    const linkMap = new Map(); // key: a|b sorted -> line
+                    const visibleEdges = graph.edges.filter(e => visibleSet.has(e.source) && visibleSet.has(e.target));
+                    visibleEdges.forEach(e => {
+                        const p1 = nodesPos.get(e.source);
+                        const p2 = nodesPos.get(e.target);
+                        if (!p1 || !p2) return;
+                        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                        line.setAttribute('x1', p1.x);
+                        line.setAttribute('y1', p1.y);
+                        line.setAttribute('x2', p2.x);
+                        line.setAttribute('y2', p2.y);
+                        const opacity = 0.2 + 0.6 * (e.weight / maxWeight);
+                        line.setAttribute('class', 'graph-link');
+                        line.setAttribute('stroke-width', String(0.5 + 1.5 * (e.weight / maxWeight)));
+                        line.setAttribute('stroke-opacity', String(opacity));
+                        root.appendChild(line);
+                        const key = e.source < e.target ? `${e.source}|${e.target}` : `${e.target}|${e.source}`;
+                        linkMap.set(key, line);
+                    });
+
+                    // Draw nodes with labels
+                    const maxCount = Math.max(1, ...graph.nodes.map(n => n.count));
+                    visibleIds.forEach(nid => {
+                        const n = graph.nodes.find(nn => nn.id === nid) || { id: nid, count: 1 };
+                        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                        g.setAttribute('class', 'graph-node');
+                        g.setAttribute('data-id', n.id);
+                        if (topicsSet.has(n.id)) {
+                            g.classList.add('topic');
+                        }
+                        const { x, y } = nodesPos.get(n.id);
+                        const r = 3 + 6 * (n.count / maxCount);
+                        const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        c.setAttribute('cx', x);
+                        c.setAttribute('cy', y);
+                        c.setAttribute('r', String(r));
+                        // Use CSS for fill color to match theme
+
+                        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        t.setAttribute('x', String(x + r + 2));
+                        t.setAttribute('y', String(y + 3));
+                        t.textContent = n.id;
+
+                        g.appendChild(c);
+                        g.appendChild(t);
+                        root.appendChild(g);
+
+                        // Interactions
+                        g.addEventListener('mouseenter', () => setHighlight(n.id));
+                        g.addEventListener('mouseleave', () => clearHighlight());
+                        if (n.id !== centerId) {
+                            g.addEventListener('click', () => navigateWithTag(n.id));
+                        }
+                    });
+
+                    function setHighlight(id) {
+                        const neighborSet = neighbors.get(id) || new Set();
+                        const groups = root.querySelectorAll('.graph-node');
+                        const links = root.querySelectorAll('.graph-link');
+                        groups.forEach(el => {
+                            const nid = el.getAttribute('data-id');
+                            const active = nid === id || neighborSet.has(nid);
+                            el.classList.toggle('active', active);
+                            el.classList.toggle('dimmed', !active);
+                        });
+                        links.forEach(l => { l.classList.add('dimmed'); });
+                        // Undim links that connect active nodes (using linkMap for lookup)
+                        visibleEdges.forEach(e => {
+                            if (e.source === id || e.target === id || neighborSet.has(e.source) || neighborSet.has(e.target)) {
+                                const key = e.source < e.target ? `${e.source}|${e.target}` : `${e.target}|${e.source}`;
+                                const line = linkMap.get(key);
+                                if (line) line.classList.remove('dimmed');
+                            }
+                        });
+                    }
+
+                    function clearHighlight() {
+                        root.querySelectorAll('.graph-node').forEach(el => {
+                            el.classList.remove('active', 'dimmed');
+                        });
+                        root.querySelectorAll('.graph-link').forEach(el => el.classList.remove('dimmed'));
+                    }
+
+                    function navigateWithTag(tag) {
+                        try {
+                            localStorage.setItem('preselectedTags', JSON.stringify([tag]));
+                        } catch { }
+                        window.location.href = '/';
+                    }
+                    // Enable simple pan/zoom
+                    enablePanZoom(svg, root);
+                })
+                .catch((e) => { console.warn('topic-graph: failed to load graph.json', e); });
+        }
+
+        // Simple pan/zoom on SVG group
+        function enablePanZoom(svg, root) {
+            let scale = 1;
+            let tx = 0, ty = 0;
+            let panning = false;
+            let lastX = 0, lastY = 0;
+
+            function apply() {
+                root.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+            }
+
+            svg.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const dir = e.deltaY < 0 ? 1.1 : 0.9;
+                scale = Math.max(0.6, Math.min(2.5, scale * dir));
+                apply();
+            }, { passive: false });
+
+            svg.addEventListener('pointerdown', (e) => {
+                panning = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                svg.classList.add('panning');
+            });
+            svg.addEventListener('pointermove', (e) => {
+                if (!panning) return;
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                tx += dx;
+                ty += dy;
+                apply();
+            });
+            const stop = () => { panning = false; svg.classList.remove('panning'); };
+            svg.addEventListener('pointerup', stop);
+            svg.addEventListener('pointerleave', stop);
+            apply();
+        }
+
+        // Read preselectedTags and apply to index filter
+        function applyPreselectedTags() {
+            const section = document.querySelector('.pipeline-section');
+            if (!section) return; // not on index
+            let preload = null;
+            try {
+                preload = JSON.parse(localStorage.getItem('preselectedTags') || 'null');
+            } catch { preload = null; }
+            if (!Array.isArray(preload) || preload.length === 0) return;
+
+            // Set active tags
+            const set = new Set(preload);
+            const allTags = document.querySelectorAll('.tag');
+            allTags.forEach(t => {
+                const name = t.getAttribute('data-tag');
+                if (set.has(name)) {
+                    t.classList.add('active');
+                }
+            });
+            // Trigger the existing filtering code by simulating clicks for each tag (to update state)
+            preload.forEach(name => {
+                const el = Array.from(allTags).find(e => e.getAttribute('data-tag') === name);
+                if (el) el.click();
+            });
+            try { localStorage.removeItem('preselectedTags'); } catch { }
+        }
     </script>
 </body>
 
