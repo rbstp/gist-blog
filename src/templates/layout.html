@@ -955,6 +955,8 @@
             let tx = 0, ty = 0;
             let panning = false;
             let lastX = 0, lastY = 0;
+            let startX = 0, startY = 0;
+            let dragCandidate = false; const DRAG_THRESHOLD = 4; // px
             const pointers = new Map(); // pointerId -> {x,y}
             let pinch = null; // {s0, t0:{x,y}, d0, world:{x,y}}
             let lastTapTime = 0;
@@ -1035,13 +1037,10 @@
 
             svg.addEventListener('pointerdown', (e) => {
                 pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                svg.setPointerCapture?.(e.pointerId);
                 if (pointers.size === 1) {
-                    // start panning with single finger/mouse
-                    panning = true;
-                    lastX = e.clientX;
-                    lastY = e.clientY;
-                    svg.classList.add('panning');
+                    // Do not start pan yet; wait for small movement to preserve click behavior
+                    dragCandidate = true; panning = false;
+                    startX = lastX = e.clientX; startY = lastY = e.clientY;
                 } else if (pointers.size === 2) {
                     tryStartPinch();
                 }
@@ -1055,23 +1054,30 @@
                     updatePinch();
                     return;
                 }
+                const p0 = clientToViewBox(lastX, lastY);
+                const p1 = clientToViewBox(e.clientX, e.clientY);
+                const dxVB = p1.x - p0.x;
+                const dyVB = p1.y - p0.y;
+
+                // Start panning only after threshold
+                if (dragCandidate && !panning) {
+                    const movedPx = Math.hypot(e.clientX - startX, e.clientY - startY);
+                    if (movedPx > DRAG_THRESHOLD) {
+                        panning = true; dragCandidate = false; svg.setPointerCapture?.(e.pointerId); svg.classList.add('panning');
+                    } else {
+                        return; // ignore tiny moves so clicks can go through
+                    }
+                }
+                lastX = e.clientX; lastY = e.clientY;
                 if (!panning) return;
-                const dx = e.clientX - lastX;
-                const dy = e.clientY - lastY;
-                lastX = e.clientX;
-                lastY = e.clientY;
-                tx += dx;
-                ty += dy;
-                clampPan();
-                apply();
+                tx += dxVB; ty += dyVB; clampPan(); apply();
             });
 
             function endInteraction(e) {
                 if (pointers.has(e.pointerId)) pointers.delete(e.pointerId);
                 if (pointers.size < 2) pinch = null;
                 if (pointers.size === 0) {
-                    panning = false;
-                    svg.classList.remove('panning');
+                    dragCandidate = false; panning = false; svg.classList.remove('panning');
                 }
             }
             svg.addEventListener('pointerup', endInteraction);
