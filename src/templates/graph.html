@@ -1,0 +1,162 @@
+<section class="graph-page">
+  <div class="hero-terminal">
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="terminal-controls">
+          <span class="control close"></span>
+          <span class="control minimize"></span>
+          <span class="control maximize"></span>
+        </div>
+        <div class="terminal-title"></div>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-line">
+          <span class="prompt">rbstp@devops:~$</span>
+          <span class="command">graph --global --tags | view</span>
+        </div>
+        <div class="terminal-output">
+          <span class="output-text">Explore connections between tags across all posts. Scroll to zoom, drag to pan.
+            Hover to highlight neighbors. Click a tag to filter posts on the homepage.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="graph-page-canvas">
+    <svg id="global-tag-graph" class="graph-svg" viewBox="0 0 800 520" width="800" height="520"
+      aria-label="Global tag graph"></svg>
+  </div>
+</section>
+
+<script>
+  (function () {
+    function navigateWithTag(tag) {
+      try { localStorage.setItem('preselectedTags', JSON.stringify([tag])); } catch { }
+      window.location.href = '/';
+    }
+
+    function enablePanZoom(svg, root) {
+      let scale = 1, tx = 0, ty = 0; let panning = false; let lastX = 0, lastY = 0;
+      function apply() { root.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`); }
+      svg.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+        const old = scale;
+        const next = Math.max(0.4, Math.min(2.5, old * factor));
+        if (next === old) return;
+        const rect = svg.getBoundingClientRect();
+        const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
+        const px = vb.x + ((e.clientX - rect.left) / rect.width) * vb.width;
+        const py = vb.y + ((e.clientY - rect.top) / rect.height) * vb.height;
+        tx = tx + px * (1 / next - 1 / old);
+        ty = ty + py * (1 / next - 1 / old);
+        scale = next;
+        apply();
+      }, { passive: false });
+      svg.addEventListener('pointerdown', (e) => { panning = true; lastX = e.clientX; lastY = e.clientY; svg.classList.add('panning'); });
+      svg.addEventListener('pointermove', (e) => { if (!panning) return; const dx = e.clientX - lastX, dy = e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; tx += dx; ty += dy; apply(); });
+      const stop = () => { panning = false; svg.classList.remove('panning'); };
+      svg.addEventListener('pointerup', stop); svg.addEventListener('pointerleave', stop);
+      apply();
+    }
+
+    function renderGlobalGraph() {
+      const svg = document.getElementById('global-tag-graph');
+      if (!svg) return;
+
+      fetch('/graph.json?v={{timestamp}}')
+        .then(r => r.ok ? r.json() : null)
+        .then(graph => {
+          if (!graph || !graph.nodes) {
+            const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', '50%'); t.setAttribute('y', '50%'); t.setAttribute('text-anchor', 'middle'); t.textContent = 'No graph data'; t.setAttribute('class', 'graph-empty'); svg.appendChild(t); return;
+          }
+
+          // Simple radial layout around center
+          const width = 800, height = 520, cx = width / 2, cy = height / 2;
+          svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+          while (svg.firstChild) svg.removeChild(svg.firstChild);
+          const root = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          root.setAttribute('id', 'global-graph-root');
+          svg.appendChild(root);
+
+          // Order nodes by count and arrange in concentric rings
+          const nodes = graph.nodes.slice().sort((a, b) => b.count - a.count);
+          const maxCount = Math.max(1, ...nodes.map(n => n.count));
+          const ringRadius = [0, 120, 200, 280];
+          const perRing = [1, 6, 8, 12];
+          const positions = new Map();
+          let idx = 0;
+          for (let r = 0; r < ringRadius.length; r++) {
+            const radius = ringRadius[r];
+            const nThisRing = perRing[r];
+            for (let i = 0; i < nThisRing && idx < nodes.length; i++, idx++) {
+              const angle = (i / Math.max(1, nThisRing)) * Math.PI * 2 - Math.PI / 2;
+              positions.set(nodes[idx].id, { x: cx + (r === 0 ? 0 : radius * Math.cos(angle)), y: cy + (r === 0 ? 0 : radius * Math.sin(angle)) });
+            }
+          }
+
+          const linkMap = new Map();
+          const maxWeight = Math.max(1, ...graph.edges.map(e => e.weight || 1));
+          graph.edges.forEach(e => {
+            const p1 = positions.get(e.source), p2 = positions.get(e.target);
+            if (!p1 || !p2) return;
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', p1.x); line.setAttribute('y1', p1.y);
+            line.setAttribute('x2', p2.x); line.setAttribute('y2', p2.y);
+            line.setAttribute('class', 'graph-link');
+            line.setAttribute('stroke-width', String(0.5 + 1.5 * ((e.weight || 1) / maxWeight)));
+            root.appendChild(line);
+            const key = e.source < e.target ? `${e.source}|${e.target}` : `${e.target}|${e.source}`;
+            linkMap.set(key, line);
+          });
+
+          nodes.forEach(n => {
+            const { x, y } = positions.get(n.id) || { x: cx, y: cy };
+            const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+            g.setAttribute('class', 'graph-node'); g.setAttribute('data-id', n.id);
+            const r = 4 + 8 * (n.count / maxCount);
+            const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+            c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', String(r));
+            const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            t.setAttribute('x', String(x + r + 2)); t.setAttribute('y', String(y + 3)); t.textContent = n.id;
+            g.appendChild(c); g.appendChild(t); root.appendChild(g);
+
+            g.addEventListener('mouseenter', () => highlight(n.id));
+            g.addEventListener('mouseleave', () => clear());
+            g.addEventListener('click', () => navigateWithTag(n.id));
+          });
+
+          function highlight(id) {
+            const neigh = new Set([id]);
+            graph.edges.forEach(e => { if (e.source === id) neigh.add(e.target); if (e.target === id) neigh.add(e.source); });
+            root.querySelectorAll('.graph-node').forEach(el => {
+              const nid = el.getAttribute('data-id');
+              const active = neigh.has(nid);
+              el.classList.toggle('active', active);
+              el.classList.toggle('dimmed', !active);
+            });
+            root.querySelectorAll('.graph-link').forEach(l => l.classList.add('dimmed'));
+            graph.edges.forEach(e => {
+              if (e.source === id || e.target === id || neigh.has(e.source) || neigh.has(e.target)) {
+                const key = e.source < e.target ? `${e.source}|${e.target}` : `${e.target}|${e.source}`;
+                const line = linkMap.get(key); if (line) line.classList.remove('dimmed');
+              }
+            });
+          }
+          function clear() {
+            root.querySelectorAll('.graph-node').forEach(el => el.classList.remove('active', 'dimmed'));
+            root.querySelectorAll('.graph-link').forEach(el => el.classList.remove('dimmed'));
+          }
+
+          enablePanZoom(svg, root);
+        })
+        .catch(() => {
+          const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+          t.setAttribute('x', '50%'); t.setAttribute('y', '50%'); t.setAttribute('text-anchor', 'middle'); t.textContent = 'Failed to load graph.json'; t.setAttribute('class', 'graph-empty'); svg.appendChild(t);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', renderGlobalGraph);
+  })();
+</script>

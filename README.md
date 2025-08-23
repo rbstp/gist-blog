@@ -22,6 +22,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Internal Gist Links** - Automatically converts your gist URLs to internal blog post links for seamless navigation
 - **Table of Contents** - Automatic ToC generation with sticky sidebar navigation and active section highlighting
 - **Permalink Navigation** - Click-to-copy section links with smooth scrolling
+- **Global Tag Graph** - Explore connections between tags across all posts; hover to highlight, click a tag to filter the homepage
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
 - **Cache Busting** - Automatic CSS versioning for instant updates
@@ -81,6 +82,16 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
    npm run build
    # or directly: node src/build.js
    ```
+### Performance controls (optional)
+- Fetch concurrency: set `FETCH_CONCURRENCY` (default 5) to control parallel GitHub requests during build.
+- Local API caching: set `GIST_CACHE=true|false` (default true in local dev) to enable/disable on-disk caching under `.cache/`.
+  - Cache TTLs can be tuned via `GIST_CACHE_TTL_LIST_MS` (default 600000 = 10m) and `GIST_CACHE_TTL_GIST_MS` (default 3600000 = 60m).
+- Post-build minification runs automatically. The `postbuild` script minifies HTML, inline JS/CSS, and `styles.css`.
+
+In CI, you can disable caching to always fetch fresh data:
+```bash
+GIST_CACHE=false npm run build
+```
 
 ## 📝 Usage
 
@@ -141,9 +152,11 @@ Check out my other post: /posts/abc123def456.html
 - **Permalink Anchors** - Hover over headings to reveal clickable # symbols for easy link sharing
 
 **Layout:**
-- **Non-Intrusive** - ToC overlays as true sidebar without affecting post content width
-- **Responsive Behavior** - Completely hidden on tablets and mobile devices
-- **Proper Positioning** - Fixed positioning ensures ToC doesn't interfere with content layout
+- **Container-Aligned** - On wide viewports, the ToC/graph sidebar aligns with the main content container
+- **Smart Sizing** - Width uses a clamp (min ~240px, ideal ~22vw, max ~360px) for a stable ratio across screen sizes
+- **Fallback Docking** - If there isn’t enough room next to content, it docks to the right edge and reserves space so content isn’t overlapped
+- **Responsive Behavior** - Hidden only on narrower screens (≤1080px) or when there truly isn’t space
+- **Footer-Aware** - Sidebar height shrinks as the footer enters view so they never overlap
 
 ### Terminal Controls
 
@@ -174,6 +187,18 @@ Check out my other post: /posts/abc123def456.html
 - **Authentic Errors**: Realistic terminal output with deployment failures and database issues
 - **Toggle Back**: Click "dev" button to restore normal operation
 - **No Persistence**: Easter egg resets on page reload for clean demo experience
+
+## 🕸 Global Tag Graph
+
+Navigate to `/graph.html` (also available in the header) to explore connections between tags across all posts.
+
+- Uses the generated `dist/graph.json` (built from post tags during `npm run build`)
+- Pan/zoom with mouse, hover to highlight neighbors
+- Click a tag to jump back to the homepage with that tag preselected (filter applied automatically)
+- Node sizes scale with tag frequency; edge widths scale with co-occurrence weight
+
+Notes:
+- By default, the graph includes up to 20 most frequent tags. You can change this by adjusting `MAX_NODES` in `generateGraphData` within `src/lib/BlogGenerator.js`.
 
 ## 🎨 Customization
 
@@ -230,13 +255,14 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
     - run: npm install
     - run: npm run build
       env:
         GIST_USERNAME: ${{ github.repository_owner }}
         SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
         SITE_TITLE: "${{ github.repository_owner }}'s Blog"
+        GIST_CACHE: false
     - uses: actions/deploy-pages@v4
       with:
         artifact_name: dist

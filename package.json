@@ -8,7 +8,8 @@
   },
   "scripts": {
     "build": "node src/build.js",
-    "dev": "node src/build.js && npx http-server dist -p 3000",
+    "postbuild": "node scripts/minify.js && node scripts/precompress.js",
+    "dev": "npm run build && npx http-server dist -p 3000 --gzip --brotli",
     "minify": "node scripts/minify.js"
   },
   "dependencies": {

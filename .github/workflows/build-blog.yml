@@ -36,13 +36,11 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Fetch gists and build site
+    - name: Build site (fetch, minify, precompress)
       env:
         GIST_USERNAME: rbstp
-      run: node src/build.js
-
-    - name: Minify
-      run: npm run minify
+        GIST_CACHE: false
+      run: npm run build
 
     - name: Setup Pages
       uses: actions/configure-pages@v4

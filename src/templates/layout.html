@@ -41,6 +41,10 @@
                     <i class="fas fa-rss nav-icon"></i>
                     <span>rss</span>
                 </a>
+                <a href="/graph.html" class="nav-item">
+                    <i class="fas fa-project-diagram nav-icon"></i>
+                    <span>graph</span>
+                </a>
             </div>
         </nav>
     </header>
@@ -610,19 +614,24 @@
 
                 const sidebar = document.querySelector('.toc-sidebar');
 
-                function ensureVisible(link) {
+                function ensureVisible(link, center = false) {
                     if (!sidebar || !link) return;
                     // Only adjust when it's actually out of view to avoid fighting page scroll
                     const sbRect = sidebar.getBoundingClientRect();
                     const lRect = link.getBoundingClientRect();
                     const margin = 8; // small visual buffer
-                    if (lRect.top < sbRect.top + margin) {
+                    if (center) {
+                        const sbCenter = (sbRect.top + sbRect.bottom) / 2;
+                        const lCenter = (lRect.top + lRect.bottom) / 2;
+                        sidebar.scrollTop += (lCenter - sbCenter);
+                    } else if (lRect.top < sbRect.top + margin) {
                         sidebar.scrollTop -= (sbRect.top + margin) - lRect.top;
                     } else if (lRect.bottom > sbRect.bottom - margin) {
                         sidebar.scrollTop += lRect.bottom - (sbRect.bottom - margin);
                     }
                 }
 
+                let lastScrollY = window.scrollY;
                 function updateActiveLink() {
                     const scrollPosition = window.scrollY + 100; // Offset for header
 
@@ -643,9 +652,34 @@
                         const activeLink = document.querySelector(`.toc-link[href="#${activeHeading.id}"]`);
                         if (activeLink) {
                             activeLink.classList.add('active');
-                            ensureVisible(activeLink);
+                            const scrollingUp = window.scrollY < lastScrollY;
+                            // On upward scroll, center the active item; on downward, just ensure visible
+                            ensureVisible(activeLink, scrollingUp);
+
+                            // If scrolling down and we're on the last ToC item, snap to the very bottom
+                            if (!scrollingUp && sidebar) {
+                                const linksArr = Array.from(tocLinks);
+                                const idx = linksArr.indexOf(activeLink);
+                                if (idx === linksArr.length - 1) {
+                                    // Snap to bottom and ensure the ToC terminal rounded corner is fully visible
+                                    const tocTerminal = document.querySelector('.toc-terminal');
+                                    const sbRect = sidebar.getBoundingClientRect();
+                                    const margin = 8;
+                                    // First try snapping to the absolute bottom
+                                    sidebar.scrollTop = sidebar.scrollHeight;
+                                    if (tocTerminal) {
+                                        const tRect = tocTerminal.getBoundingClientRect();
+                                        if (tRect.bottom > sbRect.bottom - margin) {
+                                            const delta = tRect.bottom - (sbRect.bottom - margin);
+                                            sidebar.scrollTop += Math.max(0, delta);
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
+
+                    lastScrollY = window.scrollY;
                 }
 
                 // Update on scroll with throttling
@@ -675,14 +709,73 @@
                 const header = document.querySelector('header');
                 if (!sidebar) return;
                 const gap = 16; // 1rem in px
+                // Try to align the sidebar to the right edge of the main content container
+                const container = document.querySelector('main.container');
                 const headerRect = header ? header.getBoundingClientRect() : null;
                 const headerBottom = headerRect ? Math.ceil(headerRect.bottom) : 0; // distance from viewport top
                 // Use the actual bottom position so the sidebar slides up smoothly as the header scrolls out
                 const top = Math.max(gap, headerBottom + gap);
                 sidebar.style.top = top + 'px';
                 // keep a 1rem bottom gap
-                const maxH = Math.max(120, window.innerHeight - top - gap);
+                let maxH = Math.max(120, window.innerHeight - top - gap);
+
+                // If footer is entering the viewport, reduce height so the sidebar doesn't overlap it
+                const footer = document.querySelector('footer');
+                if (footer) {
+                    const fRect = footer.getBoundingClientRect();
+                    // When footer top is inside viewport, clamp max height so sidebar bottom stays above footer
+                    if (fRect.top < window.innerHeight) {
+                        const available = Math.max(80, fRect.top - top - gap);
+                        maxH = Math.max(80, Math.min(maxH, available));
+                    }
+                }
                 sidebar.style.maxHeight = maxH + 'px';
+
+                // Responsive width and positioning: prefer aligning with container; if not enough room,
+                // dock to viewport right and reserve space by increasing post container's right margin.
+                if (container) {
+                    const cRect = container.getBoundingClientRect();
+                    const postContainer = document.querySelector('.post-container');
+                    const availableRight = Math.max(0, window.innerWidth - cRect.right - gap);
+                    const minW = 240;
+                    const maxW = 360;
+                    const ideal = Math.round(Math.min(maxW, Math.max(minW, window.innerWidth * 0.22)));
+                    const fitWidth = Math.max(minW, Math.min(ideal, availableRight));
+
+                    // Reset any reserved space by default; we'll add it only for the fallback case
+                    if (postContainer) postContainer.style.marginRight = '';
+
+                    if (availableRight >= minW + 4) {
+                        // Enough room to align next to the container's right edge
+                        sidebar.style.display = 'block';
+                        sidebar.style.right = 'auto';
+                        sidebar.style.left = Math.max(gap, Math.min(cRect.right + gap, window.innerWidth - fitWidth - gap)) + 'px';
+                        sidebar.style.width = fitWidth + 'px';
+                        sidebar.style.minWidth = minW + 'px';
+                        sidebar.style.maxWidth = maxW + 'px';
+                    } else {
+                        // Fallback: dock to viewport right and reserve space by pushing content slightly left
+                        const fallbackWidth = Math.round(Math.min(maxW, Math.max(220, ideal)));
+                        // Only use fallback when viewport is reasonably wide
+                        if (window.innerWidth >= 1160) {
+                            sidebar.style.display = 'block';
+                            sidebar.style.left = '';
+                            sidebar.style.right = gap + 'px';
+                            sidebar.style.width = fallbackWidth + 'px';
+                            sidebar.style.minWidth = '220px';
+                            sidebar.style.maxWidth = maxW + 'px';
+                            if (postContainer) postContainer.style.marginRight = (fallbackWidth + gap) + 'px';
+                        } else {
+                            // Truly narrow viewport — hide
+                            sidebar.style.display = 'none';
+                        }
+                    }
+                }
+
+                // If the page is scrolled back to very top, ensure the sidebar scroll position resets
+                if ((window.scrollY || document.documentElement.scrollTop || 0) <= 2) {
+                    sidebar.scrollTop = 0;
+                }
             }
             adjustTocSidebar();
             window.addEventListener('resize', adjustTocSidebar, { passive: true });
@@ -869,8 +962,19 @@
 
             svg.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                const dir = e.deltaY < 0 ? 1.1 : 0.9;
-                scale = Math.max(0.6, Math.min(2.5, scale * dir));
+                const factor = e.deltaY < 0 ? 1.1 : 0.9;
+                const old = scale;
+                const next = Math.max(0.6, Math.min(2.5, old * factor));
+                if (next === old) return;
+                // Zoom towards pointer: compute cursor in SVG viewBox units
+                const rect = svg.getBoundingClientRect();
+                const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
+                const px = vb.x + ((e.clientX - rect.left) / rect.width) * vb.width;
+                const py = vb.y + ((e.clientY - rect.top) / rect.height) * vb.height;
+                // Adjust translation so the point under the cursor stays fixed
+                tx = tx + px * (1 / next - 1 / old);
+                ty = ty + py * (1 / next - 1 / old);
+                scale = next;
                 apply();
             }, { passive: false });
 

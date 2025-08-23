@@ -27,6 +27,35 @@ class BlogGenerator {
     this.templateCache = new Map();
     // Date formatting cache to avoid repeated parsing and formatting
     this.dateCache = new Map();
+
+    // Simple on-disk cache for API responses (dev convenience)
+    this.cacheDir = path.join('.cache');
+    this.enableCache = String(process.env.GIST_CACHE || 'true').toLowerCase() !== 'false';
+    // Default TTL: 10 minutes for list, 60 minutes for per-gist
+    this.ttlListMs = Number(process.env.GIST_CACHE_TTL_LIST_MS || 10 * 60 * 1000);
+    this.ttlGistMs = Number(process.env.GIST_CACHE_TTL_GIST_MS || 60 * 60 * 1000);
+  }
+
+  async readCache(filePath, ttlMs) {
+    if (!this.enableCache) return null;
+    try {
+      const full = path.join(this.cacheDir, filePath);
+      const stat = await fs.stat(full).catch(() => null);
+      if (!stat) return null;
+      const age = Date.now() - stat.mtimeMs;
+      if (age > ttlMs) return null;
+      const buf = await fs.readFile(full, 'utf-8');
+      return JSON.parse(buf);
+    } catch { return null; }
+  }
+
+  async writeCache(filePath, data) {
+    if (!this.enableCache) return;
+    try {
+      await fs.mkdir(this.cacheDir, { recursive: true });
+      const full = path.join(this.cacheDir, filePath);
+      await fs.writeFile(full, JSON.stringify(data));
+    } catch { /* ignore cache errors */ }
   }
 
   // Build a minimalist graph from tags: nodes are tags with frequency, edges are co-occurrences
@@ -62,6 +91,11 @@ class BlogGenerator {
   }
 
   async fetchGists() {
+    // Try cache first
+    const cacheKey = `gists_${this.gistUsername}.json`;
+    const cached = await this.readCache(cacheKey, this.ttlListMs);
+    if (cached) return cached;
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
@@ -88,7 +122,9 @@ class BlogGenerator {
       }
 
       const gists = await response.json();
-      return gists.filter(gist => gist.public);
+      const filtered = gists.filter(gist => gist.public);
+      await this.writeCache(cacheKey, filtered);
+      return filtered;
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
@@ -99,6 +135,11 @@ class BlogGenerator {
   }
 
   async fetchGistContent(gist) {
+    // Try per-gist cache
+    const cacheKey = `gist_${gist.id}.json`;
+    const cached = await this.readCache(cacheKey, this.ttlGistMs);
+    if (cached) return cached;
+
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
@@ -124,7 +165,9 @@ class BlogGenerator {
         throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
       }
 
-      return await response.json();
+      const json = await response.json();
+      await this.writeCache(cacheKey, json);
+      return json;
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
@@ -247,6 +290,19 @@ class BlogGenerator {
     await fs.writeFile(path.join(this.distDir, 'feed.xml'), rssXml);
   }
 
+  async generateGraphPage() {
+    const { 'layout.html': layoutTemplate, 'graph.html': graphTemplate } =
+      await this.loadTemplatesCached(['layout.html', 'graph.html']);
+
+    const content = this.templateEngine.render(graphTemplate, { timestamp: Date.now() });
+    const fullPage = this.templateEngine.render(layoutTemplate, {
+      title: 'tags graph',
+      content,
+      timestamp: Date.now()
+    });
+    await fs.writeFile(path.join(this.distDir, 'graph.html'), fullPage);
+  }
+
   async copyStyles() {
     const sourceStylesPath = path.join(this.stylesDir, 'main.css');
     const destStylesPath = path.join(this.distDir, 'styles.css');
@@ -275,15 +331,42 @@ class BlogGenerator {
 
     // Fetch gists
     const gists = await this.fetchGists();
-    const gistPromises = gists.map(async (gist) => {
-      try {
-        const fullGist = await this.fetchGistContent(gist);
-        return this.gistParser.parseGistAsPost(fullGist);
-      } catch (error) {
-        console.error(`Failed to process gist ${gist.id}:`, error.message);
-        return null;
-      }
-    });
+
+    // Concurrency limiting to avoid bursts and rate-limit spikes
+    const limit = Number(process.env.FETCH_CONCURRENCY || 5);
+    async function mapWithConcurrency(items, worker, concurrency) {
+      const results = new Array(items.length);
+      let index = 0;
+      let active = 0;
+      return new Promise((resolve) => {
+        function next() {
+          if (index >= items.length && active === 0) return resolve(results);
+          while (active < concurrency && index < items.length) {
+            const cur = index++;
+            active++;
+            Promise.resolve(worker(items[cur], cur))
+              .then((res) => { results[cur] = res; })
+              .catch((err) => { console.error('Worker error:', err?.message || err); results[cur] = null; })
+              .finally(() => { active--; next(); });
+          }
+        }
+        next();
+      });
+    }
+
+    const gistPromises = await mapWithConcurrency(
+      gists,
+      async (gist) => {
+        try {
+          const fullGist = await this.fetchGistContent(gist);
+          return this.gistParser.parseGistAsPost(fullGist);
+        } catch (error) {
+          console.error(`Failed to process gist ${gist.id}:`, error.message);
+          return null;
+        }
+      },
+      Math.max(1, limit)
+    );
 
     // Use allSettled for better error resilience
     const gistResults = await Promise.allSettled(gistPromises);
@@ -291,14 +374,19 @@ class BlogGenerator {
       .filter(result => result.status === 'fulfilled' && result.value !== null)
       .map(result => result.value);
 
+    // Sort posts by createdAt once for reuse
+    const sortedPostsByDate = posts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
     // Generate all files in parallel for better performance
     await Promise.all([
       // Generate individual post files
       ...posts.map(post => this.generatePost(post)),
-      // Generate index page
-      this.generateIndex(posts),
-      // Generate RSS feed
-      this.generateRSSFeed(posts),
+      // Generate index page (uses sorted posts)
+      this.generateIndex(sortedPostsByDate),
+      // Generate RSS feed (uses sorted posts)
+      this.generateRSSFeed(sortedPostsByDate),
+      // Generate global tag graph page
+      this.generateGraphPage(),
       // Generate tag graph data
       this.generateGraphData(posts),
       // Copy styles

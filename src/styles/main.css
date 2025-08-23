@@ -1100,6 +1100,26 @@ nav {
     opacity: 0.25;
 }
 
+/* Global graph page */
+.graph-page {
+    padding: 2rem 0 3rem;
+}
+
+.graph-page-canvas {
+    max-width: 1000px;
+    margin: 1rem auto;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.graph-page-canvas .graph-svg {
+    width: 100%;
+    height: auto;
+}
+
 /* consolidated .graph-link styles above */
 
 .toc-content {
@@ -2074,8 +2094,9 @@ table code {
 }
 
 
-/* Tablet and smaller desktop screens - Hide ToC to prevent overlap */
-@media (max-width: 1400px) {
+/* Tablet and smaller desktop screens - Hide ToC on narrower layouts
+   Note: JS will also dynamically hide the ToC if there's not enough space next to content. */
+@media (max-width: 1080px) {
     .toc-sidebar {
         display: none;
     }
