@@ -23,6 +23,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Table of Contents** - Automatic ToC generation with sticky sidebar navigation and active section highlighting
 - **Permalink Navigation** - Click-to-copy section links with smooth scrolling
 - **Global Tag Graph** - Explore connections between tags across all posts; hover to highlight, click a tag to filter the homepage
+  - Pointer-centered zoom, pinch-zoom on touch, double-tap to zoom, and a reset view button
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
 - **Cache Busting** - Automatic CSS versioning for instant updates
@@ -193,9 +194,17 @@ Check out my other post: /posts/abc123def456.html
 Navigate to `/graph.html` (also available in the header) to explore connections between tags across all posts.
 
 - Uses the generated `dist/graph.json` (built from post tags during `npm run build`)
-- Pan/zoom with mouse, hover to highlight neighbors
+- Interactions:
+  - Pan: click/touch-drag to move the graph
+  - Zoom toward pointer: mouse wheel zoom is centered on the cursor
+  - Pinch-zoom (mobile/tablet): two-finger pinch to zoom with the midpoint anchored
+  - Double-tap to zoom toward the tap point
+  - Reset: a small “reset” button in the top-right restores the default view
+  - Hover: highlight neighbors when hovering a tag (desktop)
 - Click a tag to jump back to the homepage with that tag preselected (filter applied automatically)
 - Node sizes scale with tag frequency; edge widths scale with co-occurrence weight
+
+Post pages also include a compact topic graph (in the ToC sidebar on desktop) with the same pan/zoom/double‑tap/reset behavior.
 
 Notes:
 - By default, the graph includes up to 20 most frequent tags. You can change this by adjusting `MAX_NODES` in `generateGraphData` within `src/lib/BlogGenerator.js`.
@@ -273,8 +282,10 @@ jobs:
 ```
 dist/
 ├── index.html          # Homepage with post grid
+├── graph.html          # Global tag graph page
 ├── feed.xml           # RSS 2.0 feed
 ├── styles.css         # All styling (embedded)
+├── graph.json         # Generated tag/edge data used by graphs
 └── posts/
     └── {gist-id}.html # Individual post pages
 ```
