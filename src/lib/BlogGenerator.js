@@ -34,6 +34,9 @@ class BlogGenerator {
     // Default TTL: 10 minutes for list, 60 minutes for per-gist
     this.ttlListMs = Number(process.env.GIST_CACHE_TTL_LIST_MS || 10 * 60 * 1000);
     this.ttlGistMs = Number(process.env.GIST_CACHE_TTL_GIST_MS || 60 * 60 * 1000);
+
+    // Optional GitHub token for higher rate limits
+    this.githubToken = process.env.GITHUB_TOKEN || '';
   }
 
   async readCache(filePath, ttlMs) {
@@ -56,6 +59,34 @@ class BlogGenerator {
       const full = path.join(this.cacheDir, filePath);
       await fs.writeFile(full, JSON.stringify(data));
     } catch { /* ignore cache errors */ }
+  }
+
+  // Lightweight ETag helpers (stored as separate tiny files)
+  async readEtag(key) {
+    try {
+      const full = path.join(this.cacheDir, `${key}.etag`);
+      const etag = await fs.readFile(full, 'utf-8').catch(() => '');
+      return etag || '';
+    } catch { return ''; }
+  }
+
+  async writeEtag(key, etag) {
+    try {
+      if (!etag) return;
+      await fs.mkdir(this.cacheDir, { recursive: true });
+      const full = path.join(this.cacheDir, `${key}.etag`);
+      await fs.writeFile(full, etag);
+    } catch { /* ignore */ }
+  }
+
+  buildGitHubHeaders(extra = {}) {
+    const headers = {
+      'User-Agent': USER_AGENT,
+      'Accept': 'application/vnd.github+json',
+      ...extra
+    };
+    if (this.githubToken) headers['Authorization'] = `Bearer ${this.githubToken}`;
+    return headers;
   }
 
   // Build a minimalist graph from tags: nodes are tags with frequency, edges are co-occurrences
@@ -100,13 +131,17 @@ class BlogGenerator {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     try {
+      const etag = await this.readEtag(cacheKey);
       const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-        headers: {
-          'User-Agent': USER_AGENT
-        },
+        headers: this.buildGitHubHeaders(etag ? { 'If-None-Match': etag } : undefined),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+
+      if (response.status === 304 && cached) {
+        // Not modified -> use cached body
+        return cached;
+      }
 
       if (!response.ok) {
         console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
@@ -124,6 +159,8 @@ class BlogGenerator {
       const gists = await response.json();
       const filtered = gists.filter(gist => gist.public);
       await this.writeCache(cacheKey, filtered);
+      const respEtag = response.headers.get('etag');
+      if (respEtag) await this.writeEtag(cacheKey, respEtag);
       return filtered;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -144,13 +181,16 @@ class BlogGenerator {
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
 
     try {
+      const etag = await this.readEtag(cacheKey);
       const response = await fetch(gist.url, {
-        headers: {
-          'User-Agent': USER_AGENT
-        },
+        headers: this.buildGitHubHeaders(etag ? { 'If-None-Match': etag } : undefined),
         signal: controller.signal
       });
       clearTimeout(timeoutId);
+
+      if (response.status === 304 && cached) {
+        return cached;
+      }
 
       if (!response.ok) {
         console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
@@ -167,6 +207,8 @@ class BlogGenerator {
 
       const json = await response.json();
       await this.writeCache(cacheKey, json);
+      const respEtag = response.headers.get('etag');
+      if (respEtag) await this.writeEtag(cacheKey, respEtag);
       return json;
     } catch (error) {
       clearTimeout(timeoutId);
@@ -354,7 +396,7 @@ class BlogGenerator {
       });
     }
 
-    const gistPromises = await mapWithConcurrency(
+    const gistResults = await mapWithConcurrency(
       gists,
       async (gist) => {
         try {
@@ -368,11 +410,8 @@ class BlogGenerator {
       Math.max(1, limit)
     );
 
-    // Use allSettled for better error resilience
-    const gistResults = await Promise.allSettled(gistPromises);
-    const posts = gistResults
-      .filter(result => result.status === 'fulfilled' && result.value !== null)
-      .map(result => result.value);
+    // Filter out failures/nulls; items are already resolved
+    const posts = gistResults.filter((p) => p !== null);
 
     // Sort posts by createdAt once for reuse
     const sortedPostsByDate = posts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));

@@ -8,6 +8,7 @@
     <link rel="icon"
         href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 fill=%22%23000%22 rx=%222%22/><text x=%224%22 y=%2212%22 fill=%22%2300ff00%22 font-family=%22monospace%22 font-size=%228%22>$</text><text x=%224%22 y=%2222%22 fill=%22%2300ff00%22 font-family=%22monospace%22 font-size=%226%22>_</text></svg>">
     <link rel="stylesheet" href="/styles.css?v={{timestamp}}">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,10 +70,17 @@
             </div>
         </div>
     </footer>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script>
-        // Initialize highlight.js
-        hljs.highlightAll();
+        // Conditionally load highlight.js only if code blocks exist
+        (function () {
+            if (document.querySelector('pre code')) {
+                const s = document.createElement('script');
+                s.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
+                s.defer = true;
+                s.onload = function () { try { window.hljs && hljs.highlightAll(); } catch (e) { } };
+                document.head.appendChild(s);
+            }
+        })();
 
         // Theme management - must run before DOMContentLoaded to prevent flash
         (function () {
@@ -776,11 +784,24 @@
                 if ((window.scrollY || document.documentElement.scrollTop || 0) <= 2) {
                     sidebar.scrollTop = 0;
                 }
+
+                // If we've reached (or very near) the bottom of the document, snap ToC to its bottom
+                const docEl = document.documentElement;
+                const atBottom = (window.innerHeight + window.scrollY) >= (docEl.scrollHeight - 2);
+                if (atBottom) {
+                    sidebar.scrollTop = sidebar.scrollHeight; // will clamp to max scroll
+                }
+            }
+            // Throttle expensive sidebar adjustments with rAF
+            let rafId = null;
+            function scheduleAdjust() {
+                if (rafId) return;
+                rafId = requestAnimationFrame(() => { rafId = null; adjustTocSidebar(); });
             }
             adjustTocSidebar();
-            window.addEventListener('resize', adjustTocSidebar, { passive: true });
+            window.addEventListener('resize', scheduleAdjust, { passive: true });
             // Also respond to scroll so the gap reduces as the header goes off-screen
-            window.addEventListener('scroll', adjustTocSidebar, { passive: true });
+            window.addEventListener('scroll', scheduleAdjust, { passive: true });
 
             // Initialize topic graph when sidebar exists (on post pages)
             initTopicGraph();

@@ -83,6 +83,20 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
    npm run build
    # or directly: node src/build.js
    ```
+
+#### Optional: GitHub token and conditional requests
+To improve reliability and speed (especially in CI), you can provide a personal access token and benefit from conditional requests:
+
+- Set `GITHUB_TOKEN` to raise rate limits for the GitHub API.
+- The build uses ETags (`If-None-Match`) for both the gist list and per‑gist requests; when content is unchanged, cached data from `.cache/` is reused after a `304 Not Modified` response.
+
+Example (macOS zsh):
+```bash
+export GITHUB_TOKEN=ghp_your_token_here
+export GIST_USERNAME=your-github-username
+npm run build
+```
+
 ### Performance controls (optional)
 - Fetch concurrency: set `FETCH_CONCURRENCY` (default 5) to control parallel GitHub requests during build.
 - Local API caching: set `GIST_CACHE=true|false` (default true in local dev) to enable/disable on-disk caching under `.cache/`.
@@ -93,6 +107,8 @@ In CI, you can disable caching to always fetch fresh data:
 ```bash
 GIST_CACHE=false npm run build
 ```
+
+If rate limits are hit in CI, set a `GITHUB_TOKEN` secret and pass it to the build environment.
 
 ## 📝 Usage
 
@@ -352,6 +368,10 @@ dist/
 - Minimal CSS/JS payload
 - Static HTML generation
 - Browser caching with timestamps
+ - Lazy-loaded highlight.js only on pages containing code blocks
+ - rAF-throttled ToC layout adjustments on scroll/resize
+ - CSS `content-visibility` + `contain-intrinsic-size` to speed initial render of heavy/offscreen sections
+ - Respects `prefers-reduced-motion` to disable animations and smooth scrolling
 
 **Pagination & Filtering**
 - All posts loaded once for instant filtering

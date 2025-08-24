@@ -483,6 +483,9 @@ nav {
     display: flex;
     flex-direction: column;
     min-height: 400px;
+    /* Improve initial rendering for large lists */
+    content-visibility: auto;
+    contain-intrinsic-size: 400px 600px;
 }
 
 .post-card:hover {
@@ -1053,6 +1056,9 @@ nav {
     user-select: none;
     -webkit-user-select: none;
     touch-action: none;
+    /* Avoid layout thrash while offscreen */
+    content-visibility: auto;
+    contain-intrinsic-size: 232px 220px;
 }
 
 .graph-svg.panning {
@@ -2291,5 +2297,17 @@ table code {
     .post-content-advanced .permalink {
         left: -1.2rem;
         font-size: 0.75em;
+    }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    * {
+        animation: none !important;
+        transition: none !important;
     }
 }
