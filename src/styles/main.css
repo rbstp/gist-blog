@@ -7,6 +7,7 @@
     --border-primary: #21262d;
     --border-accent: #f78166;
     --text-primary: #f0f6fc;
+    --text-body: #c9d1d9;
     --text-secondary: #8b949e;
     --text-muted: #6e7681;
     --accent-primary: #58a6ff;
@@ -30,6 +31,7 @@
     --border-primary: #d0d7de;
     --border-accent: #fd7e14;
     --text-primary: #24292f;
+    --text-body: #24292f;
     --text-secondary: #656d76;
     --text-muted: #8c959f;
     --accent-primary: #0969da;
@@ -935,7 +937,7 @@ nav {
 
 .post-content-advanced p {
     margin-bottom: 1.5rem;
-    color: var(--text-secondary);
+    color: var(--text-body);
 }
 
 .post-content-advanced ul,
@@ -946,7 +948,7 @@ nav {
 
 .post-content-advanced li {
     margin-bottom: 0.5rem;
-    color: var(--text-secondary);
+    color: var(--text-body);
 }
 
 .post-content-advanced pre {
@@ -988,7 +990,7 @@ nav {
 
 .post-content-advanced blockquote p {
     margin: 0;
-    color: var(--text-secondary);
+    color: var(--text-body);
     font-style: italic;
 }
 
@@ -1585,14 +1587,14 @@ table code {
 .post-content p {
     margin: 1rem 0;
     line-height: 1.7;
-    color: var(--text-primary);
+    color: var(--text-body);
     font-size: 1rem;
     font-weight: 400;
 }
 
 .post-content p:first-of-type {
     font-size: 1.1rem;
-    color: var(--text-primary);
+    color: var(--text-body);
     margin-top: 0;
     font-weight: 500;
     line-height: 1.6;
@@ -1639,7 +1641,7 @@ table code {
 .post-content ol {
     margin: 1.5rem 0;
     padding-left: 2rem;
-    color: var(--text-primary);
+    color: var(--text-body);
 }
 
 .post-content li {
