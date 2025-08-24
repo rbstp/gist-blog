@@ -84,6 +84,23 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
    # or directly: node src/build.js
    ```
 
+### Linting
+
+This repo uses ESLint (flat config) for JS and CSS.
+
+- Run lints:
+  ```bash
+  npm run lint
+  ```
+- Auto-fix what can be fixed:
+  ```bash
+  npm run lint:fix
+  ```
+
+Notes:
+- Generated output in `dist/` and the local cache `.cache/` are ignored by ESLint.
+- CSS linting is scoped to `src/**/*.css`. Rules that flagged modern properties and important flags have been relaxed for this project.
+
 #### Optional: GitHub token and conditional requests
 To improve reliability and speed (especially in CI), you can provide a personal access token and benefit from conditional requests:
 
@@ -265,49 +282,60 @@ export SITE_DESCRIPTION="Your blog description"
 
 Create `.github/workflows/build-blog.yml`:
 ```yaml
-name: Build and Deploy Blog
+name: Build and Deploy Gist Blog
 
 on:
-  push:
-    branches: [ main ]
   schedule:
-    - cron: '0 */6 * * *'  # Build every 6 hours for new gists
+    - cron: '47 * * * *'   # hourly
+  workflow_dispatch:        # manual trigger
+  push:
+    branches: [ master ]
+    paths:
+      - 'src/**'
+      - '.github/workflows/**'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-node@v4
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        node-version: '20'
-    - run: npm install
-    - run: npm run build
+        node-version: '24'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Lint
+      run: npm run lint
+
+    - name: Build site (fetch, minify, precompress)
       env:
         GIST_USERNAME: ${{ github.repository_owner }}
-        SITE_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
-        SITE_TITLE: "${{ github.repository_owner }}'s Blog"
         GIST_CACHE: false
-    - uses: actions/deploy-pages@v4
+      run: npm run build
+
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        artifact_name: dist
-```
-
-## 📊 Generated Files
-
-```
-dist/
-├── index.html          # Homepage with post grid
-├── graph.html          # Global tag graph page
-├── feed.xml           # RSS 2.0 feed
-├── styles.css         # All styling (embedded)
-├── graph.json         # Generated tag/edge data used by graphs
-└── posts/
-    └── {gist-id}.html # Individual post pages
-```
-
-## 🔧 Technical Details
-
+        path: './dist'
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:

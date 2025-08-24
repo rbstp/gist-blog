@@ -5,11 +5,11 @@ const hljs = require('highlight.js');
 const renderer = new marked.Renderer();
 
 // Custom heading renderer to handle anchor IDs
-renderer.heading = function(text, level, raw) {
+renderer.heading = function (text, level, raw) {
   // Handle different parameter formats based on marked version
   let headingLevel = 1;
   let textStr = '';
-  
+
   if (typeof text === 'object' && text.depth && text.text) {
     // New format: text is a token object
     headingLevel = text.depth;
@@ -27,7 +27,7 @@ renderer.heading = function(text, level, raw) {
       textStr = raw || '';
     }
   }
-  
+
   // Check for custom anchor syntax {#anchor-id}
   const anchorMatch = textStr.match(/^(.*?)\s*\{#([^}]+)\}$/);
   if (anchorMatch) {
@@ -35,7 +35,7 @@ renderer.heading = function(text, level, raw) {
     const anchor = anchorMatch[2];
     return `<h${headingLevel} id="${anchor}">${cleanText}<a href="#${anchor}" class="permalink" aria-label="Permalink">#</a></h${headingLevel}>`;
   }
-  
+
   // Default heading without custom anchor
   const anchor = textStr.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   return `<h${headingLevel} id="${anchor}">${textStr}<a href="#${anchor}" class="permalink" aria-label="Permalink">#</a></h${headingLevel}>`;
@@ -99,12 +99,12 @@ class GistParser {
       const cleanDescription = this.cleanDescriptionFromTags(rawDescription);
 
       // Transform gist links to internal blog post links before processing markdown (only for own username)
-      const transformedContent = this.gistUsername ? 
+      const transformedContent = this.gistUsername ?
         this.transformGistLinks(bodyContent, this.gistUsername) : bodyContent;
 
       // Extract table of contents before processing markdown
       const toc = this.generateTableOfContents(transformedContent);
-      
+
       // Cache markdown processing to avoid re-rendering same content
       const contentKey = `${gist.id}_${gist.updated_at}`;
       let htmlContent = this.markdownCache.get(contentKey);
@@ -185,7 +185,7 @@ class GistParser {
     const cleanContent = content
       .replace(/```[\s\S]*?```/g, '') // Remove code blocks
       .replace(/`[^`]*`/g, '') // Remove inline code
-      .replace(/\[([^\]]*)\]\([^\)]*\)/g, '$1') // Replace links with just text
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // Replace links with just text
       .replace(/[#*_~`]/g, '') // Remove markdown formatting
       .replace(/\s+/g, ' ') // Normalize whitespace
       .trim();
@@ -210,7 +210,7 @@ class GistParser {
     // Transform GitHub gist URLs to internal blog post links (only for the specified username)
     // Matches: https://gist.github.com/username/gistid
     const gistUrlRegex = new RegExp(`https:\\/\\/gist\\.github\\.com\\/${gistUsername}\\/([a-f0-9]+)(?:\\#[^)\\s]*)?`, 'g');
-    
+
     return content.replace(gistUrlRegex, (_, gistId) => {
       // Replace with internal blog post link
       return `/posts/${gistId}.html`;
@@ -228,7 +228,7 @@ class GistParser {
       const level = match[1].length;
       const title = match[2].trim();
       const anchor = this.createAnchor(title);
-      
+
       headings.push({
         level: level,
         title: title,

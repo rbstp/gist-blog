@@ -24,7 +24,7 @@ class TemplateEngine {
     try {
       const templatePath = path.join(this.templatesDir, templateName);
       return await fs.readFile(templatePath, 'utf-8');
-    } catch (error) {
+    } catch {
       throw new Error(`Template not found: ${templateName}`);
     }
   }

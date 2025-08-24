@@ -10,7 +10,9 @@
     "build": "node src/build.js",
     "postbuild": "node scripts/minify.js && node scripts/precompress.js",
     "dev": "npm run build && npx http-server dist -p 3000 --gzip --brotli",
-    "minify": "node scripts/minify.js"
+    "minify": "node scripts/minify.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
@@ -18,7 +20,11 @@
     "marked": "^16.1.1"
   },
   "devDependencies": {
+    "@eslint/css": "^0.10.0",
+    "@eslint/js": "^9.34.0",
     "esbuild": "^0.25.8",
+    "eslint": "^9.34.0",
+    "globals": "^16.3.0",
     "html-minifier-terser": "^7.2.0",
     "http-server": "^14.1.1"
   }

@@ -367,7 +367,7 @@ class BlogGenerator {
     // Clean up old pagination files (we now use client-side pagination)
     try {
       await fs.rm(path.join(this.distDir, 'page'), { recursive: true, force: true });
-    } catch (error) {
+    } catch {
       // Ignore error if directory doesn't exist
     }
 
