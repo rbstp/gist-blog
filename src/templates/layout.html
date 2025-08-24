@@ -981,28 +981,26 @@
             const pointers = new Map(); // pointerId -> {x,y}
             let pinch = null; // {s0, t0:{x,y}, d0, world:{x,y}}
             let lastTapTime = 0;
-            let lastTapPos = null;
 
-            function apply() {
-                root.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
-            }
+            // Match the global graph: scale then translate so translation scales with zoom
+            function apply() { root.setAttribute('transform', `scale(${scale}) translate(${tx},${ty})`); }
 
             function clientToViewBox(cx, cy) {
                 const rect = svg.getBoundingClientRect();
                 const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
-                const px = vb.x + ((cx - rect.left) / rect.width) * vb.width;
-                const py = vb.y + ((cy - rect.top) / rect.height) * vb.height;
-                return { x: px, y: py };
+                return {
+                    x: vb.x + ((cx - rect.left) / rect.width) * vb.width,
+                    y: vb.y + ((cy - rect.top) / rect.height) * vb.height
+                };
             }
 
             // Clamp panning so the graph stays roughly in view (allow some bleed)
             function clampPan() {
                 const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
-                const bleed = 0.4; // fraction of vb allowed off-screen
-                const minX = -vb.width * bleed;
-                const minY = -vb.height * bleed;
-                const maxX = vb.width * bleed;
-                const maxY = vb.height * bleed;
+                // Small graphs (topic-graph) need more slack due to long text labels; widen bleed dynamically
+                const isSmall = (vb.width || 0) <= 240;
+                const bleed = isSmall ? 1.25 : 0.4; // fraction of vb allowed off-screen
+                const minX = -vb.width * bleed, minY = -vb.height * bleed, maxX = vb.width * bleed, maxY = vb.height * bleed;
                 tx = Math.max(minX, Math.min(maxX, tx));
                 ty = Math.max(minY, Math.min(maxY, ty));
             }
@@ -1010,48 +1008,34 @@
             function tryStartPinch() {
                 if (pointers.size !== 2 || pinch) return;
                 const pts = Array.from(pointers.values());
-                const mx = (pts[0].x + pts[1].x) / 2;
-                const my = (pts[0].y + pts[1].y) / 2;
-                const dx = pts[0].x - pts[1].x;
-                const dy = pts[0].y - pts[1].y;
-                const d0 = Math.hypot(dx, dy) || 1;
+                const mx = (pts[0].x + pts[1].x) / 2, my = (pts[0].y + pts[1].y) / 2;
+                const dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y; const d0 = Math.hypot(dx, dy) || 1;
                 const midVB = clientToViewBox(mx, my);
-                // world point under the midpoint before scaling: (S0/s0) - t0
-                const world = { x: (midVB.x / scale) - tx, y: (midVB.y / scale) - ty };
+                // world point under the midpoint before scaling
+                const world = { x: (midVB.x - tx) / scale, y: (midVB.y - ty) / scale };
                 pinch = { s0: scale, t0: { x: tx, y: ty }, d0, world };
-                panning = false; // disable panning during pinch
+                panning = false;
             }
 
             function updatePinch() {
                 if (!pinch || pointers.size !== 2) return;
                 const pts = Array.from(pointers.values());
-                const mx = (pts[0].x + pts[1].x) / 2;
-                const my = (pts[0].y + pts[1].y) / 2;
-                const dx = pts[0].x - pts[1].x;
-                const dy = pts[0].y - pts[1].y;
-                const d = Math.hypot(dx, dy) || 1;
-                let next = pinch.s0 * (d / pinch.d0);
-                next = Math.max(0.6, Math.min(2.5, next));
+                const mx = (pts[0].x + pts[1].x) / 2, my = (pts[0].y + pts[1].y) / 2;
+                const dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y; const d = Math.hypot(dx, dy) || 1;
+                let next = pinch.s0 * (d / pinch.d0); next = Math.max(0.6, Math.min(2.5, next));
                 const midVB = clientToViewBox(mx, my);
-                // t = (S/s) - world
-                tx = (midVB.x / next) - pinch.world.x;
-                ty = (midVB.y / next) - pinch.world.y;
-                scale = next;
-                apply();
+                tx = midVB.x - next * pinch.world.x; ty = midVB.y - next * pinch.world.y; scale = next; apply();
             }
 
             svg.addEventListener('wheel', (e) => {
                 e.preventDefault();
                 const factor = e.deltaY < 0 ? 1.1 : 0.9;
-                const old = scale;
-                const next = Math.max(0.6, Math.min(2.5, old * factor));
+                const old = scale; const next = Math.max(0.6, Math.min(2.5, old * factor));
                 if (next === old) return;
-                // Zoom towards pointer: compute cursor in SVG viewBox units
                 const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY);
-                // Adjust translation so the point under the cursor stays fixed
-                tx = tx + px * (1 / next - 1 / old);
-                ty = ty + py * (1 / next - 1 / old);
-                clampPan();
+                const ratio = next / old;
+                tx = px - ratio * (px - tx);
+                ty = py - ratio * (py - ty);
                 scale = next;
                 apply();
             }, { passive: false });
@@ -1059,35 +1043,35 @@
             svg.addEventListener('pointerdown', (e) => {
                 pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
                 if (pointers.size === 1) {
-                    // Do not start pan yet; wait for small movement to preserve click behavior
-                    dragCandidate = true; panning = false;
-                    startX = lastX = e.clientX; startY = lastY = e.clientY;
-                } else if (pointers.size === 2) {
-                    tryStartPinch();
-                }
+                    // detect double-tap
+                    const now = performance.now();
+                    if (now - lastTapTime < 300) {
+                        const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY);
+                        const old = scale; const next = Math.max(0.6, Math.min(2.5, old * 1.6));
+                        const ratio = next / old;
+                        tx = px - ratio * (px - tx);
+                        ty = py - ratio * (py - ty);
+                        scale = next;
+                        apply();
+                        lastTapTime = 0;
+                    } else {
+                        lastTapTime = now;
+                    }
+                    // pan candidate after handling double-tap logic
+                    dragCandidate = true; panning = false; startX = lastX = e.clientX; startY = lastY = e.clientY;
+                } else if (pointers.size === 2) { tryStartPinch(); }
             });
 
             svg.addEventListener('pointermove', (e) => {
-                if (pointers.has(e.pointerId)) {
-                    pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-                }
-                if (pinch) {
-                    updatePinch();
-                    return;
-                }
+                if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                if (pinch) { updatePinch(); return; }
                 const p0 = clientToViewBox(lastX, lastY);
                 const p1 = clientToViewBox(e.clientX, e.clientY);
-                const dxVB = p1.x - p0.x;
-                const dyVB = p1.y - p0.y;
-
-                // Start panning only after threshold
+                const dxVB = p1.x - p0.x; const dyVB = p1.y - p0.y;
                 if (dragCandidate && !panning) {
                     const movedPx = Math.hypot(e.clientX - startX, e.clientY - startY);
-                    if (movedPx > DRAG_THRESHOLD) {
-                        panning = true; dragCandidate = false; svg.setPointerCapture?.(e.pointerId); svg.classList.add('panning');
-                    } else {
-                        return; // ignore tiny moves so clicks can go through
-                    }
+                    if (movedPx > DRAG_THRESHOLD) { panning = true; dragCandidate = false; svg.setPointerCapture?.(e.pointerId); svg.classList.add('panning'); }
+                    else { return; }
                 }
                 lastX = e.clientX; lastY = e.clientY;
                 if (!panning) return;
@@ -1097,50 +1081,15 @@
             function endInteraction(e) {
                 if (pointers.has(e.pointerId)) pointers.delete(e.pointerId);
                 if (pointers.size < 2) pinch = null;
-                if (pointers.size === 0) {
-                    dragCandidate = false; panning = false; svg.classList.remove('panning');
-                }
+                if (pointers.size === 0) { dragCandidate = false; panning = false; svg.classList.remove('panning'); }
             }
             svg.addEventListener('pointerup', endInteraction);
             svg.addEventListener('pointercancel', endInteraction);
-            svg.addEventListener('pointerleave', (e) => {
-                // Only stop panning state; keep pointers if still active inside element
-                panning = false;
-                svg.classList.remove('panning');
-            });
-
-            // Double-tap to zoom in toward tap point
-            svg.addEventListener('pointerdown', (e) => {
-                const now = performance.now();
-                if (pointers.size === 0) {
-                    // candidate for double-tap
-                    if (now - lastTapTime < 300) {
-                        const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY);
-                        const old = scale;
-                        const next = Math.max(0.6, Math.min(2.5, old * 1.6));
-                        tx = tx + px * (1 / next - 1 / old);
-                        ty = ty + py * (1 / next - 1 / old);
-                        clampPan();
-                        scale = next;
-                        apply();
-                        lastTapTime = 0; // consume
-                    } else {
-                        lastTapTime = now;
-                        lastTapPos = { x: e.clientX, y: e.clientY };
-                    }
-                }
-            }, { passive: true });
+            svg.addEventListener('pointerleave', () => { panning = false; svg.classList.remove('panning'); });
 
             // Wire reset buttons (shared handler uses data-target attr)
             const resetButtons = document.querySelectorAll('.graph-reset-btn');
-            resetButtons.forEach(btn => {
-                const targetId = btn.getAttribute('data-target');
-                if (targetId === svg.id) {
-                    btn.addEventListener('click', () => {
-                        scale = 1; tx = 0; ty = 0; apply();
-                    });
-                }
-            });
+            resetButtons.forEach(btn => { const targetId = btn.getAttribute('data-target'); if (targetId === svg.id) { btn.addEventListener('click', () => { scale = 1; tx = 0; ty = 0; apply(); }); } });
             apply();
         }
 

@@ -138,9 +138,23 @@ class BlogGenerator {
       });
       clearTimeout(timeoutId);
 
-      if (response.status === 304 && cached) {
-        // Not modified -> use cached body
-        return cached;
+      if (response.status === 304) {
+        // Not modified — use any cached body even if expired; if none, re-fetch without ETag once
+        const stale = await this.readCache(cacheKey, Number.MAX_SAFE_INTEGER);
+        if (stale) return stale;
+        const fallback = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
+          headers: this.buildGitHubHeaders(),
+        });
+        if (!fallback.ok) {
+          console.error(`GitHub API Error (fallback): ${fallback.status} ${fallback.statusText}`);
+          throw new Error(`Failed to fetch gists: ${fallback.status} ${fallback.statusText}`);
+        }
+        const gistsFallback = await fallback.json();
+        const filteredFallback = gistsFallback.filter(g => g.public);
+        await this.writeCache(cacheKey, filteredFallback);
+        const et = fallback.headers.get('etag');
+        if (et) await this.writeEtag(cacheKey, et);
+        return filteredFallback;
       }
 
       if (!response.ok) {
@@ -188,8 +202,19 @@ class BlogGenerator {
       });
       clearTimeout(timeoutId);
 
-      if (response.status === 304 && cached) {
-        return cached;
+      if (response.status === 304) {
+        const stale = await this.readCache(cacheKey, Number.MAX_SAFE_INTEGER);
+        if (stale) return stale;
+        const fallback = await fetch(gist.url, { headers: this.buildGitHubHeaders() });
+        if (!fallback.ok) {
+          console.error(`GitHub API Error for gist ${gist.id} (fallback): ${fallback.status} ${fallback.statusText}`);
+          throw new Error(`Failed to fetch gist content: ${fallback.status} ${fallback.statusText}`);
+        }
+        const jsonFallback = await fallback.json();
+        await this.writeCache(cacheKey, jsonFallback);
+        const et = fallback.headers.get('etag');
+        if (et) await this.writeEtag(cacheKey, et);
+        return jsonFallback;
       }
 
       if (!response.ok) {
