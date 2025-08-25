@@ -5,16 +5,24 @@ const { format, parseISO } = require('date-fns');
 const TemplateEngine = require('./TemplateEngine');
 const GistParser = require('./GistParser');
 const RSSGenerator = require('./RSSGenerator');
+const Cache = require('./Cache');
+const GitHubClient = require('./GitHubClient');
+const { mapWithConcurrency } = require('./AsyncPool');
+const {
+  POSTS_PER_PAGE,
+  DEFAULT_GIST_USERNAME,
+  TTL_LIST_MS,
+  TTL_GIST_MS,
+  GRAPH_MAX_NODES,
+  FETCH_CONCURRENCY,
+} = require('./config');
 
-const RATE_LIMIT_DELAY = 60000;
 const EXCERPT_LENGTH = 150;
 const COMMIT_HASH_LENGTH = 7;
-const POSTS_PER_PAGE = 6;
-const USER_AGENT = 'gist-blog-generator';
 
 class BlogGenerator {
   constructor() {
-    this.gistUsername = process.env.GIST_USERNAME || 'rbstp';
+    this.gistUsername = DEFAULT_GIST_USERNAME;
     this.distDir = 'dist';
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
@@ -28,66 +36,12 @@ class BlogGenerator {
     // Date formatting cache to avoid repeated parsing and formatting
     this.dateCache = new Map();
 
-    // Simple on-disk cache for API responses (dev convenience)
-    this.cacheDir = path.join('.cache');
-    this.enableCache = String(process.env.GIST_CACHE || 'true').toLowerCase() !== 'false';
-    // Default TTL: 10 minutes for list, 60 minutes for per-gist
-    this.ttlListMs = Number(process.env.GIST_CACHE_TTL_LIST_MS || 10 * 60 * 1000);
-    this.ttlGistMs = Number(process.env.GIST_CACHE_TTL_GIST_MS || 60 * 60 * 1000);
-
-    // Optional GitHub token for higher rate limits
-    this.githubToken = process.env.GITHUB_TOKEN || '';
+    // On-disk cache and GitHub client
+    this.cache = new Cache();
+    this.github = new GitHubClient();
   }
 
-  async readCache(filePath, ttlMs) {
-    if (!this.enableCache) return null;
-    try {
-      const full = path.join(this.cacheDir, filePath);
-      const stat = await fs.stat(full).catch(() => null);
-      if (!stat) return null;
-      const age = Date.now() - stat.mtimeMs;
-      if (age > ttlMs) return null;
-      const buf = await fs.readFile(full, 'utf-8');
-      return JSON.parse(buf);
-    } catch { return null; }
-  }
-
-  async writeCache(filePath, data) {
-    if (!this.enableCache) return;
-    try {
-      await fs.mkdir(this.cacheDir, { recursive: true });
-      const full = path.join(this.cacheDir, filePath);
-      await fs.writeFile(full, JSON.stringify(data));
-    } catch { /* ignore cache errors */ }
-  }
-
-  // Lightweight ETag helpers (stored as separate tiny files)
-  async readEtag(key) {
-    try {
-      const full = path.join(this.cacheDir, `${key}.etag`);
-      const etag = await fs.readFile(full, 'utf-8').catch(() => '');
-      return etag || '';
-    } catch { return ''; }
-  }
-
-  async writeEtag(key, etag) {
-    try {
-      if (!etag) return;
-      await fs.mkdir(this.cacheDir, { recursive: true });
-      const full = path.join(this.cacheDir, `${key}.etag`);
-      await fs.writeFile(full, etag);
-    } catch { /* ignore */ }
-  }
-
-  buildGitHubHeaders(extra = {}) {
-    const headers = {
-      'User-Agent': USER_AGENT,
-      'Accept': 'application/vnd.github+json',
-      ...extra
-    };
-    if (this.githubToken) headers['Authorization'] = `Bearer ${this.githubToken}`;
-    return headers;
-  }
+  // Removed low-level cache and header helpers in favor of Cache and GitHubClient utilities
 
   // Build a minimalist graph from tags: nodes are tags with frequency, edges are co-occurrences
   async generateGraphData(posts) {
@@ -109,7 +63,7 @@ class BlogGenerator {
     }
 
     // Reduce to a compact graph (top N nodes by frequency)
-    const MAX_NODES = 20;
+    const MAX_NODES = GRAPH_MAX_NODES;
     const sortedNodes = Array.from(nodeCount.entries()).sort((a, b) => b[1] - a[1]).slice(0, MAX_NODES);
     const allowed = new Set(sortedNodes.map(([id]) => id));
     const nodes = sortedNodes.map(([id, count]) => ({ id, count }));
@@ -124,124 +78,31 @@ class BlogGenerator {
   async fetchGists() {
     // Try cache first
     const cacheKey = `gists_${this.gistUsername}.json`;
-    const cached = await this.readCache(cacheKey, this.ttlListMs);
+    const cached = await this.cache.readJson(cacheKey, TTL_LIST_MS);
     if (cached) return cached;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+    const { json } = await this.github.fetchJson(
+      `https://api.github.com/users/${this.gistUsername}/gists`,
+      { etagKey: cacheKey, cache: this.cache, useEtag: true }
+    );
 
-    try {
-      const etag = await this.readEtag(cacheKey);
-      const response = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-        headers: this.buildGitHubHeaders(etag ? { 'If-None-Match': etag } : undefined),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (response.status === 304) {
-        // Not modified — use any cached body even if expired; if none, re-fetch without ETag once
-        const stale = await this.readCache(cacheKey, Number.MAX_SAFE_INTEGER);
-        if (stale) return stale;
-        const fallback = await fetch(`https://api.github.com/users/${this.gistUsername}/gists`, {
-          headers: this.buildGitHubHeaders(),
-        });
-        if (!fallback.ok) {
-          console.error(`GitHub API Error (fallback): ${fallback.status} ${fallback.statusText}`);
-          throw new Error(`Failed to fetch gists: ${fallback.status} ${fallback.statusText}`);
-        }
-        const gistsFallback = await fallback.json();
-        const filteredFallback = gistsFallback.filter(g => g.public);
-        await this.writeCache(cacheKey, filteredFallback);
-        const et = fallback.headers.get('etag');
-        if (et) await this.writeEtag(cacheKey, et);
-        return filteredFallback;
-      }
-
-      if (!response.ok) {
-        console.error(`GitHub API Error: ${response.status} ${response.statusText}`);
-        console.error(`Response headers:`, Object.fromEntries(response.headers.entries()));
-
-        if (response.status === 403) {
-          console.error('Rate limit hit. Waiting 60 seconds...');
-          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
-          return this.fetchGists(); // Retry once
-        }
-
-        throw new Error(`Failed to fetch gists: ${response.status} ${response.statusText}`);
-      }
-
-      const gists = await response.json();
-      const filtered = gists.filter(gist => gist.public);
-      await this.writeCache(cacheKey, filtered);
-      const respEtag = response.headers.get('etag');
-      if (respEtag) await this.writeEtag(cacheKey, respEtag);
-      return filtered;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
-        throw new Error('Request timeout: GitHub API took too long to respond');
-      }
-      throw error;
-    }
+    const filtered = json.filter(gist => gist.public);
+    await this.cache.writeJson(cacheKey, filtered);
+    return filtered;
   }
 
   async fetchGistContent(gist) {
     // Try per-gist cache
     const cacheKey = `gist_${gist.id}.json`;
-    const cached = await this.readCache(cacheKey, this.ttlGistMs);
+    const cached = await this.cache.readJson(cacheKey, TTL_GIST_MS);
     if (cached) return cached;
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
-
-    try {
-      const etag = await this.readEtag(cacheKey);
-      const response = await fetch(gist.url, {
-        headers: this.buildGitHubHeaders(etag ? { 'If-None-Match': etag } : undefined),
-        signal: controller.signal
-      });
-      clearTimeout(timeoutId);
-
-      if (response.status === 304) {
-        const stale = await this.readCache(cacheKey, Number.MAX_SAFE_INTEGER);
-        if (stale) return stale;
-        const fallback = await fetch(gist.url, { headers: this.buildGitHubHeaders() });
-        if (!fallback.ok) {
-          console.error(`GitHub API Error for gist ${gist.id} (fallback): ${fallback.status} ${fallback.statusText}`);
-          throw new Error(`Failed to fetch gist content: ${fallback.status} ${fallback.statusText}`);
-        }
-        const jsonFallback = await fallback.json();
-        await this.writeCache(cacheKey, jsonFallback);
-        const et = fallback.headers.get('etag');
-        if (et) await this.writeEtag(cacheKey, et);
-        return jsonFallback;
-      }
-
-      if (!response.ok) {
-        console.error(`GitHub API Error for gist ${gist.id}: ${response.status} ${response.statusText}`);
-        console.error(`Gist URL: ${gist.url}`);
-
-        if (response.status === 403) {
-          console.error('Rate limit hit. Waiting 60 seconds...');
-          await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_DELAY));
-          return this.fetchGistContent(gist); // Retry once
-        }
-
-        throw new Error(`Failed to fetch gist content: ${response.status} ${response.statusText}`);
-      }
-
-      const json = await response.json();
-      await this.writeCache(cacheKey, json);
-      const respEtag = response.headers.get('etag');
-      if (respEtag) await this.writeEtag(cacheKey, respEtag);
-      return json;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      if (error.name === 'AbortError') {
-        throw new Error(`Request timeout: Gist ${gist.id} took too long to fetch`);
-      }
-      throw error;
-    }
+    const { json } = await this.github.fetchJson(
+      gist.url,
+      { etagKey: cacheKey, cache: this.cache, useEtag: true }
+    );
+    await this.cache.writeJson(cacheKey, json);
+    return json;
   }
 
   async loadTemplatesCached(templateNames) {
@@ -400,26 +261,7 @@ class BlogGenerator {
     const gists = await this.fetchGists();
 
     // Concurrency limiting to avoid bursts and rate-limit spikes
-    const limit = Number(process.env.FETCH_CONCURRENCY || 5);
-    async function mapWithConcurrency(items, worker, concurrency) {
-      const results = new Array(items.length);
-      let index = 0;
-      let active = 0;
-      return new Promise((resolve) => {
-        function next() {
-          if (index >= items.length && active === 0) return resolve(results);
-          while (active < concurrency && index < items.length) {
-            const cur = index++;
-            active++;
-            Promise.resolve(worker(items[cur], cur))
-              .then((res) => { results[cur] = res; })
-              .catch((err) => { console.error('Worker error:', err?.message || err); results[cur] = null; })
-              .finally(() => { active--; next(); });
-          }
-        }
-        next();
-      });
-    }
+    const limit = Math.max(1, FETCH_CONCURRENCY);
 
     const gistResults = await mapWithConcurrency(
       gists,

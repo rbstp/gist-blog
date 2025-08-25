@@ -60,16 +60,16 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
    ```
 
 3. **Configure your username**
-   
-   Edit `src/lib/BlogGenerator.js` and update the username:
-   ```javascript
-   this.gistUsername = process.env.GIST_USERNAME || 'your-github-username';
-   ```
 
-   Or set an environment variable:
+  Prefer setting an environment variable:
    ```bash
    export GIST_USERNAME=your-github-username
    ```
+
+  Or change the default in `src/lib/config.js`:
+  ```javascript
+  DEFAULT_GIST_USERNAME: process.env.GIST_USERNAME || 'rbstp'
+  ```
 
 4. **Optional: Configure RSS metadata**
    ```bash
@@ -240,7 +240,7 @@ Navigate to `/graph.html` (also available in the header) to explore connections 
 Post pages also include a compact topic graph (in the ToC sidebar on desktop) with the same pan/zoom/double‑tap/reset behavior.
 
 Notes:
-- By default, the graph includes up to 20 most frequent tags. You can change this by adjusting `MAX_NODES` in `generateGraphData` within `src/lib/BlogGenerator.js`.
+- By default, the graph includes up to 20 most frequent tags. You can change this via `GRAPH_MAX_NODES` in `src/lib/config.js` (or env var `GRAPH_MAX_NODES`).
 
 ## 🎨 Customization
 
@@ -261,13 +261,12 @@ The system includes built-in templates for:
 Override by creating files in `templates/` directory.
 
 ### Site Configuration
-Edit the constants in `src/lib/BlogGenerator.js`:
-```javascript
-const RATE_LIMIT_DELAY = 60000;  // GitHub rate limit delay
-const EXCERPT_LENGTH = 150;      // Post preview length
-const COMMIT_HASH_LENGTH = 7;    // Hash display length
-const POSTS_PER_PAGE = 6;        // Posts per page
-```
+Most knobs live in `src/lib/config.js` and can also be set via environment variables:
+- `POSTS_PER_PAGE` (default 6)
+- `GRAPH_MAX_NODES` (default 20)
+- `GIST_USERNAME` (default from `DEFAULT_GIST_USERNAME`)
+- `GIST_CACHE` (true/false), `GIST_CACHE_TTL_LIST_MS`, `GIST_CACHE_TTL_GIST_MS`
+- `FETCH_CONCURRENCY` (default 5)
 
 Configure RSS feed via environment variables:
 ```bash
@@ -339,14 +338,18 @@ jobs:
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:
-  - `BlogGenerator.js` - Core orchestration and GitHub API with timeout handling
-  - `GistParser.js` - Markdown processing, tag extraction, and gist link transformation
+  - `BlogGenerator.js` - Orchestration and file generation
+  - `GistParser.js` - Markdown processing, tag extraction, gist link transform, ToC/anchors
   - `RSSGenerator.js` - RSS feed generation with configurable metadata
   - `TemplateEngine.js` - Custom template rendering with pre-compiled regex
+  - `config.js` - Central configuration (env + defaults)
+  - `Cache.js` - JSON/ETag on-disk caching
+  - `GitHubClient.js` - Fetch with timeout, ETag handling, 304 reuse, 403 backoff
+  - `AsyncPool.js` - Controlled concurrency helper
 - **External templates** in `src/templates/` for easy customization
 - **Rate limit handling** with automatic retries and 30s request timeouts
 - **Template caching** for improved build performance
-- **Promise.allSettled** for resilient gist processing
+- **Controlled concurrency** for GitHub API requests
 
 ### Features Deep Dive
 
@@ -406,6 +409,17 @@ jobs:
 - Terminal-themed pagination UI
 - Smart tag filtering across all posts
 - No server requests for navigation
+
+## 🧪 Testing
+
+This repo uses Node’s built-in test runner (no external frameworks).
+
+- Run tests:
+  ```bash
+  npm test
+  ```
+
+The tests isolate temp `dist/` and cache directories, and stub network calls where needed. The smoke test ensures the generator can build a minimal site with fake gist data.
 
 ## 🤝 Contributing
 

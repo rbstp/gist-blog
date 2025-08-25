@@ -1,15 +1,14 @@
 name: Build and Deploy Gist Blog
 
 on:
-  schedule:
-    # Run every hour to check for new gists
-    - cron: '47 * * * *'
-  workflow_dispatch: # Allow manual trigger
   push:
     branches: [ master ]
     paths:
       - 'src/**'
       - '.github/workflows/**'
+  workflow_dispatch:
+  schedule:
+    - cron: '47 * * * *'   # hourly
 
 permissions:
   contents: read
@@ -17,8 +16,8 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
-  cancel-in-progress: false
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -39,10 +38,14 @@ jobs:
     - name: Lint
       run: npm run lint
 
+    - name: Test
+      run: npm test
+
     - name: Build site (fetch, minify, precompress)
       env:
-        GIST_USERNAME: rbstp
+        GIST_USERNAME: ${{ github.repository_owner }}
         GIST_CACHE: false
+        SITE_URL: https://rbstp.dev
       run: npm run build
 
     - name: Setup Pages

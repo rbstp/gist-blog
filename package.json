@@ -12,7 +12,8 @@
     "dev": "npm run build && npx http-server dist -p 3000 --gzip --brotli",
     "minify": "node scripts/minify.js",
     "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint:fix": "eslint . --fix",
+    "test": "node --test"
   },
   "dependencies": {
     "date-fns": "^4.1.0",
