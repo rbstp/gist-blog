@@ -33,7 +33,7 @@ class RSSGenerator {
       <link>${postUrl}</link>
       <guid>${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${post.htmlContent}]]></description>${categoryTags}
+      <description><![CDATA[${post.htmlContent || ''}]]></description>${categoryTags}
     </item>`;
     }).join('\n');
 

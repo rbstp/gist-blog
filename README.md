@@ -312,7 +312,7 @@ jobs:
     - name: Lint
       run: npm run lint
 
-    - name: Build site (fetch, minify, precompress)
+    - name: Build site
       env:
         GIST_USERNAME: ${{ github.repository_owner }}
         GIST_CACHE: false

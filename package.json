@@ -8,8 +8,8 @@
   },
   "scripts": {
     "build": "node src/build.js",
-    "postbuild": "node scripts/minify.js && node scripts/precompress.js",
-    "dev": "npm run build && npx http-server dist -p 3000 --gzip --brotli",
+    "postbuild": "node scripts/minify.js",
+    "dev": "npm run build && npx http-server dist -p 3000",
     "minify": "node scripts/minify.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

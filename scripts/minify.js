@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { minify: minifyHtml } = require('html-minifier-terser');
+const esbuild = require('esbuild');
 
 // Function to recursively find all files with specific extensions
 function findFiles(dir, extensions) {
@@ -24,17 +25,9 @@ function findFiles(dir, extensions) {
 }
 
 // Function to minify CSS content
-function minifyCss(css) {
-  // Simple CSS minification - remove comments, unnecessary whitespace
-  return css
-    .replace(/\/\*[\s\S]*?\*\//g, '') // Remove comments
-    .replace(/\s+/g, ' ') // Collapse whitespace
-    .replace(/;\s*}/g, '}') // Remove semicolon before closing brace
-    .replace(/,\s+/g, ',') // Remove space after comma
-    .replace(/:\s+/g, ':') // Remove space after colon
-    .replace(/{\s+/g, '{') // Remove space after opening brace
-    .replace(/}\s+/g, '}') // Remove space after closing brace
-    .trim();
+async function minifyCssWithEsbuild(content) {
+  const result = await esbuild.transform(content, { loader: 'css', minify: true });
+  return result.code;
 }
 
 async function minifyFiles() {
@@ -57,13 +50,19 @@ async function minifyFiles() {
       const content = fs.readFileSync(file, 'utf8');
       const minified = await minifyHtml(content, {
         collapseWhitespace: true,
+        conservativeCollapse: true,
         removeComments: true,
         removeRedundantAttributes: true,
+        removeEmptyAttributes: true,
+        collapseBooleanAttributes: true,
+        removeOptionalTags: false, // keep for safety
         removeScriptTypeAttributes: true,
         removeStyleLinkTypeAttributes: true,
         useShortDoctype: true,
         minifyCSS: true,
-        minifyJS: true
+        minifyJS: true,
+        sortAttributes: true,
+        sortClassName: false
       });
 
       fs.writeFileSync(file, minified);
@@ -77,7 +76,7 @@ async function minifyFiles() {
   for (const file of cssFiles) {
     try {
       const content = fs.readFileSync(file, 'utf8');
-      const minified = minifyCss(content);
+      const minified = await minifyCssWithEsbuild(content);
 
       fs.writeFileSync(file, minified);
       console.log(`Minified: ${file}`);
