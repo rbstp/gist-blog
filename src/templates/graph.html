@@ -78,12 +78,14 @@ content-indexer      1/1     1            1           42d
       window.location.href = '/';
     }
 
-    function enablePanZoom(svg, root) {
+    function enablePanZoom(svg, root, options = {}) {
       let scale = 1, tx = 0, ty = 0; let panning = false; let lastX = 0, lastY = 0;
       let dragCandidate = false; const DRAG_THRESHOLD = 4; let downOnNode = false;
       const pointers = new Map();
       let pinch = null; // {s0,t0:{x,y},d0,world:{x,y}}
       let lastTapTime = 0;
+      // Remember the fitted "home" view so reset restores it
+      let initialScale = 1, initialTx = 0, initialTy = 0;
       function apply() { root.setAttribute('transform', `scale(${scale}) translate(${tx},${ty})`); }
       function clientToViewBox(cx, cy) {
         const rect = svg.getBoundingClientRect();
@@ -187,7 +189,34 @@ content-indexer      1/1     1            1           42d
       });
       // Wire reset button
       const resetButtons = document.querySelectorAll('.graph-reset-btn');
-      resetButtons.forEach(btn => { const targetId = btn.getAttribute('data-target'); if (targetId === svg.id) { btn.addEventListener('click', () => { scale = 1; tx = 0; ty = 0; apply(); }); } });
+      resetButtons.forEach(btn => {
+        const targetId = btn.getAttribute('data-target');
+        if (targetId === svg.id) {
+          btn.addEventListener('click', () => { scale = initialScale; tx = initialTx; ty = initialTy; apply(); });
+        }
+      });
+
+      // Optionally fit content to the viewBox on first load
+      function fitToContent(padding = 24) {
+        try {
+          const vb = svg.viewBox && svg.viewBox.baseVal ? svg.viewBox.baseVal : { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
+          const bbox = root.getBBox();
+          if (!bbox || !isFinite(bbox.width) || !isFinite(bbox.height) || bbox.width === 0 || bbox.height === 0) { apply(); return; }
+          const contentW = bbox.width + 2 * padding;
+          const contentH = bbox.height + 2 * padding;
+          const s = Math.min(vb.width / contentW, vb.height / contentH);
+          // Keep scale in bounds but allow slight upscale if content is tiny
+          scale = Math.max(0.3, Math.min(2.5, s));
+          const cx = vb.x + vb.width / 2; const cy = vb.y + vb.height / 2;
+          const ccx = bbox.x + bbox.width / 2; const ccy = bbox.y + bbox.height / 2;
+          tx = cx - scale * ccx; ty = cy - scale * ccy;
+          initialScale = scale; initialTx = tx; initialTy = ty;
+          apply();
+        } catch { /* ignore */ }
+      }
+
+      // Defer fit until DOM paints so bbox is accurate
+      if (options.autoFit) { requestAnimationFrame(() => fitToContent(options.padding ?? 24)); }
       apply();
     }
 
@@ -321,7 +350,7 @@ content-indexer      1/1     1            1           42d
             root.querySelectorAll('.graph-link').forEach(el => el.classList.remove('dimmed'));
           }
 
-          enablePanZoom(svg, root);
+          enablePanZoom(svg, root, { autoFit: true, padding: 28 });
         })
         .catch(() => {
           const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
