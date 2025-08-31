@@ -13,7 +13,7 @@
     let scale = 1, tx = 0, ty = 0; let panning = false; let lastX = 0, lastY = 0;
     let dragCandidate = false; const DRAG_THRESHOLD = 4; const pointers = new Map(); let pinch = null; let lastTapTime = 0;
     let initialScale = 1, initialTx = 0, initialTy = 0;
-    function apply() { root.setAttribute('transform', `scale(${scale}) translate(${tx},${ty})`); }
+  function apply() { root.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`); }
     function clientToViewBox(cx, cy) {
       const rect = svg.getBoundingClientRect(); const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
       return { x: vb.x + ((cx - rect.left) / rect.width) * vb.width, y: vb.y + ((cy - rect.top) / rect.height) * vb.height };
