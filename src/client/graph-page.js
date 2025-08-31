@@ -11,47 +11,60 @@
   // Pan/zoom utility for the global graph (supports wheel, drag, and pinch).
   function enablePanZoom(svg, root, options = {}) {
     let scale = 1, tx = 0, ty = 0; let panning = false; let lastX = 0, lastY = 0;
-    let dragCandidate = false; const DRAG_THRESHOLD = 4; const pointers = new Map(); let pinch = null; let lastTapTime = 0;
-    let initialScale = 1, initialTx = 0, initialTy = 0;
-  function apply() { root.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`); }
+  let dragCandidate = false; const DRAG_THRESHOLD = 4; const pointers = new Map(); let pinch = null; let lastTapTime = 0;
+  let initialScale = 1, initialTx = 0, initialTy = 0;
+  function apply() { root.setAttribute('transform', `scale(${scale}) translate(${tx},${ty})`); }
     function clientToViewBox(cx, cy) {
       const rect = svg.getBoundingClientRect(); const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
       return { x: vb.x + ((cx - rect.left) / rect.width) * vb.width, y: vb.y + ((cy - rect.top) / rect.height) * vb.height };
     }
-    function toWorldDelta(c0x, c0y, c1x, c1y) { const p0 = clientToViewBox(c0x, c0y), p1 = clientToViewBox(c1x, c1y); return { dx: (p1.x - p0.x) / scale, dy: (p1.y - p0.y) / scale }; }
+  function toWorldDelta(c0x, c0y, c1x, c1y) { const p0 = clientToViewBox(c0x, c0y), p1 = clientToViewBox(c1x, c1y); return { dx: (p1.x - p0.x) / scale, dy: (p1.y - p0.y) / scale }; }
     function clampPan() {
+      // Simple symmetric clamp similar to the small graph; generous bounds
       const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
-      const bleed = 0.4; const minX = -vb.width * bleed, minY = -vb.height * bleed, maxX = vb.width * bleed, maxY = vb.height * bleed;
+      const bleed = 2.0; const minX = -vb.width * bleed, minY = -vb.height * bleed, maxX = vb.width * bleed, maxY = vb.height * bleed;
       tx = Math.max(minX, Math.min(maxX, tx)); ty = Math.max(minY, Math.min(maxY, ty));
     }
     function tryStartPinch() {
       if (pointers.size !== 2 || pinch) return; const pts = Array.from(pointers.values());
       const mx = (pts[0].x + pts[1].x) / 2, my = (pts[0].y + pts[1].y) / 2; const dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y; const d0 = Math.hypot(dx, dy) || 1;
-      const midVB = clientToViewBox(mx, my); const world = { x: (midVB.x - tx) / scale, y: (midVB.y - ty) / scale }; pinch = { s0: scale, t0: { x: tx, y: ty }, d0, world }; panning = false;
+      const midVB = clientToViewBox(mx, my);
+      // For scale() then translate(), world = (px - tx) / scale
+      const world = { x: (midVB.x - tx) / scale, y: (midVB.y - ty) / scale };
+      pinch = { s0: scale, t0: { x: tx, y: ty }, d0, world }; panning = false;
     }
     function updatePinch() {
       if (!pinch || pointers.size !== 2) return; const pts = Array.from(pointers.values());
       const mx = (pts[0].x + pts[1].x) / 2, my = (pts[0].y + pts[1].y) / 2; const dx = pts[0].x - pts[1].x, dy = pts[0].y - pts[1].y; const d = Math.hypot(dx, dy) || 1;
       let next = pinch.s0 * (d / pinch.d0); next = Math.max(0.4, Math.min(2.5, next)); const midVB = clientToViewBox(mx, my);
-      tx = midVB.x - next * pinch.world.x; ty = midVB.y - next * pinch.world.y; scale = next; apply();
+      // Keep the world point under the pinch center fixed: t' = px - s' * world
+      tx = midVB.x - next * pinch.world.x; ty = midVB.y - next * pinch.world.y; scale = next; clampPan(); apply();
     }
-    svg.addEventListener('wheel', (e) => { e.preventDefault(); const factor = e.deltaY < 0 ? 1.1 : 0.9; const old = scale; const next = Math.max(0.4, Math.min(2.5, old * factor)); if (next === old) return; const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const ratio = next / old; tx = px - ratio * (px - tx); ty = py - ratio * (py - ty); scale = next; apply(); }, { passive: false });
+    svg.addEventListener('wheel', (e) => { e.preventDefault(); const factor = e.deltaY < 0 ? 1.1 : 0.9; const old = scale; const next = Math.max(0.4, Math.min(2.5, old * factor)); if (next === old) return;
+      // Anchor zoom at the center of the visible browser viewport
+      const cx = window.innerWidth / 2; const cy = window.innerHeight / 2; const { x: px, y: py } = clientToViewBox(cx, cy);
+      const ratio = next / old; tx = px - ratio * (px - tx); ty = py - ratio * (py - ty); scale = next; clampPan(); apply(); }, { passive: false });
     svg.addEventListener('pointerdown', (e) => {
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 1) { const now = performance.now(); if (now - lastTapTime < 300) { const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const old = scale; const next = Math.max(0.4, Math.min(2.5, old * 1.6)); const ratio = next / old; tx = px - ratio * (px - tx); ty = py - ratio * (py - ty); scale = next; apply(); lastTapTime = 0; } else { lastTapTime = now; } dragCandidate = true; panning = false; lastX = e.clientX; lastY = e.clientY; }
+  if (pointers.size === 1) { const now = performance.now(); if (now - lastTapTime < 300) { const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const old = scale; const next = Math.max(0.4, Math.min(2.5, old * 1.6)); const ratio = next / old; tx = px - ratio * (px - tx); ty = py - ratio * (py - ty); scale = next; clampPan(); apply(); lastTapTime = 0; } else { lastTapTime = now; } dragCandidate = true; panning = false; lastX = e.clientX; lastY = e.clientY; }
       else if (pointers.size === 2) { tryStartPinch(); }
     });
     svg.addEventListener('pointermove', (e) => {
       if (pointers.has(e.pointerId)) pointers.set(e.pointerId, { x: e.clientX, y: e.clientY }); if (pinch) { updatePinch(); return; }
       const p0 = clientToViewBox(lastX, lastY), p1 = clientToViewBox(e.clientX, e.clientY); const dx = p1.x - p0.x, dy = p1.y - p0.y;
       if (dragCandidate && !panning) { const moved = Math.hypot(e.clientX - lastX, e.clientY - lastY); if (moved > DRAG_THRESHOLD) { panning = true; dragCandidate = false; svg.setPointerCapture?.(e.pointerId); svg.classList.add('panning'); } else return; }
-      lastX = e.clientX; lastY = e.clientY; if (!panning) return; tx += dx; ty += dy; clampPan(); apply();
+  lastX = e.clientX; lastY = e.clientY; if (!panning) return; tx += dx; ty += dy; clampPan(); apply();
     });
     function endInteraction(e) { if (pointers.has(e.pointerId)) pointers.delete(e.pointerId); if (pointers.size < 2) pinch = null; if (pointers.size === 0) { dragCandidate = false; panning = false; svg.classList.remove('panning'); } }
     svg.addEventListener('pointerup', endInteraction); svg.addEventListener('pointercancel', endInteraction); svg.addEventListener('pointerleave', () => { panning = false; svg.classList.remove('panning'); });
-    const resetButtons = document.querySelectorAll('.graph-reset-btn'); resetButtons.forEach(btn => { const targetId = btn.getAttribute('data-target'); if (targetId === svg.id) { btn.addEventListener('click', () => { scale = initialScale; tx = initialTx; ty = initialTy; apply(); }); } });
+  const resetButtons = document.querySelectorAll('.graph-reset-btn'); resetButtons.forEach(btn => { const targetId = btn.getAttribute('data-target'); if (targetId === svg.id) { btn.addEventListener('click', () => { scale = initialScale; tx = initialTx; ty = initialTy; apply(); }); } });
     function fitToContent(padding = 24) {
-      try { const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value }; const bbox = root.getBBox(); if (!bbox || !isFinite(bbox.width) || !isFinite(bbox.height) || bbox.width === 0 || bbox.height === 0) { apply(); return; } const contentW = bbox.width + 2 * padding, contentH = bbox.height + 2 * padding; const s = Math.min(vb.width / contentW, vb.height / contentH); scale = Math.max(0.3, Math.min(2.5, s)); const cx = vb.x + vb.width / 2, cy = vb.y + vb.height / 2; const ccx = bbox.x + bbox.width / 2, ccy = bbox.y + bbox.height / 2; tx = cx - scale * ccx; ty = cy - scale * ccy; initialScale = scale; initialTx = tx; initialTy = ty; apply(); } catch { }
+      try { const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value }; const bbox = root.getBBox(); if (!bbox || !isFinite(bbox.width) || !isFinite(bbox.height) || bbox.width === 0 || bbox.height === 0) { apply(); return; }
+        const contentW = bbox.width + 2 * padding, contentH = bbox.height + 2 * padding; const s = Math.min(vb.width / contentW, vb.height / contentH); scale = Math.max(0.3, Math.min(2.5, s));
+        const cx = vb.x + vb.width / 2, cy = vb.y + vb.height / 2; const ccx = bbox.x + bbox.width / 2, ccy = bbox.y + bbox.height / 2;
+        // For scale() then translate(): t = center - s * contentCenter
+        tx = cx - scale * ccx; ty = cy - scale * ccy; initialScale = scale; initialTx = tx; initialTy = ty; apply();
+      } catch { }
     }
     if (options.autoFit) requestAnimationFrame(() => fitToContent(options.padding ?? 24));
     apply();
