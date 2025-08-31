@@ -1,15 +1,18 @@
 const fs = require('fs').promises;
 const path = require('path');
-const { format, parseISO } = require('date-fns');
+// date-fns no longer needed directly; DateUtils handles formatting
 
 const TemplateEngine = require('./TemplateEngine');
+const TemplateLoader = require('./TemplateLoader');
 const GistParser = require('./GistParser');
 const RSSGenerator = require('./RSSGenerator');
 const Cache = require('./Cache');
 const GitHubClient = require('./GitHubClient');
 const { mapWithConcurrency } = require('./AsyncPool');
+const DateUtils = require('./DateUtils');
+const GraphBuilder = require('./GraphBuilder');
+const DataShaper = require('./DataShaper');
 const {
-  POSTS_PER_PAGE,
   DEFAULT_GIST_USERNAME,
   TTL_LIST_MS,
   TTL_GIST_MS,
@@ -17,8 +20,7 @@ const {
   FETCH_CONCURRENCY,
 } = require('./config');
 
-const EXCERPT_LENGTH = 150;
-const COMMIT_HASH_LENGTH = 7;
+// Data shaping logic moved to DataShaper
 
 class BlogGenerator {
   constructor() {
@@ -27,51 +29,28 @@ class BlogGenerator {
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
 
-    this.templateEngine = new TemplateEngine(this.templatesDir);
+  this.templateEngine = new TemplateEngine(this.templatesDir);
+  this.templateLoader = new TemplateLoader(this.templatesDir);
     this.gistParser = new GistParser(this.gistUsername);
     this.rssGenerator = new RSSGenerator();
 
-    // Template cache for performance
-    this.templateCache = new Map();
-    // Date formatting cache to avoid repeated parsing and formatting
-    this.dateCache = new Map();
+    // Date formatting utilities
+  this.dates = new DateUtils();
+  this.shaper = new DataShaper({
+    formatDate: (iso, fmt) => this.dates.formatISO(iso, fmt),
+    now: (fmt) => this.dates.now(fmt),
+  });
 
     // On-disk cache and GitHub client
     this.cache = new Cache();
     this.github = new GitHubClient();
   }
 
-  // Removed low-level cache and header helpers in favor of Cache and GitHubClient utilities
 
   // Build a minimalist graph from tags: nodes are tags with frequency, edges are co-occurrences
   async generateGraphData(posts) {
-    const nodeCount = new Map();
-    const edgeCount = new Map(); // key: a|b
-
-    for (const post of posts) {
-      const tags = Array.isArray(post.tags) ? [...new Set(post.tags.map(t => String(t).toLowerCase()))] : [];
-      if (tags.length === 0) continue;
-      for (const t of tags) nodeCount.set(t, (nodeCount.get(t) || 0) + 1);
-      for (let i = 0; i < tags.length; i++) {
-        for (let j = i + 1; j < tags.length; j++) {
-          const a = tags[i];
-          const b = tags[j];
-          const key = a < b ? `${a}|${b}` : `${b}|${a}`;
-          edgeCount.set(key, (edgeCount.get(key) || 0) + 1);
-        }
-      }
-    }
-
-    // Reduce to a compact graph (top N nodes by frequency)
-    const MAX_NODES = GRAPH_MAX_NODES;
-    const sortedNodes = Array.from(nodeCount.entries()).sort((a, b) => b[1] - a[1]).slice(0, MAX_NODES);
-    const allowed = new Set(sortedNodes.map(([id]) => id));
-    const nodes = sortedNodes.map(([id, count]) => ({ id, count }));
-    const edges = Array.from(edgeCount.entries())
-      .map(([key, weight]) => { const [source, target] = key.split('|'); return { source, target, weight }; })
-      .filter(e => allowed.has(e.source) && allowed.has(e.target));
-
-    const graph = { nodes, edges };
+    const builder = new GraphBuilder();
+    const graph = builder.buildFromPosts(posts, GRAPH_MAX_NODES);
     await fs.writeFile(path.join(this.distDir, 'graph.json'), JSON.stringify(graph));
   }
 
@@ -106,67 +85,14 @@ class BlogGenerator {
   }
 
   async loadTemplatesCached(templateNames) {
-    const templates = {};
-    for (const name of templateNames) {
-      if (!this.templateCache.has(name)) {
-        this.templateCache.set(name, await this.templateEngine.loadTemplate(name));
-      }
-      templates[name] = this.templateCache.get(name);
-    }
-    return templates;
-  }
-
-  formatDateCached(dateString, formatStr = 'MMM d, yyyy') {
-    const cacheKey = `${dateString}_${formatStr}`;
-    if (!this.dateCache.has(cacheKey)) {
-      this.dateCache.set(cacheKey, format(parseISO(dateString), formatStr));
-    }
-    return this.dateCache.get(cacheKey);
+    // Delegate caching to TemplateLoader internally
+    return this.templateLoader.loadMany(templateNames);
   }
 
   async generateIndex(posts) {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
-
-    // Cache the current date formatting to avoid repeated calls
-    const lastUpdateFormatted = format(new Date(), 'MMM d, HH:mm');
-
-    // Sort posts and add metadata in single operation for better performance
-    const postsWithMeta = posts
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-      .map(post => ({
-        ...post,
-        formattedDate: this.formatDateCached(post.createdAt),
-        excerpt: post.content.length > EXCERPT_LENGTH
-          ? post.content.substring(0, EXCERPT_LENGTH) + '...'
-          : post.content,
-        shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
-        lastUpdate: lastUpdateFormatted,
-        hasTags: post.tags && post.tags.length > 0
-      }));
-
-    // Calculate pagination data for client-side use
-    const totalPosts = postsWithMeta.length;
-    const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
-
-    // Collect all unique tags from posts
-    const allTags = [...new Set(
-      postsWithMeta
-        .filter(post => post.tags && post.tags.length > 0)
-        .flatMap(post => post.tags)
-    )].sort();
-
-    const templateData = {
-      posts: postsWithMeta, // Load ALL posts for client-side pagination
-      postsLength: totalPosts,
-      lastUpdate: new Date().toISOString(),
-      allTags: allTags,
-      hasAnyTags: allTags.length > 0,
-      pagination: totalPages > 1 ? {
-        totalPages,
-        postsPerPage: POSTS_PER_PAGE
-      } : null
-    };
+  const templateData = this.shaper.buildIndexData(posts);
 
     const indexContent = this.templateEngine.render(indexTemplate, templateData);
 
@@ -183,23 +109,7 @@ class BlogGenerator {
   async generatePost(post) {
     const { 'layout.html': layoutTemplate, 'post.html': postTemplate } =
       await this.loadTemplatesCached(['layout.html', 'post.html']);
-
-    // Determine the primary topic for this post (used by the sidebar graph)
-    function choosePrimaryTopic(p) {
-      if (Array.isArray(p.tags) && p.tags.length) return String(p.tags[0]);
-      return '';
-    }
-    const currentTopic = choosePrimaryTopic(post);
-
-    const postData = {
-      ...post,
-      formattedDate: this.formatDateCached(post.createdAt),
-      formattedUpdateDate: post.updatedAt !== post.createdAt ?
-        this.formatDateCached(post.updatedAt) : null,
-      shortId: post.id.substring(0, COMMIT_HASH_LENGTH),
-      currentTopic,
-      tagsCsv: Array.isArray(post.tags) ? post.tags.join(',') : ''
-    };
+  const postData = this.shaper.buildPostData(post);
 
     const postContent = this.templateEngine.render(postTemplate, postData);
     const fullPage = this.templateEngine.render(layoutTemplate, {
@@ -236,8 +146,7 @@ class BlogGenerator {
     const destStylesPath = path.join(this.distDir, 'styles.css');
 
     try {
-      const cssContent = await fs.readFile(sourceStylesPath, 'utf-8');
-      await fs.writeFile(destStylesPath, cssContent);
+      await fs.copyFile(sourceStylesPath, destStylesPath);
     } catch (error) {
       console.error('Error copying styles:', error.message);
       throw error;
@@ -261,7 +170,7 @@ class BlogGenerator {
     const gists = await this.fetchGists();
 
     // Concurrency limiting to avoid bursts and rate-limit spikes
-    const limit = Math.max(1, FETCH_CONCURRENCY);
+  const limit = Math.max(1, FETCH_CONCURRENCY);
 
     const gistResults = await mapWithConcurrency(
       gists,
@@ -274,7 +183,7 @@ class BlogGenerator {
           return null;
         }
       },
-      Math.max(1, limit)
+      limit
     );
 
     // Filter out failures/nulls; items are already resolved

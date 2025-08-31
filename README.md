@@ -374,10 +374,16 @@ jobs:
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:
-  - `BlogGenerator.js` - Orchestration and file generation
-  - `GistParser.js` - Markdown processing, tag extraction, gist link transform, ToC/anchors
+  - `BlogGenerator.js` - Thin orchestrator for the build pipeline
+  - `GistParser.js` - High-level parser delegating to focused modules
+  - `TagManager.js` - Extracts/cleans hashtags with caching
+  - `MarkdownProcessor.js` - marked + highlight.js wrapper with anchors/ToC and caching
+  - `LinkTransformer.js` - Converts own gist URLs into internal post links
+  - `GraphBuilder.js` - Builds tag co-occurrence graph data
+  - `DataShaper.js` - Shapes view-models for templates (single-pass reduce, DI for date utils)
+  - `TemplateEngine.js` - Custom mustache-like template rendering
+  - `TemplateLoader.js` - Cached template file loader
   - `RSSGenerator.js` - RSS feed generation with configurable metadata
-  - `TemplateEngine.js` - Custom template rendering with pre-compiled regex
   - `config.js` - Central configuration (env + defaults)
   - `Cache.js` - JSON/ETag on-disk caching
   - `GitHubClient.js` - Fetch with timeout, ETag handling, 304 reuse, 403 backoff
