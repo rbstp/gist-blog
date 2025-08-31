@@ -71,11 +71,6 @@ content-indexer      1/1     1            1           42d
   </div>
 </section>
 
-<style>
-  .graph-node { cursor: grab; }
-  .graph-node.dragging, .graph-svg.dragging-node { cursor: grabbing; }
-</style>
-
 <script>
   (function () {
     function navigateWithTag(tag) {
@@ -320,11 +315,24 @@ content-indexer      1/1     1            1           42d
             });
           }
 
+          // Update terminal title with live stats
+            try {
+              const titleEl = document.querySelector('.terminal-title');
+              if (titleEl) {
+                const n = graph.nodes?.length || 0;
+                const e = graph.edges?.length || 0;
+                titleEl.textContent = `graph • ${n} nodes • ${e} edges`;
+              }
+            } catch {}
+
           // Draw nodes + interactions
           nodes.forEach(n => {
             const { x, y } = positions.get(n.id) || { x: cx, y: cy };
             const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
             g.setAttribute('class', 'graph-node'); g.setAttribute('data-id', n.id);
+            g.setAttribute('role', 'button');
+            g.setAttribute('tabindex', '0');
+            g.setAttribute('aria-label', `Open tag ${n.id}`);
             const r = 4 + 8 * (n.count / maxCount);
             const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
             c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', String(r));
@@ -363,6 +371,13 @@ content-indexer      1/1     1            1           42d
 
             // Click to navigate (blocked right after a drag)
             g.addEventListener('click', (e) => { if (blockClickNav) { e.stopPropagation(); e.preventDefault(); return; } navigateWithTag(n.id); });
+            g.addEventListener('keydown', (e) => {
+              if (blockClickNav) return;
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigateWithTag(n.id);
+              }
+            });
           });
 
           // Highlight helpers
@@ -408,4 +423,14 @@ content-indexer      1/1     1            1           42d
 
     document.addEventListener('DOMContentLoaded', renderGlobalGraph);
   })();
+
+  // Update terminal title with live stats
+  try {
+    const titleEl = document.querySelector('.terminal-title');
+    if (titleEl) {
+      const n = graph.nodes?.length || 0;
+      const e = graph.edges?.length || 0;
+      titleEl.textContent = `graph • ${n} nodes • ${e} edges`;
+    }
+  } catch {}
 </script>
