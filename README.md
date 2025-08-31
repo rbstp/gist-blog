@@ -7,6 +7,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 ## 🚀 Features
 
 ### Core Functionality
+
 - **GitHub Gists Integration** - Automatically fetches and converts your public gists to blog posts
 - **Markdown Processing** - Full markdown support with GitHub-style syntax highlighting
 - **Dual Theme Support** - Light/dark mode toggle with system preference detection
@@ -14,6 +15,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Static Generation** - Builds fast, lightweight HTML files ready for deployment
 
 ### Advanced Features
+
 - **Theme Toggle** - Smart light/dark mode with system preference detection and localStorage persistence
 - **Syntax Highlighting** - GitHub-style code highlighting with language-specific colors for XML, JSON, JavaScript, Python, CSS, and more
 - **Multi-Tag System** - Extract hashtags from gist descriptions for automatic categorization
@@ -29,6 +31,9 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Cache Busting** - Automatic CSS versioning for instant updates
 
 ### UI/UX Highlights
+
+- **Modern Graph Styling** - Terminal-themed graph visualizations with grid backgrounds, subtle glows, and improved accessibility
+- **Interactive Tag Graphs** - Explore tag connections with hover highlighting, pointer-centered zoom, pinch gestures, and keyboard navigation
 - **Theme Switching** - Seamless light/dark mode toggle in navigation bar
 - **Interactive Terminal Windows** - Functional close, minimize, and maximize buttons with hover icons
 - **Multi-Tag Filtering** - Select multiple tags with AND logic for precise content discovery
@@ -43,35 +48,41 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 ## 🛠 Setup
 
 ### Prerequisites
+
 - Node.js 24+
 - npm or yarn
 
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone <your-repo-url>
    cd gist-blog
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure your username**
 
-  Prefer setting an environment variable:
-   ```bash
-   export GIST_USERNAME=your-github-username
-   ```
+Prefer setting an environment variable:
 
-  Or change the default in `src/lib/config.js`:
-  ```javascript
-  DEFAULT_GIST_USERNAME: process.env.GIST_USERNAME || 'rbstp'
-  ```
+```bash
+export GIST_USERNAME=your-github-username
+```
+
+Or change the default in `src/lib/config.js`:
+
+```javascript
+DEFAULT_GIST_USERNAME: process.env.GIST_USERNAME || 'rbstp';
+```
 
 4. **Optional: Configure RSS metadata**
+
    ```bash
    export SITE_URL=https://yourdomain.com
    export SITE_TITLE="Your Blog Title"
@@ -98,16 +109,19 @@ This repo uses ESLint (flat config) for JS and CSS.
   ```
 
 Notes:
+
 - Generated output in `dist/` and the local cache `.cache/` are ignored by ESLint.
 - CSS linting is scoped to `src/**/*.css`. Rules that flagged modern properties and important flags have been relaxed for this project.
 
 #### Optional: GitHub token and conditional requests
+
 To improve reliability and speed (especially in CI), you can provide a personal access token and benefit from conditional requests:
 
 - Set `GITHUB_TOKEN` to raise rate limits for the GitHub API.
 - The build uses ETags (`If-None-Match`) for both the gist list and per‑gist requests; when content is unchanged, cached data from `.cache/` is reused after a `304 Not Modified` response.
 
 Example (macOS zsh):
+
 ```bash
 export GITHUB_TOKEN=ghp_your_token_here
 export GIST_USERNAME=your-github-username
@@ -115,12 +129,14 @@ npm run build
 ```
 
 ### Performance controls (optional)
+
 - Fetch concurrency: set `FETCH_CONCURRENCY` (default 5) to control parallel GitHub requests during build.
 - Local API caching: set `GIST_CACHE=true|false` (default true in local dev) to enable/disable on-disk caching under `.cache/`.
   - Cache TTLs can be tuned via `GIST_CACHE_TTL_LIST_MS` (default 600000 = 10m) and `GIST_CACHE_TTL_GIST_MS` (default 3600000 = 60m).
 - Post-build minification runs automatically. The `postbuild` script minifies HTML, inline JS/CSS, and `styles.css`.
 
 In CI, you can disable caching to always fetch fresh data:
+
 ```bash
 GIST_CACHE=false npm run build
 ```
@@ -141,6 +157,7 @@ If rate limits are hit in CI, set a `GITHUB_TOKEN` secret and pass it to the bui
 ### Gist Structure
 
 Your gist should contain:
+
 - At least one `.md` or `.markdown` file
 - Optional: Title as first H1 heading, otherwise filename is used
 - Optional: Multiple files (first markdown file becomes the post)
@@ -148,6 +165,7 @@ Your gist should contain:
 ### Tag System
 
 Add hashtags anywhere in your gist description:
+
 - `#ai #devops #tutorial` → Creates clickable filter tags
 - Tags are extracted and removed from the display description
 - Click tags to filter posts with a terminal-style interface
@@ -157,16 +175,19 @@ Add hashtags anywhere in your gist description:
 When you reference your own gists in markdown content, they automatically become internal links:
 
 **Before (in your markdown):**
+
 ```markdown
 Check out my other post: https://gist.github.com/rbstp/abc123def456
 ```
 
 **After (in generated HTML):**
+
 ```markdown
 Check out my other post: /posts/abc123def456.html
 ```
 
 **Features:**
+
 - **Username-specific**: Only your gist URLs are converted (preserves external links to other users' gists)
 - **All markdown formats**: Works with inline links, reference links, and plain URLs
 - **Build-time transformation**: No performance impact on site visitors
@@ -175,17 +196,20 @@ Check out my other post: /posts/abc123def456.html
 ### Table of Contents & Navigation
 
 **Automatic ToC Generation:**
+
 - **Smart Detection** - Automatically generates ToC for posts with heading levels 2-6 (`##`, `###`, etc.)
 - **Terminal Styling** - ToC styled as terminal window with `$ grep -n "^##" filename.md` command
 - **Desktop Only** - ToC appears as floating sidebar on desktop, hidden on mobile for clean mobile experience
 
 **Interactive Features:**
+
 - **Sticky Positioning** - ToC follows along as you scroll, always accessible
 - **Active Section Highlighting** - Current section highlighted in blue with bold text
 - **Smooth Scrolling** - Clicking ToC links smoothly scrolls to target section
 - **Permalink Anchors** - Hover over headings to reveal clickable # symbols for easy link sharing
 
 **Layout:**
+
 - **Container-Aligned** - On wide viewports, the ToC/graph sidebar aligns with the main content container
 - **Smart Sizing** - Width uses a clamp (min ~240px, ideal ~22vw, max ~360px) for a stable ratio across screen sizes
 - **Fallback Docking** - If there isn’t enough room next to content, it docks to the right edge and reserves space so content isn’t overlapped
@@ -195,16 +219,19 @@ Check out my other post: /posts/abc123def456.html
 ### Terminal Controls
 
 **Interactive Terminal Windows** (Available on index page):
+
 - **Close Button** (red) - Hides the entire terminal section
 - **Minimize Button** (yellow) - Collapses terminal to header-only view
 - **Maximize Button** (green) - Expands terminal to full width
 - **Hover Effects** - Shows macOS-style icons (×, −, ⇱) when hovering over buttons
 
 **Post Page Terminals**:
+
 - **Terminal Header** - Shows `$ cat filename.md` with green prompt and blue command
 - **Static Display** - No interactive controls for cleaner reading experience
 
 **Multi-Tag Filtering System**:
+
 - **Multiple Selection**: Click multiple tags to combine filters using AND logic
 - **Toggle Behavior**: Click active tags to remove them, inactive tags to add them
 - **Maximize Access**: Maximize the pagination terminal to reveal all available tags
@@ -214,6 +241,7 @@ Check out my other post: /posts/abc123def456.html
 - **Precise Filtering**: Posts must contain ALL selected tags to appear in results
 
 **Dev Mode Easter Egg** 🎯:
+
 - **Activation**: Click the "main" branch button in the top navigation
 - **Chaos Mode**: Instantly transforms the site into a DevOps disaster scenario
 - **Visual Changes**: Build failures, error indicators, emergency rollback messages
@@ -240,20 +268,24 @@ Navigate to `/graph.html` (also available in the header) to explore connections 
 Post pages also include a compact topic graph (in the ToC sidebar on desktop) with the same pan/zoom/double‑tap/reset behavior.
 
 Notes:
+
 - By default, the graph includes up to 20 most frequent tags. You can change this via `GRAPH_MAX_NODES` in `src/lib/config.js` (or env var `GRAPH_MAX_NODES`).
 
 ## 🎨 Customization
 
 ### Styling
+
 - **Dual Theme Support** with CSS custom properties in `src/styles/main.css`
 - **Dark Theme**: GitHub dark color palette (`--bg-primary: #0d1117`)
-- **Light Theme**: Clean light palette (`--bg-primary: #ffffff`) 
+- **Light Theme**: Clean light palette (`--bg-primary: #ffffff`)
 - **System Integration**: Automatically detects and follows OS preference
 - **Manual Override**: Theme toggle persists user choice in localStorage
 - Fonts: JetBrains Mono (code) + Inter (text)
 
 ### Templates
+
 The system includes built-in templates for:
+
 - `layout.html` - Main page wrapper with navigation
 - `index.html` - Homepage with post grid
 - `post.html` - Individual post pages
@@ -261,7 +293,9 @@ The system includes built-in templates for:
 Override by creating files in `templates/` directory.
 
 ### Site Configuration
+
 Most knobs live in `src/lib/config.js` and can also be set via environment variables:
+
 - `POSTS_PER_PAGE` (default 6)
 - `GRAPH_MAX_NODES` (default 20)
 - `GIST_USERNAME` (default from `DEFAULT_GIST_USERNAME`)
@@ -269,9 +303,10 @@ Most knobs live in `src/lib/config.js` and can also be set via environment varia
 - `FETCH_CONCURRENCY` (default 5)
 
 Configure RSS feed via environment variables:
+
 ```bash
 export SITE_URL=https://yourdomain.com
-export SITE_TITLE="Your Blog Title" 
+export SITE_TITLE="Your Blog Title"
 export SITE_DESCRIPTION="Your blog description"
 ```
 
@@ -280,7 +315,8 @@ export SITE_DESCRIPTION="Your blog description"
 ### GitHub Actions
 
 Create `.github/workflows/build-blog.yml`:
-```yaml
+
+````yaml
 name: Build and Deploy Gist Blog
 
 on:
@@ -417,7 +453,7 @@ This repo uses Node’s built-in test runner (no external frameworks).
 - Run tests:
   ```bash
   npm test
-  ```
+````
 
 The tests isolate temp `dist/` and cache directories, and stub network calls where needed. The smoke test ensures the generator can build a minimal site with fake gist data.
 
@@ -435,4 +471,4 @@ MIT License - feel free to use for your own blog!
 
 ---
 
-*Built with ❤️ for developers who love terminals, gists, and clean code.*
+_Built with ❤️ for developers who love terminals, gists, and clean code._
