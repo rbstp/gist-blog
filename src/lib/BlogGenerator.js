@@ -1,5 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
+const esbuild = require('esbuild');
 // date-fns no longer needed directly; DateUtils handles formatting
 
 const TemplateEngine = require('./TemplateEngine');
@@ -28,6 +29,7 @@ class BlogGenerator {
     this.distDir = 'dist';
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
+  this.clientDir = 'src/client';
 
   this.templateEngine = new TemplateEngine(this.templatesDir);
   this.templateLoader = new TemplateLoader(this.templatesDir);
@@ -153,6 +155,34 @@ class BlogGenerator {
     }
   }
 
+  async bundleClientScripts() {
+    const outdir = path.join(this.distDir, 'assets');
+    await fs.mkdir(outdir, { recursive: true });
+    // We treat each client script as its own entry point; main.js will lazy-load others.
+    const entryPoints = [
+      path.join(this.clientDir, 'main.js'),
+      path.join(this.clientDir, 'graph-page.js'),
+      path.join(this.clientDir, 'topic-graph-enhance.js'),
+    ];
+    try {
+      await esbuild.build({
+        entryPoints,
+        outdir,
+        bundle: false,
+        minify: true,
+        sourcemap: false,
+        format: 'iife',
+        platform: 'browser',
+        target: ['es2019'],
+        write: true,
+        logLevel: 'silent'
+      });
+    } catch (error) {
+      console.error('Error bundling client scripts:', error.message);
+      throw error;
+    }
+  }
+
   async build() {
     console.log('Starting blog build...');
 
@@ -205,7 +235,9 @@ class BlogGenerator {
       // Generate tag graph data
       this.generateGraphData(posts),
       // Copy styles
-      this.copyStyles()
+      this.copyStyles(),
+      // Bundle/copy client scripts
+      this.bundleClientScripts()
     ]);
 
     console.log(`✅ Build complete! Generated ${posts.length} posts.`);

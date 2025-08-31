@@ -19,6 +19,25 @@ export default defineConfig([
     },
   },
 
+  // Browser client scripts
+  {
+    files: ["src/client/**/*.js"],
+    plugins: { js },
+    extends: ["js/recommended"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "script",
+      globals: {
+        ...globals.browser,
+        // Allow bundlers or loaders to inject these at runtime
+        requestAnimationFrame: "readonly",
+      },
+    },
+    rules: {
+      "no-unused-vars": ["warn", { args: "none", vars: "all", varsIgnorePattern: "^_" }],
+    },
+  },
+
   // CSS linting for source styles only
   {
     files: ["src/**/*.css"],
