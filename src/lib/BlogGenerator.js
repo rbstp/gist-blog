@@ -164,16 +164,21 @@ class BlogGenerator {
       path.join(this.clientDir, 'graph-page.js'),
       path.join(this.clientDir, 'topic-graph-enhance.js'),
     ];
+    // Optional bundling: if we ever add imports across client files, enable bundling by setting
+    //   BUNDLE_CLIENT=true
+    // Default keeps separate minified IIFEs without bundling for simplicity and predictable filenames.
+    const enableBundling = String(process.env.BUNDLE_CLIENT || '').toLowerCase() === 'true';
     try {
       await esbuild.build({
         entryPoints,
         outdir,
-        bundle: false,
+        bundle: enableBundling,
         minify: true,
         sourcemap: false,
         format: 'iife',
         platform: 'browser',
         target: ['es2019'],
+        entryNames: '[name]', // keep stable names main.js, graph-page.js, topic-graph-enhance.js
         write: true,
         logLevel: 'silent'
       });

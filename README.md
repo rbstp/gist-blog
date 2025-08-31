@@ -28,7 +28,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
   - Pointer-centered zoom, pinch-zoom on touch, double-tap to zoom, and a reset view button
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
 - **Responsive Design** - Mobile-optimized layouts with compact headers
-- **Cache Busting** - Automatic CSS versioning for instant updates
+- **Cache Busting** - Timestamp-driven cache busting for CSS and JS assets
 
 ### UI/UX Highlights
 
@@ -286,9 +286,10 @@ Notes:
 
 The system includes built-in templates for:
 
-- `layout.html` - Main page wrapper with navigation
+- `layout.html` - Main page wrapper with navigation; loads `/assets/main.js` with a build timestamp
 - `index.html` - Homepage with post grid
-- `post.html` - Individual post pages
+- `post.html` - Individual post pages with compact topic graph and ToC sidebar; no inline scripts or styles
+- `graph.html` - Global tag graph page; scripts are loaded dynamically by `main.js`
 
 Override by creating files in `templates/` directory.
 
@@ -348,7 +349,7 @@ jobs:
     - name: Lint
       run: npm run lint
 
-    - name: Build site
+  - name: Build site
       env:
         GIST_USERNAME: ${{ github.repository_owner }}
         GIST_CACHE: false
@@ -374,7 +375,7 @@ jobs:
 ### Architecture
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:
-  - `BlogGenerator.js` - Thin orchestrator for the build pipeline
+  - `BlogGenerator.js` - Build orchestrator: fetch → parse → shape → render → emit
   - `GistParser.js` - High-level parser delegating to focused modules
   - `TagManager.js` - Extracts/cleans hashtags with caching
   - `MarkdownProcessor.js` - marked + highlight.js wrapper with anchors/ToC and caching
@@ -388,6 +389,7 @@ jobs:
   - `Cache.js` - JSON/ETag on-disk caching
   - `GitHubClient.js` - Fetch with timeout, ETag handling, 304 reuse, 403 backoff
   - `AsyncPool.js` - Controlled concurrency helper
+  - `DateUtils.js` - ISO date formatting utilities
 - **External templates** in `src/templates/` for easy customization
 - **Rate limit handling** with automatic retries and 30s request timeouts
 - **Template caching** for improved build performance
@@ -440,11 +442,81 @@ jobs:
 - Client-side pagination and filtering
 - Minimal CSS/JS payload
 - Static HTML generation
-- Browser caching with timestamps
- - Lazy-loaded highlight.js only on pages containing code blocks
- - rAF-throttled ToC layout adjustments on scroll/resize
- - CSS `content-visibility` + `contain-intrinsic-size` to speed initial render of heavy/offscreen sections
- - Respects `prefers-reduced-motion` to disable animations and smooth scrolling
+- Timestamp cache-busting for assets
+- Lazy-loaded highlight.js only on pages containing code blocks
+- rAF-throttled ToC layout adjustments on scroll/resize
+- CSS `content-visibility` + `contain-intrinsic-size` to speed initial render of heavy/offscreen sections
+- Respects `prefers-reduced-motion` to disable animations and smooth scrolling
+
+### Build toolchain and assets
+
+- Client scripts live in `src/client/` and are emitted to `dist/assets/` via esbuild
+  - `main.js` is referenced once in `layout.html`; it lazy-loads page-specific modules (`graph-page.js`, `topic-graph-enhance.js`) when needed
+  - Default build produces separate minified IIFEs without bundling for predictable filenames
+  - Optional: enable bundling with environment variable `BUNDLE_CLIENT=true` (keeps filenames stable)
+- Post-build minification uses `html-minifier-terser` on HTML and `styles.css`
+- Timestamp is injected as `data-build-ts` on `<body>` and appended as `?v=...` to asset URLs for cache-busting
+
+## 📁 Project structure
+
+```
+gist-blog/
+├── CLAUDE.md
+├── CNAME
+├── LICENSE
+├── README.md
+├── eslint.config.mjs
+├── package.json
+├── scripts/
+│   └── minify.js
+├── src/
+│   ├── build.js
+│   ├── client/
+│   │   ├── main.js
+│   │   ├── graph-page.js
+│   │   └── topic-graph-enhance.js
+│   ├── lib/
+│   │   ├── AsyncPool.js
+│   │   ├── BlogGenerator.js
+│   │   ├── Cache.js
+│   │   ├── DataShaper.js
+│   │   ├── DateUtils.js
+│   │   ├── GistParser.js
+│   │   ├── GitHubClient.js
+│   │   ├── GraphBuilder.js
+│   │   ├── LinkTransformer.js
+│   │   ├── MarkdownProcessor.js
+│   │   ├── RSSGenerator.js
+│   │   ├── StringUtils.js
+│   │   ├── TagManager.js
+│   │   └── config.js
+│   ├── styles/
+│   │   └── main.css
+│   └── templates/
+│       ├── graph.html
+│       ├── index.html
+│       ├── layout.html
+│       └── post.html
+├── test/
+│   ├── blog-generator.smoke.test.js
+│   ├── bloggenerator.data.test.js
+│   ├── cache.test.js
+│   ├── config.test.js
+│   ├── gist-parser.test.js
+│   ├── github-client.test.js
+│   └── template-engine.test.js
+└── dist/
+  ├── assets/
+  │   ├── main.js
+  │   ├── graph-page.js
+  │   └── topic-graph-enhance.js
+  ├── posts/
+  │   └── {gist-id}.html
+  ├── feed.xml
+  ├── graph.html
+  ├── index.html
+  └── styles.css
+```
 
 **Pagination & Filtering**
 - All posts loaded once for instant filtering

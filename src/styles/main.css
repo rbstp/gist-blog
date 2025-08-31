@@ -1155,6 +1155,11 @@ nav {
   border-color: var(--accent-primary);
 }
 
+/* Topic graph (post sidebar) cursor affordances */
+#topic-graph .graph-node { cursor: grab; }
+#topic-graph .graph-node.dragging { cursor: grabbing; }
+#topic-graph.dragging-node { cursor: grabbing; }
+
 .graph-svg.panning {
     cursor: grabbing;
 }
