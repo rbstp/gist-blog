@@ -41,12 +41,15 @@
       tx = midVB.x - next * pinch.world.x; ty = midVB.y - next * pinch.world.y; scale = next; clampPan(); apply();
     }
     svg.addEventListener('wheel', (e) => { e.preventDefault(); const factor = e.deltaY < 0 ? 1.1 : 0.9; const old = scale; const next = Math.max(0.4, Math.min(2.5, old * factor)); if (next === old) return;
-      // Anchor zoom at the center of the visible browser viewport
-      const cx = window.innerWidth / 2; const cy = window.innerHeight / 2; const { x: px, y: py } = clientToViewBox(cx, cy);
-      const ratio = next / old; tx = px - ratio * (px - tx); ty = py - ratio * (py - ty); scale = next; clampPan(); apply(); }, { passive: false });
+      // Anchor zoom at the center of the visible portion of the SVG (viewport ∩ svg rect)
+      const r = svg.getBoundingClientRect(); const vx1 = Math.max(0, r.left), vy1 = Math.max(0, r.top); const vx2 = Math.min(window.innerWidth, r.right), vy2 = Math.min(window.innerHeight, r.bottom);
+      const hasIntersection = vx2 > vx1 && vy2 > vy1; const cx = hasIntersection ? (vx1 + vx2) / 2 : (r.left + r.width / 2); const cy = hasIntersection ? (vy1 + vy2) / 2 : (r.top + r.height / 2);
+      const { x: px, y: py } = clientToViewBox(cx, cy);
+      // For scale() then translate(), keep world under anchor fixed: t' = t + px*(1/s' - 1/s)
+      tx = tx + px * (1 / next - 1 / old); ty = ty + py * (1 / next - 1 / old); scale = next; clampPan(); apply(); }, { passive: false });
     svg.addEventListener('pointerdown', (e) => {
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if (pointers.size === 1) { const now = performance.now(); if (now - lastTapTime < 300) { const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const old = scale; const next = Math.max(0.4, Math.min(2.5, old * 1.6)); const ratio = next / old; tx = px - ratio * (px - tx); ty = py - ratio * (py - ty); scale = next; clampPan(); apply(); lastTapTime = 0; } else { lastTapTime = now; } dragCandidate = true; panning = false; lastX = e.clientX; lastY = e.clientY; }
+  if (pointers.size === 1) { const now = performance.now(); if (now - lastTapTime < 300) { const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const old = scale; const next = Math.max(0.4, Math.min(2.5, old * 1.6)); tx = tx + px * (1 / next - 1 / old); ty = ty + py * (1 / next - 1 / old); scale = next; clampPan(); apply(); lastTapTime = 0; } else { lastTapTime = now; } dragCandidate = true; panning = false; lastX = e.clientX; lastY = e.clientY; }
       else if (pointers.size === 2) { tryStartPinch(); }
     });
     svg.addEventListener('pointermove', (e) => {
