@@ -1644,7 +1644,8 @@ table code {
     border-bottom: 3px solid var(--accent-primary);
     padding-bottom: 0.75rem;
     margin: 0 0 2rem 0;
-    background: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
+    /* eslint-disable-next-line css/no-invalid-properties */
+    background-image: linear-gradient(135deg, var(--text-primary), var(--accent-primary));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -1788,7 +1789,8 @@ table code {
 .post-content hr {
     border: none;
     height: 2px;
-    background: linear-gradient(90deg, var(--accent-primary), transparent);
+    /* eslint-disable-next-line css/no-invalid-properties */
+    background-image: linear-gradient(90deg, var(--accent-primary), transparent);
     margin: 1.5rem 0;
     border-radius: 1px;
     width: 100%;
