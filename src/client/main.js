@@ -219,6 +219,17 @@
     const prevBtn = document.getElementById('prev-btn'); const nextBtn = document.getElementById('next-btn');
     let filterStatus = document.createElement('div'); filterStatus.className = 'filter-status'; filterStatus.style.display = 'none'; section.insertBefore(filterStatus, section.querySelector('.posts-grid'));
 
+    // Escape HTML for safe insertion
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\//g, '&#x2F;');
+    }
+
     function getFilteredPosts() {
       if (activeTags.length === 0) return allPosts;
       return allPosts.filter(post => {
@@ -247,7 +258,7 @@
     }
     function updateFilterStatus() {
       if (activeTags.length === 0) { filterStatus.style.display = 'none'; return; }
-      const filteredCount = getFilteredPosts().length; const tagsDisplay = activeTags.map(tag => `<span class="filter-tag clickable-filter-tag" data-tag="${tag}">#${tag}</span>`).join(' ');
+      const filteredCount = getFilteredPosts().length; const tagsDisplay = activeTags.map(tag => `<span class="filter-tag clickable-filter-tag" data-tag="${escapeHTML(tag)}">#${escapeHTML(tag)}</span>`).join(' ');
       filterStatus.innerHTML = `<div class="filter-info"><span class="filter-prompt">$</span><span>grep --tag</span>${tagsDisplay}<span class="filter-count">→ ${filteredCount} result${filteredCount !== 1 ? 's' : ''}</span><button class="clear-filter" data-clear>clear</button></div>`;
       filterStatus.style.display = 'block';
       filterStatus.querySelector('[data-clear]')?.addEventListener('click', () => { activeTags = []; currentPage = 1; document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); updateFilterStatus(); updatePagination(); });
