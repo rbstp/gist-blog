@@ -393,7 +393,8 @@
     initTocBehaviors();
     initTopicGraph();
 
-    const ts = document.body.getAttribute('data-build-ts') || '';
+    const rawTs = document.body.getAttribute('data-build-ts') || '';
+    const ts = encodeURIComponent(rawTs);
     // Load graph page script if on graph page
     if (document.querySelector('.graph-page')) { loadScript(`/assets/graph-page.js?v=${ts}`).catch(() => { /* ignore */ }); }
     // Load topic-graph enhancement when topic graph exists
