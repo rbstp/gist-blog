@@ -6,14 +6,15 @@ class TemplateLoader {
   constructor(templatesDir = 'src/templates') {
     this.templatesDir = templatesDir;
     this.cache = new Map();
+    this.enableCache = String(process.env.TEMPLATE_CACHE || 'true').toLowerCase() !== 'false';
   }
 
   async load(name) {
-    if (this.cache.has(name)) return this.cache.get(name);
+    if (this.enableCache && this.cache.has(name)) return this.cache.get(name);
     const full = path.join(this.templatesDir, name);
     try {
       const content = await fs.readFile(full, 'utf-8');
-      this.cache.set(name, content);
+      if (this.enableCache) this.cache.set(name, content);
       return content;
     } catch {
       throw new Error(`Template not found: ${name}`);

@@ -39,7 +39,19 @@
       document.documentElement.setAttribute('data-theme', theme);
       try { localStorage.setItem('theme', theme); } catch { /* ignore */ }
       const themeIcon = document.getElementById('theme-icon');
-      if (themeIcon) themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+      if (themeIcon && themeIcon.tagName.toLowerCase() === 'svg') {
+        const useEl = themeIcon.querySelector('use');
+        if (useEl) useEl.setAttribute('href', theme === 'light' ? '#icon-moon' : '#icon-sun');
+        // Trigger spin animation
+        const btn = document.getElementById('theme-toggle');
+        if (btn) {
+          btn.classList.remove('spin');
+          // Force reflow to restart animation
+          void btn.offsetWidth; /* reflow */
+          btn.classList.add('spin');
+          setTimeout(() => btn.classList.remove('spin'), 650);
+        }
+      }
     };
 
     const storedTheme = getStoredTheme();

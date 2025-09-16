@@ -19,7 +19,8 @@
     --terminal-blue: #58a6ff;
     --terminal-orange: #ff7b72;
     --mono-font: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-    --sans-font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    /* Drop custom Inter font to save bytes; rely on high-quality system UI stack */
+    --sans-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Light theme */
@@ -53,6 +54,24 @@
 html {
     scroll-behavior: smooth;
 }
+
+/* --------------------------------------------------
+   Local self-hosted fonts
+   Place variable font files in /src/fonts (copied to /dist/fonts)
+   Expected filenames (see src/fonts/README.md):
+     - InterVariable.woff2
+     - JetBrainsMono-Variable.woff2
+   We only declare variable fonts to minimize payload.
+   -------------------------------------------------- */
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2-variations');
+    font-weight: 400 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+/* Optional: fallback monospace already in stack; no explicit system fallback required */
 
 /* Utility classes for common patterns */
 .transition-base {
@@ -248,6 +267,10 @@ nav {
     width: 2.5rem;
     height: 2.5rem;
 }
+
+/* Theme toggle icon spin animation */
+.theme-toggle .nav-icon { transition: transform 0.6s ease; transform-origin: 50% 50%; }
+.theme-toggle.spin .nav-icon { transform: rotate(360deg); }
 
 .hero-terminal {
     padding: 4rem 0 2rem;

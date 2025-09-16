@@ -29,6 +29,7 @@ class BlogGenerator {
     this.distDir = 'dist';
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
+  this.fontsDir = 'src/fonts';
   this.clientDir = 'src/client';
 
   this.templateEngine = new TemplateEngine(this.templatesDir);
@@ -155,6 +156,30 @@ class BlogGenerator {
     }
   }
 
+  async copyFonts() {
+    // Copy entire fonts directory if it exists
+    try {
+      const source = this.fontsDir;
+      // Verify directory exists; if not, skip silently
+      const stat = await fs.stat(source).catch(() => null);
+      if (!stat || !stat.isDirectory()) return;
+      const destDir = path.join(this.distDir, 'fonts');
+      await fs.mkdir(destDir, { recursive: true });
+      const entries = await fs.readdir(source);
+      await Promise.all(entries.map(async (name) => {
+        const srcPath = path.join(source, name);
+        const destPath = path.join(destDir, name);
+        const s = await fs.stat(srcPath);
+        if (s.isFile()) {
+          await fs.copyFile(srcPath, destPath);
+        }
+      }));
+    } catch (error) {
+      console.error('Error copying fonts:', error.message);
+      throw error;
+    }
+  }
+
   async bundleClientScripts() {
     const outdir = path.join(this.distDir, 'assets');
     await fs.mkdir(outdir, { recursive: true });
@@ -241,6 +266,8 @@ class BlogGenerator {
       this.generateGraphData(posts),
       // Copy styles
       this.copyStyles(),
+      // Copy fonts (if any present)
+      this.copyFonts(),
       // Bundle/copy client scripts
       this.bundleClientScripts()
     ]);

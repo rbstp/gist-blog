@@ -281,6 +281,50 @@ Notes:
 - **System Integration**: Automatically detects and follows OS preference
 - **Manual Override**: Theme toggle persists user choice in localStorage
 - Fonts: JetBrains Mono (code) + Inter (text)
+  Fonts: JetBrains Mono (code) + Inter (text) — self‑hosted (no Google Fonts request)
+  Icons: Inline SVG symbols
+
+#### Self-hosted Fonts
+
+This project now self-hosts its fonts for improved privacy, performance, and resilience.
+
+Why:
+
+- Removes external `fonts.googleapis.com` / `fonts.gstatic.com` network dependency
+- Avoids layout shift and speeds up first render (`font-display: swap`)
+- Keeps consistent caching behavior with other static assets
+
+Implementation:
+
+- Variable font files placed in `src/fonts/` and copied to `dist/fonts` during build
+- `@font-face` declarations added near the top of `src/styles/main.css`
+- Preload hints added in `layout.html` for faster font availability
+
+Expected filenames (place these manually – they are NOT committed):
+
+```
+src/fonts/InterVariable.woff2
+src/fonts/JetBrainsMono-Variable.woff2
+```
+
+Obtain them from official releases:
+
+- Inter: https://github.com/rsms/inter/releases
+- JetBrains Mono: https://github.com/JetBrains/JetBrainsMono/releases
+
+Licenses (SIL OFL 1.1) are included as `OFL-INTER.txt` and `OFL-JETBRAINS-MONO.txt` in the same directory.
+
+If the font files are missing the site will gracefully fall back to the system sans/monospace stacks defined in the CSS custom properties.
+
+#### Icons (SVG, no external font)
+
+Previously icons were provided by Font Awesome via a CDN stylesheet which triggered font downloads (`fa-solid-900.woff2`, `fa-brands-400.woff2`). These external requests have been removed. A tiny inline SVG sprite (sun, moon, branch, github, rss, graph) now serves icons:
+
+- No layout shift waiting for icon font
+- No cross‑origin font requests
+- Easy to add more: drop another `<symbol>` into the sprite inside `layout.html` and reference with `<use href="#icon-name"/>`.
+
+Theme toggle now swaps the `<use>` target between `#icon-sun` and `#icon-moon` instead of toggling Font Awesome classes.
 
 ### Templates
 
