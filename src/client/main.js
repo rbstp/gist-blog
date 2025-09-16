@@ -392,15 +392,51 @@
 
     // Sidebar position/height responsive adjustments
     function adjustTocSidebar() {
-      const sidebar = document.querySelector('.toc-sidebar'); const header = document.querySelector('header'); if (!sidebar) return; const gap = 16; const container = document.querySelector('main.container');
+      const sidebar = document.querySelector('.toc-sidebar'); const header = document.querySelector('header'); if (!sidebar) return;
+      const gap = 16; // vertical + general spacing
+      const horizontalGap = 40; // increased breathing room from viewport right edge
+      const container = document.querySelector('main.container');
       const headerRect = header ? header.getBoundingClientRect() : null; const headerBottom = headerRect ? Math.ceil(headerRect.bottom) : 0; const top = Math.max(gap, headerBottom + gap); sidebar.style.top = top + 'px';
       let maxH = Math.max(120, window.innerHeight - top - gap); const footer = document.querySelector('footer'); if (footer) { const fRect = footer.getBoundingClientRect(); if (fRect.top < window.innerHeight) { const available = Math.max(80, fRect.top - top - gap); maxH = Math.max(80, Math.min(maxH, available)); } }
       sidebar.style.maxHeight = maxH + 'px';
       if (container) {
-        const cRect = container.getBoundingClientRect(); const postContainer = document.querySelector('.post-container'); const availableRight = Math.max(0, window.innerWidth - cRect.right - gap);
-        const minW = 240; const maxW = 360; const ideal = Math.round(Math.min(maxW, Math.max(minW, window.innerWidth * 0.22))); const fitWidth = Math.max(minW, Math.min(ideal, availableRight)); if (postContainer) postContainer.style.marginRight = '';
-        if (availableRight >= minW + 4) { sidebar.style.display = 'block'; sidebar.style.right = 'auto'; sidebar.style.left = Math.max(gap, Math.min(cRect.right + gap, window.innerWidth - fitWidth - gap)) + 'px'; sidebar.style.width = fitWidth + 'px'; sidebar.style.minWidth = minW + 'px'; sidebar.style.maxWidth = maxW + 'px'; }
-        else { const fallbackWidth = Math.round(Math.min(maxW, Math.max(220, ideal))); if (window.innerWidth >= 1160) { sidebar.style.display = 'block'; sidebar.style.left = ''; sidebar.style.right = gap + 'px'; sidebar.style.width = fallbackWidth + 'px'; sidebar.style.minWidth = '220px'; sidebar.style.maxWidth = maxW + 'px'; if (postContainer) postContainer.style.marginRight = (fallbackWidth + gap) + 'px'; } else { sidebar.style.display = 'none'; } }
+        const cRect = container.getBoundingClientRect();
+        const postContainer = document.querySelector('.post-container');
+        const minW = 240; const maxW = 360; const desiredWidth = 340; // preferred width before shrinking
+        const ideal = Math.round(Math.min(maxW, Math.max(minW, window.innerWidth * 0.22)));
+        // Available horizontal space between container right edge and viewport right edge minus enforced viewport gap
+        const rawSpace = window.innerWidth - horizontalGap - cRect.right;
+        const availableSpace = Math.max(0, rawSpace);
+        let fitWidth = Math.max(minW, Math.min(ideal, availableSpace));
+        // Ensure we can also keep gap between container and sidebar (content gap)
+        const contentGap = gap; // readability alias
+        // If there's room for min width plus both gaps, position floating next to content
+        const spaceForSidebar = window.innerWidth - (cRect.right + contentGap) - horizontalGap;
+        const roomForSidebar = spaceForSidebar >= desiredWidth; // require enough space for desired width (prevents overly narrow bar at large screens)
+        if (postContainer) postContainer.style.marginRight = '';
+        if (roomForSidebar) {
+          fitWidth = Math.min(fitWidth, window.innerWidth - (cRect.right + contentGap) - horizontalGap);
+          fitWidth = Math.max(minW, Math.min(fitWidth, maxW));
+          const left = Math.max(contentGap, Math.min(cRect.right + contentGap, window.innerWidth - horizontalGap - fitWidth));
+          sidebar.style.display = 'block';
+          sidebar.style.right = 'auto';
+          sidebar.style.left = left + 'px';
+          sidebar.style.width = fitWidth + 'px';
+          sidebar.style.minWidth = minW + 'px';
+          sidebar.style.maxWidth = maxW + 'px';
+        } else {
+          // Fallback: stick to right edge with viewport gap and push post content
+            const fallbackWidth = Math.round(Math.min(maxW, Math.max(220, ideal)));
+            if (window.innerWidth >= 1160) {
+              sidebar.style.display = 'block';
+              sidebar.style.left = '';
+              sidebar.style.right = horizontalGap + 'px';
+              sidebar.style.width = fallbackWidth + 'px';
+              sidebar.style.minWidth = '220px';
+              sidebar.style.maxWidth = maxW + 'px';
+              if (postContainer) postContainer.style.marginRight = (fallbackWidth + horizontalGap) + 'px';
+            } else { sidebar.style.display = 'none'; }
+        }
       }
       if ((window.scrollY || document.documentElement.scrollTop || 0) <= 2) sidebar.scrollTop = 0;
       const docEl = document.documentElement; const atBottom = (window.innerHeight + window.scrollY) >= (docEl.scrollHeight - 2); if (atBottom) sidebar.scrollTop = sidebar.scrollHeight;

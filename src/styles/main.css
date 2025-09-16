@@ -752,6 +752,10 @@ nav {
     padding: 1rem;
     margin: 1rem 0;
     flex-grow: 1;
+    /* Ensure the entire stats block inherits terminal mono styling */
+    font-family: var(--mono-font);
+    font-size: 0.75rem;
+    line-height: 1.3;
 }
 
 .stat-line {
@@ -766,8 +770,7 @@ nav {
 }
 
 .stat-command {
-    font-family: var(--mono-font);
-    font-size: 0.75rem;
+    /* Inherit mono font + base size from container; keep color cues */
     color: var(--terminal-blue);
     background: none;
     border: none;
@@ -1038,7 +1041,8 @@ nav {
     position: fixed;
     top: 4.5rem;
     /* Safe default below header; JS refines this */
-    right: 2rem;
+    /* Increase default right edge gap for better breathing room */
+    right: 3rem;
     width: 280px;
     height: fit-content;
     max-height: calc(100vh - 5.5rem);
@@ -2269,8 +2273,8 @@ table code {
     .toc-sidebar {
         width: 240px;
         /* Smaller ToC width */
-        right: 1rem;
-        /* Closer to edge */
+        /* Maintain consistent edge gap (JS may override dynamically) */
+        right: 3rem;
     }
 
     .toc-content {
