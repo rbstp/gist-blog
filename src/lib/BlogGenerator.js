@@ -249,6 +249,10 @@ class BlogGenerator {
     // Filter out failures/nulls; items are already resolved
     const posts = gistResults.filter((p) => p !== null);
 
+    if (posts.length === 0) {
+      console.warn('⚠️  No posts were generated. This may indicate an authentication issue (invalid GITHUB_TOKEN) or no public gists found.');
+    }
+
     // Sort posts by createdAt once for reuse
     const sortedPostsByDate = posts.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
@@ -273,6 +277,13 @@ class BlogGenerator {
     ]);
 
     console.log(`✅ Build complete! Generated ${posts.length} posts.`);
+    if (posts.length === 0) {
+      // Provide failing exit code in CI to surface problem early
+      if (process.env.CI) {
+        console.error('Exiting with code 2 because zero posts generated in CI environment.');
+        process.exitCode = 2;
+      }
+    }
   }
 }
 

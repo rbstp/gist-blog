@@ -79,4 +79,43 @@ describe('GitHubClient', () => {
     // Should have waited at least a bit; we don't assert the full RATE_LIMIT_DELAY_MS to avoid flakiness.
     assert.ok(elapsed >= 0);
   });
+
+  it('falls back without auth header on 401 when token supplied', async () => {
+    const dir = await mkTmp();
+    const cache = new Cache(dir, true);
+
+    let authHeaders = [];
+    // First call 401 with auth, second success without auth
+    global.fetch = async (_, opts) => {
+      authHeaders.push(Object.keys(opts.headers).some(k => k.toLowerCase() === 'authorization'));
+      if (authHeaders.length === 1) {
+        return { ok: false, status: 401, statusText: 'Unauthorized', text: async () => JSON.stringify({ message: 'bad creds' }), headers: { get: () => null } };
+      }
+      return { ok: true, status: 200, json: async () => ({ ok: true }), headers: { get: () => null } };
+    };
+
+    const client = new GitHubClient({ token: 'dummy' });
+    const { json } = await client.fetchJson('https://api.example.com', { etagKey: 'a1', cache });
+    assert.deepStrictEqual(json, { ok: true });
+    assert.deepStrictEqual(authHeaders, [ true, false ], 'Should send auth first then retry without');
+  });
+
+  it('surfaces 401 when no token to fallback', async () => {
+    const dir = await mkTmp();
+    const cache = new Cache(dir, true);
+
+    mockFetchSequence([
+      { ok: false, status: 401, statusText: 'Unauthorized', text: JSON.stringify({ message: 'no token' }) },
+    ]);
+
+    const client = new GitHubClient({ token: '' });
+    let error;
+    try {
+      await client.fetchJson('https://api.example.com', { etagKey: 'a2', cache });
+    } catch (e) {
+      error = e;
+    }
+    assert.ok(error, 'Expected error');
+    assert.match(String(error), /401/);
+  });
 });

@@ -119,6 +119,8 @@ To improve reliability and speed (especially in CI), you can provide a personal 
 
 - Set `GITHUB_TOKEN` to raise rate limits for the GitHub API.
 - The build uses ETags (`If-None-Match`) for both the gist list and per‑gist requests; when content is unchanged, cached data from `.cache/` is reused after a `304 Not Modified` response.
+- If an invalid or insufficient‑scope token causes a `401 Unauthorized`, the build now automatically retries the request **without** the token so public gist data can still be fetched. A warning is emitted and the build continues (helpful if a secret was rotated or missing).
+- In CI, if **zero posts** are ultimately generated the build exits with code `2` to surface a likely auth or data issue early.
 
 Example (macOS zsh):
 
@@ -361,15 +363,15 @@ export SITE_DESCRIPTION="Your blog description"
 
 Create `.github/workflows/build-blog.yml`:
 
-````yaml
+```yaml
 name: Build and Deploy Gist Blog
 
 on:
   schedule:
-    - cron: '47 * * * *'   # hourly
-  workflow_dispatch:        # manual trigger
+    - cron: '47 * * * *' # hourly
+  workflow_dispatch: # manual trigger
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
       - 'src/**'
       - '.github/workflows/**'
@@ -378,34 +380,38 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Lint
-      run: npm run lint
+      - name: Lint
+        run: npm run lint
 
-  - name: Build site
-      env:
-        GIST_USERNAME: ${{ github.repository_owner }}
-        GIST_CACHE: false
-      run: npm run build
+      - name: Test
+        run: npm test
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
+      - name: Build site
+        env:
+          GIST_USERNAME: ${{ github.repository_owner }}
+          GIST_CACHE: false
+          GITHUB_TOKEN: ${{ secrets.GIST_BLOG_TOKEN }} # (optional) PAT with 'gist' scope for higher rate limits
+        run: npm run build
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './dist'
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
   deploy:
     environment:
       name: github-pages
@@ -413,10 +419,32 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+### Providing a Personal Access Token
+
+The default `GITHUB_TOKEN` that GitHub Actions provides does **not** allow calling the Gist API at elevated rate limits; for most public‑gist use cases anonymous access works, but heavy schedules (hourly + many gists) may hit secondary limits. To harden builds:
+
+1. Create a classic PAT with the minimal `gist` scope (no repo scope required).
+2. Add it to your repository secrets as `GIST_BLOG_TOKEN`.
+3. Pass it as `GITHUB_TOKEN: ${{ secrets.GIST_BLOG_TOKEN }}` in the build step env.
+
+If the token becomes invalid the build will log a warning and fall back to unauthenticated requests; monitor for the zero‑posts exit code in CI.
+
+### Troubleshooting
+
+| Symptom                                                        | Cause                                              | Fix                                                                            |
+| -------------------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Build log shows `GitHub API Error 401` then succeeds           | Invalid / missing PAT                              | Recreate PAT with `gist` scope and update secret                               |
+| `✅ Build complete! Generated 0 posts.` with exit code 2 in CI | No public gists fetched (auth failure or no gists) | Verify `GIST_USERNAME`, token validity, at least one public gist with markdown |
+| Frequent `403` then retry                                      | Rate limiting                                      | Add PAT or reduce `FETCH_CONCURRENCY`                                          |
+| Slow builds                                                    | Large gist set                                     | Increase cache TTLs or reduce schedule frequency                               |
+
 ### Architecture
+
 - **Zero dependencies** at runtime (pure HTML/CSS/JS)
 - **Modular build system** with separated concerns:
   - `BlogGenerator.js` - Build orchestrator: fetch → parse → shape → render → emit
@@ -442,6 +470,7 @@ jobs:
 ### Features Deep Dive
 
 **Internal Gist Link Transformation**
+
 - Regex-based URL transformation during markdown processing
 - Username-specific filtering preserves external links to other users' gists
 - Supports all markdown link formats (inline, reference, plain URLs)
@@ -449,6 +478,7 @@ jobs:
 - Pattern matching: `https://gist.github.com/{username}/{gistId}` → `/posts/{gistId}.html`
 
 **Multi-Tag System**
+
 - Extracts `#tagname` from gist descriptions
 - Supports multiple tag selection with AND logic
 - Interactive filter buttons with toggle behavior
@@ -457,6 +487,7 @@ jobs:
 - Maintains clean descriptions without hashtags
 
 **Reading Analytics**
+
 - Calculates word count by removing markdown syntax and code blocks
 - Estimates reading time based on 225 words per minute average
 - Displays as terminal commands with color-coded output
@@ -464,6 +495,7 @@ jobs:
 - Two-line format: word count and reading time separately
 
 **Table of Contents System**
+
 - Extracts headings (levels 2-6) from markdown content during build
 - Generates URL-friendly anchor IDs with proper slug formatting
 - Custom marked.js renderer adds permalink anchors with hover effects
@@ -473,12 +505,14 @@ jobs:
 - Performance optimized with requestAnimationFrame for smooth scroll updates
 
 **RSS Feed**
+
 - Full RSS 2.0 compliance
 - Post categories from tags
 - Proper CDATA encoding
 - Self-referencing atom:link
 
 **Performance**
+
 - Parallel gist processing with error resilience
 - Template caching to reduce file I/O
 - Pre-compiled regex patterns in template engine
@@ -563,6 +597,7 @@ gist-blog/
 ```
 
 **Pagination & Filtering**
+
 - All posts loaded once for instant filtering
 - Terminal-themed pagination UI
 - Smart tag filtering across all posts
@@ -575,7 +610,9 @@ This repo uses Node’s built-in test runner (no external frameworks).
 - Run tests:
   ```bash
   npm test
-````
+  ```
+
+```
 
 The tests isolate temp `dist/` and cache directories, and stub network calls where needed. The smoke test ensures the generator can build a minimal site with fake gist data.
 
@@ -594,3 +631,4 @@ MIT License - feel free to use for your own blog!
 ---
 
 _Built with ❤️ for developers who love terminals, gists, and clean code._
+```

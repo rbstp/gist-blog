@@ -20,13 +20,14 @@ class GitHubClient {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-    const getOnce = async (withEtag) => {
+    const getOnce = async (withEtag, { omitAuth } = {}) => {
       const etag = withEtag && etagKey ? await cache.readEtag(etagKey) : '';
-      const res = await fetch(url, {
-        headers: this.headers(etag ? { 'If-None-Match': etag } : undefined),
+      const baseHeaders = this.headers(etag ? { 'If-None-Match': etag } : undefined);
+      if (omitAuth) delete baseHeaders['Authorization'];
+      return fetch(url, {
+        headers: baseHeaders,
         signal: controller.signal,
       });
-      return res;
     };
 
     try {
@@ -46,6 +47,10 @@ class GitHubClient {
           // Rate limited: wait then retry once
           await new Promise((r) => setTimeout(r, this.rateLimitDelayMs));
           response = await getOnce(false);
+        } else if (response.status === 401 && this.token) {
+          // Token provided but unauthorized (token invalid or missing scope). Retry once without auth header.
+          // This enables public-data fallback rather than failing entire build.
+          response = await getOnce(false, { omitAuth: true });
         }
       }
 
@@ -53,7 +58,8 @@ class GitHubClient {
 
       if (!response.ok) {
         const text = await response.text().catch(() => '');
-        throw new Error(`GitHub API Error ${response.status} ${response.statusText} ${text}`);
+        const detail = text && text.length < 500 ? ` ${text}` : '';
+        throw new Error(`GitHub API Error ${response.status} ${response.statusText}${detail}`);
       }
 
       const json = await response.json();
