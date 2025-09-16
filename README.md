@@ -145,6 +145,46 @@ GIST_CACHE=false npm run build
 
 If rate limits are hit in CI, set a `GITHUB_TOKEN` secret and pass it to the build environment.
 
+### GitHub Actions cache for API responses
+
+The build stores normalized gist list + per‑gist JSON (plus ETags) in the local `.cache/` directory. In CI you can persist this between runs using `actions/cache` to drastically cut API calls and stay well below rate limits:
+
+Benefits:
+
+- Faster builds when nothing changed (many 304s avoided entirely – you never hit the network if still fresh in cache and TTL not expired).
+- Reduced likelihood of secondary rate limiting on busy schedules.
+- Allows safe increases to `FETCH_CONCURRENCY` for large gist sets.
+
+Example snippet added before the build step:
+
+```yaml
+- name: Restore gist API cache
+  uses: actions/cache@v4
+  with:
+    path: .cache
+    key: gist-cache-${{ env.GIST_USERNAME }}-${{ hashFiles('package-lock.json') }}-${{ github.run_id }}
+    restore-keys: |
+      gist-cache-${{ env.GIST_USERNAME }}-
+```
+
+Key strategy rationale:
+
+- Includes username so forks don’t collide.
+- Includes a hash of `package-lock.json` so changes to dependencies (potentially affecting parsing logic) can naturally bust the cache.
+- Appends `github.run_id` in the primary key so each run writes a fresh segment (avoids concurrent write races). The restore key prefix reuses the most recent cache from the same username if present.
+
+TTL vs. cache persistence:
+
+- Your internal TTLs (`GIST_CACHE_TTL_LIST_MS`, `GIST_CACHE_TTL_GIST_MS`) still gate staleness; even if a file is restored from cache, the code re-validates TTL before reusing.
+- If you want to force a clean fetch while keeping the Action step, you can set `GIST_CACHE=false` for that run or tweak the key (e.g., add a manual suffix `-bust1`).
+
+When NOT to cache:
+
+- Extremely small gist sets (benefit negligible).
+- Highly dynamic private gists (not applicable here since only public gists are used).
+
+Local dev: caching is always on by default; Action-level caching only affects CI persistence.
+
 ## 📝 Usage
 
 ### Creating Blog Posts
@@ -361,15 +401,15 @@ export SITE_DESCRIPTION="Your blog description"
 
 ### GitHub Actions
 
-Create `.github/workflows/build-blog.yml`:
+Create `.github/workflows/build-blog.yml` (simplified example with caching enabled):
 
 ```yaml
 name: Build and Deploy Gist Blog
 
 on:
   schedule:
-    - cron: '47 * * * *' # hourly
-  workflow_dispatch: # manual trigger
+    - cron: '47 * */6 * *' # every 6 hours
+  workflow_dispatch:
   push:
     branches: [master]
     paths:
@@ -379,6 +419,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GIST_USERNAME: ${{ github.repository_owner }}
+      SITE_URL: https://example.com
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -398,11 +441,18 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Restore gist API cache
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: gist-cache-${{ env.GIST_USERNAME }}-${{ hashFiles('package-lock.json') }}-${{ github.run_id }}
+          restore-keys: |
+            gist-cache-${{ env.GIST_USERNAME }}-
+
       - name: Build site
         env:
-          GIST_USERNAME: ${{ github.repository_owner }}
-          GIST_CACHE: false
-          GITHUB_TOKEN: ${{ secrets.GIST_BLOG_TOKEN }} # (optional) PAT with 'gist' scope for higher rate limits
+          GIST_CACHE: true
+          GITHUB_TOKEN: ${{ secrets.GIST_BLOG_TOKEN }} # optional PAT (gist scope)
         run: npm run build
 
       - name: Setup Pages

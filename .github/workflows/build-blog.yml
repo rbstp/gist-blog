@@ -2,13 +2,13 @@ name: Build and Deploy Gist Blog
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
       - 'src/**'
       - '.github/workflows/**'
   workflow_dispatch:
   schedule:
-    - cron: '47 * * * *'   # hourly
+    - cron: '47 * */6 * *' # every 6 hours
 
 permissions:
   contents: read
@@ -22,39 +22,50 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GIST_USERNAME: ${{ github.repository_owner }}
+      SITE_URL: https://rbstp.dev
+    environment: github-pages
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24'
-        cache: 'npm'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
 
-    - name: Install dependencies
-      run: npm ci
+      - name: Install dependencies
+        run: npm ci
 
-    - name: Lint
-      run: npm run lint
+      - name: Lint
+        run: npm run lint
 
-    - name: Test
-      run: npm test
+      - name: Test
+        run: npm test
 
-    - name: Build site
-      env:
-        GIST_USERNAME: ${{ github.repository_owner }}
-        GIST_CACHE: false
-        SITE_URL: https://rbstp.dev
-      run: npm run build
+      - name: Restore gist API cache
+        uses: actions/cache@v4
+        with:
+          path: .cache
+          key: gist-cache-${{ env.GIST_USERNAME }}-${{ hashFiles('package-lock.json') }}-${{ github.run_id }}
+          restore-keys: |
+            gist-cache-${{ env.GIST_USERNAME }}-
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
+      - name: Build site
+        env:
+          GIST_CACHE: true
+          GITHUB_TOKEN: ${{ secrets.GIST_BLOG_TOKEN }}
+        run: npm run build
 
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: './dist'
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
 
   deploy:
     environment:
@@ -63,6 +74,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
