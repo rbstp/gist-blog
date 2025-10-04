@@ -32,6 +32,10 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### UI/UX Highlights
 
+- **Command Palette** - Press `Cmd/Ctrl+K` for instant fuzzy search across posts, tags, and commands with terminal styling
+- **Enhanced Graph Search** - Real-time tag search on `/graph.html` with visual highlighting and `$ grep --tag` interface
+- **Keyboard Navigation** - Full arrow key navigation on graph page with `?` help overlay and `/` search shortcut
+- **Graph Minimap** - Small overview showing viewport position within the larger tag graph
 - **Modern Graph Styling** - Terminal-themed graph visualizations with grid backgrounds, subtle glows, and improved accessibility
 - **Interactive Tag Graphs** - Explore tag connections with hover highlighting, pointer-centered zoom, pinch gestures, and keyboard navigation
 - **Theme Switching** - Seamless light/dark mode toggle in navigation bar
@@ -312,6 +316,29 @@ Post pages also include a compact topic graph (in the ToC sidebar on desktop) wi
 Notes:
 
 - By default, the graph includes up to 20 most frequent tags. You can change this via `GRAPH_MAX_NODES` in `src/lib/config.js` (or env var `GRAPH_MAX_NODES`).
+
+### Command Palette
+
+Press `Cmd/Ctrl+K` anywhere on the site to open a terminal-styled command palette for instant navigation.
+
+**Features:**
+- **Universal Search**: Find posts, tags, and commands in one place
+- **Fuzzy Matching**: Type partial words (e.g., "demi" finds "deming")
+- **Keyboard Shortcuts**: 
+  - `Cmd/Ctrl+K` to open
+  - `↑↓` to navigate results
+  - `Enter` to select
+  - `Esc` to close
+- **Smart Categorization**: Results tagged as "post", "tag", or "command"
+- **Instant Results**: Data preloads on idle for zero-latency search
+- **Terminal Styling**: Authentic command prompt interface with color-coded output
+
+**Search Capabilities:**
+- Post titles and descriptions
+- Tag names (e.g., "#ai", "#devops")
+- Navigation commands ("Home", "Tag Graph", "RSS Feed")
+
+The command palette automatically stores blog data for lightning-fast searches without network requests.
 
 ## 🎨 Customization
 
@@ -601,6 +628,7 @@ gist-blog/
 │   ├── build.js
 │   ├── client/
 │   │   ├── main.js
+│   │   ├── command-palette.js
 │   │   ├── graph-page.js
 │   │   └── topic-graph-enhance.js
 │   ├── lib/
@@ -636,6 +664,7 @@ gist-blog/
 └── dist/
   ├── assets/
   │   ├── main.js
+  │   ├── command-palette.js
   │   ├── graph-page.js
   │   └── topic-graph-enhance.js
   ├── posts/

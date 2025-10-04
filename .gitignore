@@ -9,6 +9,7 @@ dist/
 
 # Local cache
 .cache/
+.tessl/
 
 # Environment variables
 .env
@@ -59,4 +60,3 @@ coverage/
 
 # Yarn Integrity file
 .yarn-integrity
-

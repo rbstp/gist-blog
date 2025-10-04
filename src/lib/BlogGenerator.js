@@ -188,6 +188,7 @@ class BlogGenerator {
       path.join(this.clientDir, 'main.js'),
       path.join(this.clientDir, 'graph-page.js'),
       path.join(this.clientDir, 'topic-graph-enhance.js'),
+      path.join(this.clientDir, 'command-palette.js'),
     ];
     // Optional bundling: if we ever add imports across client files, enable bundling by setting
     //   BUNDLE_CLIENT=true

@@ -1,4 +1,36 @@
 <section class="graph-page">
+  <div class="graph-controls">
+    <div class="graph-search-container">
+      <div class="graph-search-prompt">
+        <span class="prompt-symbol">$</span>
+        <input 
+          type="text" 
+          id="graph-search-input" 
+          placeholder="grep --tag ..."
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search tags"
+        />
+      </div>
+      <div id="graph-search-results" class="graph-search-results"></div>
+    </div>
+    
+    <div class="graph-legend">
+      <div class="legend-item">
+        <span class="legend-key">/</span>
+        <span>search</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-key">?</span>
+        <span>help</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-key">↑↓←→</span>
+        <span>navigate</span>
+      </div>
+    </div>
+  </div>
+
   <div class="graph-page-canvas">
     <button class="graph-reset-btn" data-target="global-tag-graph" title="Reset view">reset</button>
     <svg id="global-tag-graph" class="graph-svg" viewBox="0 0 800 520" width="800" height="520"
@@ -33,6 +65,8 @@ DESCRIPTION
     Renders an interactive graph of tags across all posts.
     Scroll to zoom, drag to pan. Hover to highlight neighbors.
     Click a tag to filter posts on the homepage.
+    
+    Press ? for keyboard shortcuts and navigation help.
           </pre>
         </div>
 
