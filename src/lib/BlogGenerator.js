@@ -189,6 +189,7 @@ class BlogGenerator {
       path.join(this.clientDir, 'graph-page.js'),
       path.join(this.clientDir, 'topic-graph-enhance.js'),
       path.join(this.clientDir, 'command-palette.js'),
+      path.join(this.clientDir, 'ux-enhancements.js'),
     ];
     // Optional bundling: if we ever add imports across client files, enable bundling by setting
     //   BUNDLE_CLIENT=true
@@ -204,7 +205,7 @@ class BlogGenerator {
         format: 'iife',
         platform: 'browser',
         target: ['es2019'],
-        entryNames: '[name]', // keep stable names main.js, graph-page.js, topic-graph-enhance.js
+        entryNames: '[name]', // keep stable names main.js, graph-page.js, topic-graph-enhance.js, ux-enhancements.js
         write: true,
         logLevel: 'silent'
       });

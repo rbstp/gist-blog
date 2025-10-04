@@ -32,6 +32,11 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### UI/UX Highlights
 
+- **Copy Button for Code Blocks** - Hover over code blocks to reveal `$ pbcopy` button with one-click copying and visual "copied!" feedback
+- **Jump to Top** - `$ cd ~` floating button appears when scrolled down (>400px) for quick navigation back to top on long posts
+- **Breadcrumb Navigation** - Shows `$ cd ~ / posts / {slug}` path on post pages with clickable links for site orientation
+- **Reading Progress** - Thin gradient progress bar at top of viewport shows reading progress through posts
+- **Keyboard Shortcuts Help** - Press `?` to open terminal-styled help modal documenting all shortcuts (not shown on graph page which has its own help)
 - **Command Palette** - Press `Cmd/Ctrl+K` for instant fuzzy search across posts, tags, and commands with terminal styling
 - **Enhanced Graph Search** - Real-time tag search on `/graph.html` with visual highlighting and `$ grep --tag` interface
 - **Keyboard Navigation** - Full arrow key navigation on graph page with `?` help overlay and `/` search shortcut
@@ -630,7 +635,8 @@ gist-blog/
 │   │   ├── main.js
 │   │   ├── command-palette.js
 │   │   ├── graph-page.js
-│   │   └── topic-graph-enhance.js
+│   │   ├── topic-graph-enhance.js
+│   │   └── ux-enhancements.js
 │   ├── lib/
 │   │   ├── AsyncPool.js
 │   │   ├── BlogGenerator.js
@@ -666,7 +672,8 @@ gist-blog/
   │   ├── main.js
   │   ├── command-palette.js
   │   ├── graph-page.js
-  │   └── topic-graph-enhance.js
+  │   ├── topic-graph-enhance.js
+  │   └── ux-enhancements.js
   ├── posts/
   │   └── {gist-id}.html
   ├── feed.xml
