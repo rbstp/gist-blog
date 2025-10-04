@@ -3332,19 +3332,15 @@ pre:hover .copy-btn {
         font-size: 0.8rem;
     }
     
-    /* On mobile with ToC, stack jump-to-top above help button on left */
+    /* On mobile with ToC, move jump-to-top to left side */
     .jump-to-top.has-toc {
         right: auto;
         left: 1rem;
-        bottom: 5rem;
+        bottom: 1rem;
     }
     
     .keyboard-help-btn {
-        bottom: 1rem;
-        left: 1rem;
-        width: 2rem;
-        height: 2rem;
-        font-size: 1rem;
+        display: none;
     }
     
     .breadcrumb-nav {
