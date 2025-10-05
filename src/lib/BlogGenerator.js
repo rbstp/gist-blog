@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const esbuild = require('esbuild');
+const sharp = require('sharp');
 // date-fns no longer needed directly; DateUtils handles formatting
 
 const TemplateEngine = require('./TemplateEngine');
@@ -211,16 +212,25 @@ class BlogGenerator {
   }
 
   async copyFavicon() {
-    // Copy favicon.svg to dist root
+    // Copy favicon.svg and convert to PNG for RSS feed
     try {
       const source = path.join('src', 'favicon.svg');
-      const dest = path.join(this.distDir, 'favicon.svg');
+      const svgDest = path.join(this.distDir, 'favicon.svg');
+      const pngDest = path.join(this.distDir, 'favicon.png');
+
       const stat = await fs.stat(source).catch(() => null);
       if (stat && stat.isFile()) {
-        await fs.copyFile(source, dest);
+        // Copy SVG for website use
+        await fs.copyFile(source, svgDest);
+
+        // Convert to PNG for RSS feed (RSS requires GIF/JPEG/PNG)
+        await sharp(source)
+          .resize(128, 128) // Larger size for better quality in feed readers
+          .png()
+          .toFile(pngDest);
       }
     } catch (error) {
-      console.error('Error copying favicon:', error.message);
+      console.error('Error copying/converting favicon:', error.message);
       throw error;
     }
   }
