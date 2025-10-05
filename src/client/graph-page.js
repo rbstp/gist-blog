@@ -1,7 +1,7 @@
 /* eslint-env browser */
 /* eslint-disable no-empty */
 
-// Enhanced graph page with search, keyboard navigation, and minimap
+// Enhanced graph page with search and keyboard navigation
 (function () {
   let currentFocusIndex = -1;
   let allNodeElements = [];
