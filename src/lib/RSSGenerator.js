@@ -5,6 +5,17 @@ class RSSGenerator {
     this.description = process.env.SITE_DESCRIPTION || 'There and Back Again: A DevOps Engineer\'s Journey Through AI and Infrastructure';
   }
 
+  /**
+   * Sanitizes HTML content for RSS feeds by removing permalink anchors
+   * @param {string} html - The HTML content to sanitize
+   * @returns {string} - Sanitized HTML without permalink anchors
+   */
+  sanitizeForRSS(html) {
+    if (!html) return '';
+    // Remove permalink anchors (e.g., <a href="#section" class="permalink" aria-label="Permalink">#</a>)
+    return html.replace(/<a[^>]*class="permalink"[^>]*>.*?<\/a>/g, '');
+  }
+
   generateFeed(posts) {
     // Assume posts are already sorted (they are sorted in BlogGenerator.generateIndex)
     // If not sorted, we could add a safety sort, but avoid redundant sorting
@@ -33,7 +44,7 @@ class RSSGenerator {
       <link>${postUrl}</link>
       <guid>${postUrl}</guid>
       <pubDate>${pubDate}</pubDate>
-      <description><![CDATA[${post.htmlContent || ''}]]></description>${categoryTags}
+      <description><![CDATA[${this.sanitizeForRSS(post.htmlContent)}]]></description>${categoryTags}
     </item>`;
     }).join('\n');
 
