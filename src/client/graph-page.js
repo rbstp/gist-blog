@@ -178,78 +178,7 @@
     });
   }
 
-  // Minimap
-  function createMinimap(svg, root, nodes, positions, enablePanZoomReturn) {
-    const container = svg.closest('.graph-page-canvas');
-    if (!container) return;
-    
-    const minimapDiv = document.createElement('div');
-    minimapDiv.className = 'graph-minimap';
-    minimapDiv.innerHTML = `
-      <svg class="minimap-svg" viewBox="0 0 800 520">
-        <g id="minimap-content"></g>
-        <rect id="minimap-viewport" class="minimap-viewport" x="0" y="0" width="100" height="100"></rect>
-      </svg>
-    `;
-    container.appendChild(minimapDiv);
-    
-    const minimapSvg = minimapDiv.querySelector('.minimap-svg');
-    const minimapContent = minimapSvg.querySelector('#minimap-content');
-    const viewportRect = minimapSvg.querySelector('#minimap-viewport');
-    
-    // Draw nodes on minimap
-    nodes.forEach(n => {
-      const pos = positions.get(n.id);
-      if (!pos) return;
-      
-      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-      circle.setAttribute('cx', pos.x);
-      circle.setAttribute('cy', pos.y);
-      circle.setAttribute('r', '3');
-      circle.setAttribute('class', 'minimap-node');
-      minimapContent.appendChild(circle);
-    });
-    
-    // Update viewport indicator
-    function updateViewport() {
-      try {
-        const transform = root.getAttribute('transform') || '';
-        const scaleMatch = transform.match(/scale\(([^)]+)\)/);
-        const translateMatch = transform.match(/translate\(([^,]+),([^)]+)\)/);
-        
-        const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
-        const tx = translateMatch ? parseFloat(translateMatch[1]) : 0;
-        const ty = translateMatch ? parseFloat(translateMatch[2]) : 0;
-        
-        const vb = svg.viewBox.baseVal || { x: 0, y: 0, width: 800, height: 520 };
-        
-        // Calculate visible area in world coordinates
-        const visibleW = vb.width / scale;
-        const visibleH = vb.height / scale;
-        const visibleX = -tx;
-        const visibleY = -ty;
-        
-        viewportRect.setAttribute('x', visibleX);
-        viewportRect.setAttribute('y', visibleY);
-        viewportRect.setAttribute('width', visibleW);
-        viewportRect.setAttribute('height', visibleH);
-      } catch (err) {
-        console.warn('Minimap viewport update error:', err);
-      }
-    }
-    
-    // Update on transform changes
-    const observer = new MutationObserver(() => {
-      updateViewport();
-    });
-    
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ['transform']
-    });
-    
-    updateViewport();
-  }
+
 
   // Pan/zoom utility (unchanged from original, keeping for reference)
   function enablePanZoom(svg, root, options = {}) {
@@ -415,7 +344,6 @@
         // Setup new features
         setupGraphSearch(nodes, nodeRefs, highlight, clear);
         setupKeyboardNavigation(nodes, nodeRefs, positions);
-        createMinimap(svg, root, nodes, positions, pz);
 
         // Terminal title update
         try { const titleEl = document.querySelector('.terminal-title'); if (titleEl) { const n = graph.nodes.length; const e = graph.edges.length; titleEl.textContent = `graph • ${n} nodes • ${e} edges`; } } catch { }
