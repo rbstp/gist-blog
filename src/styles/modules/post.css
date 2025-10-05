@@ -49,7 +49,6 @@
   background-color: var(--bg-tertiary);
   background-image:
     radial-gradient(60% 60% at 20% 15%, rgba(88, 166, 255, 0.08), transparent 60%),
-    radial-gradient(60% 60% at 80% 85%, rgba(63, 185, 80, 0.06), transparent 60%),
     repeating-linear-gradient(0deg, transparent 0 23px, rgba(88, 166, 255, 0.06) 23px 24px),
     repeating-linear-gradient(90deg, transparent 0 23px, rgba(88, 166, 255, 0.06) 23px 24px);
   border: 1px solid var(--border-primary);
