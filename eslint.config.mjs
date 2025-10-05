@@ -38,14 +38,28 @@ export default defineConfig([
     },
   },
 
-  // CSS linting for source styles only
+  // CSS linting for source styles
+  // Note: Individual modules may reference CSS variables from other modules,
+  // so we disable property validation for module files
   {
-    files: ["src/**/*.css"],
+    files: ["src/styles/modules/**/*.css"],
     plugins: { css },
     language: "css/css",
     extends: ["css/recommended"],
     rules: {
-      // Allow modern properties and occasional !important in this project
+      "css/use-baseline": "off",
+      "css/no-important": "off",
+      "css/no-invalid-properties": "off", // Modules reference vars from other modules
+    },
+  },
+  
+  // CSS linting for concatenated/generated styles - strict validation
+  {
+    files: ["dist/**/*.css"],
+    plugins: { css },
+    language: "css/css",
+    extends: ["css/recommended"],
+    rules: {
       "css/use-baseline": "off",
       "css/no-important": "off",
     },

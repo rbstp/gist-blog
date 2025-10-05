@@ -1,0 +1,112 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+/* --------------------------------------------------
+   Local self-hosted fonts
+   Place variable font files in /src/fonts (copied to /dist/fonts)
+   Expected filenames (see src/fonts/README.md):
+     - InterVariable.woff2
+     - JetBrainsMono-Variable.woff2
+   We only declare variable fonts to minimize payload.
+   -------------------------------------------------- */
+@font-face {
+    font-family: 'JetBrains Mono';
+    src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2-variations');
+    font-weight: 400 700;
+    font-display: swap;
+    font-style: normal;
+}
+
+/* Optional: fallback monospace already in stack; no explicit system fallback required */
+
+/* Utility classes for common patterns */
+.transition-base {
+    transition: all 0.2s ease;
+}
+
+.transition-colors {
+    transition: color 0.2s ease;
+}
+
+.mono-font {
+    font-family: var(--mono-font);
+}
+
+.sans-font {
+    font-family: var(--sans-font);
+}
+
+.border-radius-sm {
+    border-radius: 3px;
+}
+
+.border-radius-md {
+    border-radius: 4px;
+}
+
+.border-radius-lg {
+    border-radius: 6px;
+}
+
+.border-radius-xl {
+    border-radius: 8px;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+}
+
+.flex-center-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.text-hover-primary:hover {
+    color: var(--accent-primary);
+}
+
+/* Common button and link patterns */
+.btn-base {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.btn-primary:hover {
+    background: var(--terminal-blue);
+    transform: translateX(2px);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+}

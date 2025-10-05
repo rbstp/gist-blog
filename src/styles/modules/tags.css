@@ -1,0 +1,170 @@
+/* Base tag styling */
+.tag,
+.filter-tag,
+.branch-name {
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--accent-primary);
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--accent-primary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--mono-font);
+    transition: all 0.2s ease;
+}
+
+.tag {
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.tag:hover,
+.tag.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.tag:hover {
+    transform: translateY(-1px);
+}
+
+.tag.active {
+    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+}
+
+.filter-tag {
+    border-radius: 4px;
+    padding: 0.2rem 0.6rem;
+}
+
+.clickable-filter-tag {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.clickable-filter-tag:hover {
+    background: var(--terminal-orange);
+    color: var(--bg-primary);
+    transform: translateY(-1px);
+}
+
+.clickable-filter-tag:hover::after {
+    content: "×";
+    position: absolute;
+    right: 0.2rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: var(--bg-primary);
+}
+
+.branch-name {
+    border-radius: 3px;
+    border: none;
+}
+
+.filter-status {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--accent-primary);
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1);
+}
+
+.filter-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+
+.filter-prompt {
+    color: var(--terminal-green);
+    font-weight: 600;
+}
+
+/* .filter-tag styling now consolidated above */
+
+.filter-count {
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.clear-filter {
+    background: var(--bg-primary);
+    color: var(--terminal-orange);
+    border: 1px solid var(--terminal-orange);
+    padding: 0.3rem 0.8rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-family: var(--mono-font);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+}
+
+.clear-filter:hover {
+    background: var(--terminal-orange);
+    color: var(--bg-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 123, 114, 0.3);
+}
+
+.post-stats {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 4px;
+    padding: 1rem;
+    margin: 1rem 0;
+    flex-grow: 1;
+    /* Ensure the entire stats block inherits terminal mono styling */
+    font-family: var(--mono-font);
+    font-size: 0.75rem;
+    line-height: 1.3;
+}
+
+.stat-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.stat-line:last-child {
+    margin-bottom: 0;
+}
+
+.stat-command {
+    /* Inherit mono font + base size from container; keep color cues */
+    color: var(--terminal-blue);
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.stat-command::before {
+    content: "$ ";
+    color: var(--terminal-green);
+}
+
+.stat-value {
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+    color: var(--terminal-green);
+    font-weight: 500;
+}
+
+.card-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-primary);
+    margin-top: auto;
+}
+
+/* Action links now use consolidated button classes defined above */

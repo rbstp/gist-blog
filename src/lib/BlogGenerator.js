@@ -145,11 +145,45 @@ class BlogGenerator {
   }
 
   async copyStyles() {
-    const sourceStylesPath = path.join(this.stylesDir, 'main.css');
     const destStylesPath = path.join(this.distDir, 'styles.css');
+    const modulesDir = path.join(this.stylesDir, 'modules');
 
     try {
-      await fs.copyFile(sourceStylesPath, destStylesPath);
+      // Check if modules directory exists (modular approach)
+      const stat = await fs.stat(modulesDir).catch(() => null);
+      
+      if (stat && stat.isDirectory()) {
+        // Concatenate CSS modules in the correct order
+        const moduleOrder = [
+          'variables.css',
+          'base.css',
+          'layout.css',
+          'terminal.css',
+          'tags.css',
+          'cards.css',
+          'post.css',
+          'typography.css',
+          'syntax.css',
+          'dev-mode.css',
+          'command-palette.css',
+          'graph.css',
+          'ux.css',
+          'responsive.css'
+        ];
+
+        let concatenatedCSS = '';
+        for (const moduleName of moduleOrder) {
+          const modulePath = path.join(modulesDir, moduleName);
+          const moduleContent = await fs.readFile(modulePath, 'utf8');
+          concatenatedCSS += moduleContent + '\n';
+        }
+
+        await fs.writeFile(destStylesPath, concatenatedCSS);
+      } else {
+        // Fallback to monolithic main.css if modules don't exist
+        const sourceStylesPath = path.join(this.stylesDir, 'main.css');
+        await fs.copyFile(sourceStylesPath, destStylesPath);
+      }
     } catch (error) {
       console.error('Error copying styles:', error.message);
       throw error;

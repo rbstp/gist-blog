@@ -1,0 +1,232 @@
+.action-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.action-link.primary {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.action-link.primary:hover {
+    background: var(--terminal-blue);
+    transform: translateX(2px);
+}
+
+.action-link.secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-primary);
+}
+
+.action-link.secondary:hover {
+    border-color: var(--accent-secondary);
+    color: var(--accent-secondary);
+}
+
+.action-icon {
+    font-size: 0.75rem;
+}
+
+.post-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 0;
+}
+
+.post-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.back-link,
+.source-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--mono-font);
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+}
+
+.back-link:hover,
+.source-link:hover {
+    color: var(--accent-primary);
+}
+
+.post-header-compact {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.post-meta-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+}
+
+.post-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.status-badge {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--accent-success);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    border: 1px solid var(--accent-success);
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.commit-info {
+    color: var(--terminal-orange);
+    font-weight: 500;
+}
+
+.post-date {
+    color: var(--text-secondary);
+}
+
+.post-title-compact {
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+/* Removed redundant styles - now handled by consolidated terminal styles above */
+
+.terminal-title-small {
+    color: var(--text-secondary);
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+}
+
+.terminal-prompt {
+    color: var(--terminal-green);
+}
+
+.terminal-command {
+    color: var(--terminal-blue);
+}
+
+.post-content-advanced {
+    padding: 2rem;
+    line-height: 1.8;
+}
+
+.post-content-advanced h1,
+.post-content-advanced h2,
+.post-content-advanced h3,
+.post-content-advanced h4 {
+    color: var(--text-primary);
+    margin: 2rem 0 1rem 0;
+    font-weight: 600;
+}
+
+.post-content-advanced h1 {
+    font-size: 2rem;
+}
+
+.post-content-advanced h2 {
+    font-size: 1.5rem;
+}
+
+.post-content-advanced h3 {
+    font-size: 1.25rem;
+}
+
+.post-content-advanced p {
+    margin-bottom: 1.5rem;
+    color: var(--text-body);
+}
+
+.post-content-advanced ul,
+.post-content-advanced ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.post-content-advanced li {
+    margin-bottom: 0.5rem;
+    color: var(--text-body);
+}
+
+.post-content-advanced pre {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    border-radius: 6px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    overflow-x: auto;
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.post-content-advanced code {
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+    background: var(--bg-primary);
+    color: var(--terminal-orange);
+    padding: 0.2rem 0.4rem;
+    border-radius: 3px;
+    border: 1px solid var(--border-primary);
+}
+
+.post-content-advanced pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: inherit;
+}
+
+.post-content-advanced blockquote {
+    border-left: 3px solid var(--accent-primary);
+    background: var(--bg-secondary);
+    padding: 1rem 1.5rem;
+    margin: 1.5rem 0;
+    border-radius: 0 4px 4px 0;
+}
+
+.post-content-advanced blockquote p {
+    margin: 0;
+    color: var(--text-body);
+    font-style: italic;
+}
+
+.post-content-advanced a {
+    color: var(--accent-primary);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+}
+
+.post-content-advanced a:hover {
+    border-bottom-color: var(--accent-primary);
+}

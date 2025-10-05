@@ -1,0 +1,46 @@
+:root {
+    /* Dark theme (default) */
+    --bg-primary: #0d1117;
+    --bg-secondary: #161b22;
+    --bg-tertiary: #21262d;
+    --bg-card: #0d1117;
+    --border-primary: #21262d;
+    --border-accent: #f78166;
+    --text-primary: #f0f6fc;
+    --text-body: #c9d1d9;
+    --text-secondary: #8b949e;
+    --text-muted: #6e7681;
+    --accent-primary: #58a6ff;
+    --accent-secondary: #f78166;
+    --accent-success: #3fb950;
+    --accent-warning: #d29922;
+    --accent-error: #f85149;
+    --terminal-green: #39d353;
+    --terminal-blue: #58a6ff;
+    --terminal-orange: #ff7b72;
+    --mono-font: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
+    /* Drop custom Inter font to save bytes; rely on high-quality system UI stack */
+    --sans-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+}
+
+/* Light theme */
+[data-theme="light"] {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f6f8fa;
+    --bg-tertiary: #f1f3f4;
+    --bg-card: #ffffff;
+    --border-primary: #d0d7de;
+    --border-accent: #fd7e14;
+    --text-primary: #24292f;
+    --text-body: #24292f;
+    --text-secondary: #656d76;
+    --text-muted: #8c959f;
+    --accent-primary: #0969da;
+    --accent-secondary: #fd7e14;
+    --accent-success: #1a7f37;
+    --accent-warning: #bf8700;
+    --accent-error: #d1242f;
+    --terminal-green: #1a7f37;
+    --terminal-blue: #0969da;
+    --terminal-orange: #fd7e14;
+}

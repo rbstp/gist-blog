@@ -1,0 +1,318 @@
+/* Post Content Layout with Sidebar ToC */
+.post-content-wrapper {
+    position: relative;
+}
+
+/* Table of Contents Sidebar - Desktop Only */
+.toc-sidebar {
+    position: fixed;
+    top: 4.5rem;
+    /* Safe default below header; JS refines this */
+    /* Increase default right edge gap for better breathing room */
+    right: 3rem;
+    width: 280px;
+    height: fit-content;
+    max-height: calc(100vh - 5.5rem);
+    /* Safe default; JS refines this */
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.toc-terminal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Minimalist topic graph (desktop sidebar) */
+.graph-terminal {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    margin-bottom: 1rem;
+}
+
+.graph-content {
+    padding: 0.75rem;
+    position: relative;
+}
+
+.graph-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  /* Terminal-style canvas with subtle grid and vignette */
+  background-color: var(--bg-tertiary);
+  background-image:
+    radial-gradient(60% 60% at 20% 15%, rgba(88, 166, 255, 0.08), transparent 60%),
+    radial-gradient(60% 60% at 80% 85%, rgba(63, 185, 80, 0.06), transparent 60%),
+    repeating-linear-gradient(0deg, transparent 0 23px, rgba(88, 166, 255, 0.06) 23px 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, rgba(88, 166, 255, 0.06) 23px 24px);
+  border: 1px solid var(--border-primary);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 1px rgba(88, 166, 255, 0.08);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+  /* Avoid layout thrash while offscreen */
+  content-visibility: auto;
+  contain-intrinsic-size: 232px 220px;
+}
+
+/* Pointer and drag affordances */
+.graph-svg.panning { cursor: grabbing; }
+.graph-node { cursor: grab; transition: filter 0.15s ease; }
+.graph-node.dragging, .graph-svg.dragging-node { cursor: grabbing; }
+
+/* Nodes */
+.graph-node { fill: var(--accent-primary); opacity: 0.95; }
+.graph-node circle {
+  fill: var(--accent-primary);
+  stroke: rgba(88, 166, 255, 0.35);
+  stroke-width: 1;
+}
+.graph-node:hover {
+  filter: drop-shadow(0 0 8px rgba(88, 166, 255, 0.45));
+}
+
+/* Labels: mono, small, with a subtle halo for readability on grid */
+.graph-node text {
+  font-family: var(--mono-font);
+  font-size: 11px;
+  fill: var(--text-secondary);
+  paint-order: stroke;
+  stroke: rgba(13, 17, 23, 0.85); /* dark theme halo */
+  stroke-width: 3px;
+}
+[data-theme="light"] .graph-node text {
+  stroke: rgba(255, 255, 255, 0.9); /* light theme halo */
+}
+
+/* Links */
+.graph-link {
+  stroke: var(--text-muted);
+  stroke-opacity: 0.45;
+  stroke-linecap: round;
+  transition: stroke-opacity 0.15s ease, stroke-width 0.15s ease;
+  filter: drop-shadow(0 0 2px rgba(88, 166, 255, 0.2));
+}
+.graph-link:not(.dimmed) { stroke-opacity: 0.7; }
+
+/* Highlight states (works with existing JS) */
+.graph-node.active circle { stroke: var(--accent-secondary); stroke-width: 2; }
+.graph-node.dimmed circle,
+.graph-node.dimmed text,
+.graph-link.dimmed { opacity: 0.25; }
+
+/* Empty/failed state text inside the SVG */
+.graph-empty {
+  font-family: var(--mono-font);
+  font-size: 0.9rem;
+  fill: var(--text-muted);
+}
+
+/* Global graph container polish */
+.graph-page-canvas {
+  max-width: 1000px;
+  margin: 1rem auto;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  position: relative;
+}
+.graph-page-canvas .graph-svg { width: 100%; height: auto; }
+
+/* Reset button overlay */
+.graph-reset-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  font-family: var(--mono-font);
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border-primary);
+  background: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  cursor: pointer;
+}
+.graph-reset-btn:hover {
+  color: var(--accent-primary);
+  border-color: var(--accent-primary);
+}
+
+/* Topic graph (post sidebar) cursor affordances */
+#topic-graph .graph-node { cursor: grab; }
+#topic-graph .graph-node.dragging { cursor: grabbing; }
+#topic-graph.dragging-node { cursor: grabbing; }
+
+.graph-svg.panning {
+    cursor: grabbing;
+}
+
+.graph-node {
+    fill: var(--accent-primary);
+    opacity: 0.9;
+}
+
+.graph-node circle {
+    fill: var(--accent-primary);
+}
+
+/* Highlight topic tags for this post */
+.graph-node.topic circle {
+    fill: var(--terminal-green);
+}
+
+.graph-node text {
+    font-family: var(--mono-font);
+    font-size: 10px;
+    fill: var(--text-secondary);
+}
+
+.graph-link {
+    stroke: var(--text-muted);
+    stroke-opacity: 0.6;
+    stroke-linecap: round;
+    filter: drop-shadow(0 0 2px rgba(88, 166, 255, 0.25));
+}
+
+.graph-node:hover {
+    filter: drop-shadow(0 0 6px rgba(88, 166, 255, 0.6));
+}
+
+.graph-node.active circle {
+    stroke: var(--accent-secondary);
+    stroke-width: 2;
+}
+
+.graph-node.dimmed circle,
+.graph-node.dimmed text,
+.graph-link.dimmed {
+    opacity: 0.25;
+}
+
+/* Global graph page */
+.graph-page {
+    padding: 2rem 0 3rem;
+}
+
+.graph-page-canvas {
+    max-width: 1000px;
+    margin: 1rem auto;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+    position: relative;
+}
+
+.graph-page-canvas .graph-svg {
+    width: 100%;
+    height: auto;
+}
+
+/* Reset button overlay for graphs */
+.graph-reset-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 2;
+    font-family: var(--mono-font);
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border: 1px solid var(--border-primary);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.graph-reset-btn:hover {
+    color: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+/* consolidated .graph-link styles above */
+
+.toc-content {
+    padding: 1.5rem;
+}
+
+.table-of-contents {
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.toc-item {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+    padding: 0.25rem 0;
+    width: 100%;
+}
+
+.toc-item:last-child {
+    margin-bottom: 0;
+}
+
+.toc-line-number {
+    color: var(--terminal-green);
+    margin-right: 0.75rem;
+    font-weight: 500;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+    min-width: 1.2rem;
+}
+
+.toc-link {
+    color: var(--text-primary);
+    text-decoration: none;
+    transition: color 0.2s ease;
+    line-height: 1.4;
+    flex: 1;
+    word-wrap: break-word;
+    padding: 0.1rem 0.25rem;
+    /* ensure active state doesn't reflow */
+    border-radius: 4px;
+}
+
+.toc-link:hover {
+    color: var(--accent-primary);
+}
+
+.toc-link.active {
+    color: var(--accent-primary);
+    background: rgba(88, 166, 255, 0.12);
+}
+
+.toc-level-2 {
+    padding-left: 0;
+}
+
+.toc-level-3 {
+    padding-left: 1rem;
+}
+
+.toc-level-4 {
+    padding-left: 2rem;
+}
+
+.toc-level-5 {
+    padding-left: 3rem;
+}
+
+.toc-level-6 {
+    padding-left: 4rem;
+}
