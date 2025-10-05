@@ -82,13 +82,32 @@
   // Keyboard navigation
   function setupKeyboardNavigation(nodes, nodeRefs, positions) {
     allNodeElements = Array.from(document.querySelectorAll('.graph-node'));
-    
+
     document.addEventListener('keydown', (e) => {
-      // Only handle if search input is not focused
-      if (document.activeElement && document.activeElement.id === 'graph-search-input') {
+      // Close help overlay with Esc key
+      if (e.key === 'Escape') {
+        const helpOverlay = document.getElementById('graph-help-overlay');
+        if (helpOverlay) {
+          e.preventDefault();
+          helpOverlay.remove();
+          return;
+        }
+      }
+
+      // Only handle keyboard shortcuts if search input is not focused
+      const searchInputFocused = document.activeElement && document.activeElement.id === 'graph-search-input';
+
+      // Toggle theme with 't' key (but not when typing in search)
+      if ((e.key === 't' || e.key === 'T') && !searchInputFocused) {
+        e.preventDefault();
+        if (window.toggleTheme) window.toggleTheme();
         return;
       }
-      
+
+      if (searchInputFocused) {
+        return;
+      }
+
       // Arrow key navigation
       if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
         e.preventDefault();
@@ -155,8 +174,9 @@
           <div class="help-section">
             <h3>Actions</h3>
             <div class="help-item"><kbd>/</kbd>Focus search</div>
-            <div class="help-item"><kbd>Esc</kbd>Clear search</div>
+            <div class="help-item"><kbd>Esc</kbd>Close help / Clear search</div>
             <div class="help-item"><kbd>?</kbd>Toggle this help</div>
+            <div class="help-item"><kbd>T</kbd>Toggle theme</div>
           </div>
           <div class="help-section">
             <h3>Mouse</h3>

@@ -7,7 +7,7 @@
     gap: 0.75rem;
     margin: 0 auto 1rem;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
     max-width: 1000px;
 }

@@ -313,6 +313,13 @@ Navigate to `/graph.html` (also available in the header) to explore connections 
   - Double-tap to zoom toward the tap point
   - Reset: a small "reset" button in the top-right restores the default view
   - Hover: highlight neighbors when hovering a tag (desktop)
+- Keyboard shortcuts:
+  - `/` - Focus search box
+  - `?` - Show help overlay with all shortcuts
+  - `Esc` - Close help overlay or clear search
+  - `t` - Toggle light/dark theme
+  - Arrow keys - Navigate between tags
+  - `Enter` - Select focused tag
 - Click a tag to jump back to the homepage with that tag preselected (filter applied automatically)
 - Node sizes scale with tag frequency (2-5px radius); edge widths scale with co-occurrence weight
 
