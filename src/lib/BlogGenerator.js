@@ -179,10 +179,6 @@ class BlogGenerator {
         }
 
         await fs.writeFile(destStylesPath, concatenatedCSS);
-      } else {
-        // Fallback to monolithic main.css if modules don't exist
-        const sourceStylesPath = path.join(this.stylesDir, 'main.css');
-        await fs.copyFile(sourceStylesPath, destStylesPath);
       }
     } catch (error) {
       console.error('Error copying styles:', error.message);

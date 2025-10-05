@@ -61,7 +61,7 @@ The modules are concatenated in a specific order to ensure:
 
 ## Migration Note
 
-The original monolithic `main.css` file (3,367 lines) has been split into 14 focused modules averaging ~240 lines each. The backup is preserved as `main.css.backup`.
+The original monolithic `main.css` file (3,367 lines) has been split into 14 focused modules averaging ~240 lines each.
 
 ## Benefits
 
