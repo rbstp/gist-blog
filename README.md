@@ -349,14 +349,19 @@ The command palette automatically stores blog data for lightning-fast searches w
 
 ### Styling
 
-- **Dual Theme Support** with CSS custom properties in `src/styles/main.css`
+Styles are organized into **modular CSS files** in `src/styles/modules/` for easier maintenance:
+- 14 focused modules (variables, base, layout, terminal, tags, cards, post, typography, syntax, dev-mode, command-palette, graph, ux, responsive)
+- Build process concatenates modules into a single `dist/styles.css` file
+- See `src/styles/README.md` for detailed module documentation
+
+Key features:
+- **Dual Theme Support** with CSS custom properties
 - **Dark Theme**: GitHub dark color palette (`--bg-primary: #0d1117`)
 - **Light Theme**: Clean light palette (`--bg-primary: #ffffff`)
 - **System Integration**: Automatically detects and follows OS preference
 - **Manual Override**: Theme toggle persists user choice in localStorage
-- Fonts: JetBrains Mono (code) + Inter (text)
-  Fonts: JetBrains Mono (code) + Inter (text) — self‑hosted (no Google Fonts request)
-  Icons: Inline SVG symbols
+- Fonts: JetBrains Mono (code) + Inter (text) — self‑hosted (no Google Fonts request)
+- Icons: Inline SVG symbols
 
 #### Self-hosted Fonts
 
@@ -371,7 +376,7 @@ Why:
 Implementation:
 
 - Variable font files placed in `src/fonts/` and copied to `dist/fonts` during build
-- `@font-face` declarations added near the top of `src/styles/main.css`
+- `@font-face` declarations added in `src/styles/modules/base.css`
 - Preload hints added in `layout.html` for faster font availability
 
 Expected filenames (place these manually – they are NOT committed):

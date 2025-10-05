@@ -1,0 +1,349 @@
+/* Terminal window base styles */
+.terminal-window,
+.content-terminal,
+.pagination-terminal {
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.terminal-window {
+    max-width: 600px;
+    width: 100%;
+}
+
+.terminal-header,
+.terminal-header-small,
+.pagination-header {
+    background: var(--bg-secondary);
+    padding: 0.75rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.terminal-header-small {
+    padding: 0.5rem 1rem;
+}
+
+.terminal-controls,
+.terminal-controls-small,
+.pagination-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.terminal-controls-small {
+    gap: 0.3rem;
+}
+
+.control,
+.control-small {
+    border-radius: 50%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+    overflow: hidden;
+}
+
+.control {
+    width: 12px;
+    height: 12px;
+}
+
+.control-small {
+    width: 10px;
+    height: 10px;
+}
+
+.control.close,
+.control-small.close {
+    background: var(--accent-error);
+}
+
+.control.minimize,
+.control-small.minimize {
+    background: var(--accent-warning);
+}
+
+.control.maximize,
+.control-small.maximize {
+    background: var(--accent-success);
+}
+
+/* Hover effects for terminal controls */
+.control:hover,
+.control-small:hover {
+    transform: scale(1.1);
+}
+
+.control:hover::after,
+.control-small:hover::after {
+    opacity: 1;
+    font-size: 8px;
+}
+
+.control::after,
+.control-small::after {
+    content: '';
+    position: absolute;
+    color: rgba(0, 0, 0, 0.8);
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-size: 0;
+}
+
+.control.close::after,
+.control-small.close::after {
+    content: '×';
+}
+
+.control.minimize::after,
+.control-small.minimize::after {
+    content: '−';
+}
+
+.control.maximize::after,
+.control-small.maximize::after {
+    content: '⇱';
+}
+
+.terminal-title {
+    color: var(--text-secondary);
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+}
+
+.terminal-body {
+    padding: 1.5rem;
+    font-family: var(--mono-font);
+    font-size: 0.9rem;
+}
+
+.terminal-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.prompt {
+    color: var(--terminal-green);
+    font-weight: 500;
+}
+
+.command {
+    color: var(--terminal-blue);
+}
+
+.terminal-output {
+    margin-left: 2rem;
+    margin-bottom: 0.3rem;
+}
+
+.output-text {
+    color: var(--text-secondary);
+}
+
+.typing-animation {
+    animation: typing 2s steps(20) infinite;
+}
+
+.cursor-blink {
+    color: var(--terminal-green);
+    animation: blink 1s infinite;
+}
+
+.pipeline-section {
+    padding: 3rem 0;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.section-icon {
+    font-size: 1.2rem;
+}
+
+.pipeline-status {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--mono-font);
+    font-size: 0.85rem;
+}
+
+.build-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.build-status.success {
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--accent-success);
+    border: 1px solid var(--accent-success);
+}
+
+.deploy-time {
+    color: var(--text-muted);
+}
+
+.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 1.5rem;
+}
+
+.post-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 400px;
+    /* Improve initial rendering for large lists */
+    content-visibility: auto;
+    contain-intrinsic-size: 400px 600px;
+}
+
+.post-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: 0 8px 32px rgba(88, 166, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.commit-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-family: var(--mono-font);
+    font-size: 0.8rem;
+}
+
+.commit-hash {
+    color: var(--terminal-orange);
+    font-weight: 500;
+}
+
+/* .branch-name styling now consolidated above */
+
+.deploy-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--mono-font);
+    font-size: 0.75rem;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.status-indicator.deployed {
+    background: var(--accent-success);
+    box-shadow: 0 0 8px rgba(63, 185, 80, 0.5);
+}
+
+.status-text {
+    color: var(--accent-success);
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.card-content {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.post-title {
+    margin-bottom: 1rem;
+}
+
+.post-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+.post-title a:hover {
+    color: var(--accent-primary);
+}
+
+.post-metadata {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+}
+
+.metadata-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.icon {
+    font-size: 0.75rem;
+}
+
+.description {
+    color: var(--text-body);
+    font-style: italic;
+}
+
+.tags-container {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.tags {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}

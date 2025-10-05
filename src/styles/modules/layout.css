@@ -1,0 +1,120 @@
+body {
+    font-family: var(--sans-font);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    position: relative;
+}
+
+.terminal-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 20% 80%, rgba(88, 166, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+}
+
+header {
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-primary);
+    padding: 1rem 0;
+}
+
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    font-family: var(--mono-font);
+}
+
+.terminal-prompt {
+    color: var(--terminal-green);
+    font-weight: 700;
+    margin-right: 0.5rem;
+}
+
+.logo {
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 1.1rem;
+}
+
+.cursor {
+    color: var(--terminal-green);
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-item,
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-family: var(--mono-font);
+    font-size: 0.9rem;
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-item:hover,
+.theme-toggle:hover {
+    color: var(--accent-primary);
+}
+
+.nav-icon {
+    font-size: 0.8rem;
+}
+
+.theme-toggle {
+    background: none;
+    border: none;
+    padding: 0.5rem;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+/* Theme toggle icon spin animation */
+.theme-toggle .nav-icon { transition: transform 0.6s ease; transform-origin: 50% 50%; }
+.theme-toggle.spin .nav-icon { transform: rotate(360deg); }
+
+.hero-terminal {
+    padding: 4rem 0 2rem;
+    display: flex;
+    justify-content: center;
+}

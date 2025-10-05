@@ -1,0 +1,198 @@
+/* Dev Mode Easter Egg Styles */
+.dev-mode {
+    --accent-primary: var(--accent-error);
+    --terminal-blue: var(--accent-error);
+}
+
+.dev-mode .terminal-bg {
+    background: radial-gradient(circle at 20% 80%, rgba(248, 81, 73, 0.15) 0%, transparent 50%);
+}
+
+.build-status.error {
+    background: rgba(248, 81, 73, 0.15);
+    color: var(--accent-error);
+    border: 1px solid var(--accent-error);
+    animation: pulse-error 2s infinite;
+}
+
+.status-indicator.error {
+    background: var(--accent-error);
+    box-shadow: 0 0 8px rgba(248, 81, 73, 0.8);
+    animation: blink-error 1s infinite;
+}
+
+.status-indicator.warning {
+    background: var(--accent-warning);
+    box-shadow: 0 0 8px rgba(210, 153, 34, 0.8);
+    animation: pulse-warning 1.5s infinite;
+}
+
+.status-dot.error {
+    background: var(--accent-error);
+    box-shadow: 0 0 6px rgba(248, 81, 73, 0.8);
+    animation: blink-error 1s infinite;
+}
+
+.status-dot.warning {
+    background: var(--accent-warning);
+    box-shadow: 0 0 6px rgba(210, 153, 34, 0.8);
+    animation: pulse-warning 1.5s infinite;
+}
+
+.error-output {
+    margin-left: 2rem;
+    margin-bottom: 0.3rem;
+}
+
+.output-text.error {
+    color: var(--accent-error);
+    font-weight: 600;
+    animation: flash-error 3s infinite;
+}
+
+.output-text.warning {
+    color: var(--accent-warning);
+    font-weight: 600;
+    animation: pulse-warning 2s infinite;
+}
+
+.dev-mode .hero-terminal .terminal-body {
+    box-shadow: 0 0 20px rgba(248, 81, 73, 0.3);
+}
+
+.dev-mode .section-title {
+    color: var(--accent-error);
+    animation: flash-error 4s infinite;
+}
+
+.dev-mode .post-card:hover {
+    border-color: var(--accent-error);
+    box-shadow: 0 8px 32px rgba(248, 81, 73, 0.2);
+}
+
+.dev-mode .post-card .deploy-status .status-text {
+    text-transform: uppercase;
+    font-weight: 700;
+    animation: blink-error 1.5s infinite;
+}
+
+/* Dev mode animations */
+@keyframes pulse-error {
+
+    0%,
+    100% {
+        box-shadow: 0 0 5px rgba(248, 81, 73, 0.3);
+        transform: scale(1);
+    }
+
+    50% {
+        box-shadow: 0 0 15px rgba(248, 81, 73, 0.8);
+        transform: scale(1.02);
+    }
+}
+
+@keyframes blink-error {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes flash-error {
+
+    0%,
+    90% {
+        opacity: 1;
+    }
+
+    91%,
+    95% {
+        opacity: 0.3;
+    }
+
+    96%,
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse-warning {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.7;
+        transform: scale(1.05);
+    }
+}
+
+/* Dev mode terminal styling */
+.dev-mode .terminal-line .prompt {
+    color: var(--accent-error);
+    text-shadow: 0 0 5px rgba(248, 81, 73, 0.5);
+}
+
+.dev-mode .terminal-line .command {
+    color: var(--accent-warning);
+}
+
+.dev-mode .pagination-prompt {
+    color: var(--accent-error);
+}
+
+.dev-mode .pagination-command {
+    color: var(--accent-warning);
+}
+
+.dev-mode .filter-prompt {
+    color: var(--accent-error);
+}
+
+/* Dev mode footer styling */
+.dev-mode footer {
+    background: var(--bg-secondary);
+    border-top: 2px solid var(--accent-error);
+    box-shadow: 0 -5px 15px rgba(248, 81, 73, 0.2);
+}
+
+.dev-mode .status-bar {
+    animation: pulse-warning 3s infinite;
+}
+
+/* Dev mode nav styling */
+.dev-mode nav {
+    border-bottom: 2px solid var(--accent-error);
+    box-shadow: 0 2px 10px rgba(248, 81, 73, 0.3);
+}
+
+.dev-mode .nav-item[href="/"] {
+    color: var(--accent-error) !important;
+}
+
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-2px);
+    }
+
+    75% {
+        transform: translateX(2px);
+    }
+}
+

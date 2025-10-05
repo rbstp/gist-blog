@@ -1,0 +1,188 @@
+/* Tablet and smaller desktop screens - Hide ToC on narrower layouts
+   Note: JS will also dynamically hide the ToC if there's not enough space next to content. */
+@media (max-width: 1080px) {
+    .toc-sidebar {
+        display: none;
+    }
+
+    /* Ensure main content uses full width when ToC is hidden */
+    .post-content-wrapper {
+        margin-right: 0;
+    }
+
+    .content-terminal {
+        max-width: none;
+    }
+}
+
+/* Optional: Intermediate breakpoint for smaller ToC */
+@media (min-width: 1401px) and (max-width: 1600px) {
+    .toc-sidebar {
+        width: 240px;
+        /* Smaller ToC width */
+        /* Maintain consistent edge gap (JS may override dynamically) */
+        right: 3rem;
+    }
+
+    .toc-content {
+        padding: 1rem;
+        /* Reduced padding */
+    }
+
+    .table-of-contents {
+        font-size: 0.8rem;
+        /* Smaller font */
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0 1rem;
+    }
+
+    nav {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .nav-links {
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .posts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .post-title-compact {
+        font-size: 1.5rem;
+    }
+
+    .post-header-compact {
+        padding: 0.75rem 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .post-meta-line {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: flex-start;
+    }
+
+    .terminal-window {
+        margin: 0 1rem;
+    }
+
+    .status-bar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .post-navigation {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .post-card {
+        min-height: auto;
+    }
+
+    .card-actions {
+        flex-direction: row;
+        gap: 0.5rem;
+    }
+
+    .pagination-nav {
+        flex-direction: row;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .pagination-pages {
+        justify-content: center;
+    }
+
+    /* Fix filter container overflow on mobile */
+    .filter-info {
+        flex-wrap: wrap;
+    }
+
+    .pagination-tags {
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .pagination-terminal {
+        min-width: 0;
+    }
+
+    /* Mobile table styles */
+    table {
+        font-size: 0.75rem;
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+        border-radius: 4px;
+    }
+
+    th,
+    td {
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Mobile typography improvements */
+    .post-content h1 {
+        font-size: 1.75rem;
+    }
+
+    .post-content h2 {
+        font-size: 1.5rem;
+    }
+
+    .post-content h3 {
+        font-size: 1.25rem;
+    }
+
+    .post-content p {
+        font-size: 0.95rem;
+        line-height: 1.6;
+    }
+
+    .post-content p:first-of-type {
+        font-size: 1rem;
+    }
+
+    .post-content pre {
+        padding: 0.75rem 1rem;
+        margin: 1rem 0;
+    }
+
+    .post-content pre code {
+        font-size: 0.8rem;
+    }
+
+    /* Permalink mobile styles */
+    .post-content-advanced .permalink {
+        left: -1.2rem;
+        font-size: 0.75em;
+    }
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    * {
+        animation: none !important;
+        transition: none !important;
+    }
+}
