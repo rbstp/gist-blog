@@ -45,14 +45,6 @@ jobs:
       - name: Test
         run: npm test
 
-      - name: Restore gist API cache
-        uses: actions/cache@v4
-        with:
-          path: .cache
-          key: gist-cache-${{ env.GIST_USERNAME }}-${{ hashFiles('package-lock.json') }}-${{ github.run_id }}
-          restore-keys: |
-            gist-cache-${{ env.GIST_USERNAME }}-
-
       - name: Build site
         env:
           GIST_CACHE: true
