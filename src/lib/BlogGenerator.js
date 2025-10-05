@@ -210,6 +210,21 @@ class BlogGenerator {
     }
   }
 
+  async copyFavicon() {
+    // Copy favicon.svg to dist root
+    try {
+      const source = path.join('src', 'favicon.svg');
+      const dest = path.join(this.distDir, 'favicon.svg');
+      const stat = await fs.stat(source).catch(() => null);
+      if (stat && stat.isFile()) {
+        await fs.copyFile(source, dest);
+      }
+    } catch (error) {
+      console.error('Error copying favicon:', error.message);
+      throw error;
+    }
+  }
+
   async bundleClientScripts() {
     const outdir = path.join(this.distDir, 'assets');
     await fs.mkdir(outdir, { recursive: true });
@@ -304,6 +319,8 @@ class BlogGenerator {
       this.copyStyles(),
       // Copy fonts (if any present)
       this.copyFonts(),
+      // Copy favicon
+      this.copyFavicon(),
       // Bundle/copy client scripts
       this.bundleClientScripts()
     ]);

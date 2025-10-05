@@ -60,6 +60,13 @@ class RSSGenerator {
     <ttl>60</ttl>
     <atom:link href="${this.siteUrl}/feed.xml" rel="self" type="application/rss+xml"/>
     <generator>gist-blog-generator</generator>
+    <image>
+      <url>${this.siteUrl}/favicon.svg</url>
+      <title>${this.title}</title>
+      <link>${this.siteUrl}</link>
+      <width>32</width>
+      <height>32</height>
+    </image>
 ${rssItems}
   </channel>
 </rss>`;
