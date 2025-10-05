@@ -185,7 +185,7 @@
     let scale = 1, tx = 0, ty = 0; let panning = false; let lastX = 0, lastY = 0;
     let dragCandidate = false; const DRAG_THRESHOLD = 4; const pointers = new Map(); let pinch = null; let lastTapTime = 0;
     let initialScale = 1, initialTx = 0, initialTy = 0;
-    function apply() { root.setAttribute('transform', `scale(${scale}) translate(${tx},${ty})`); }
+    function apply() { root.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`); }
     function clientToViewBox(cx, cy) {
       const rect = svg.getBoundingClientRect(); const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
       return { x: vb.x + ((cx - rect.left) / rect.width) * vb.width, y: vb.y + ((cy - rect.top) / rect.height) * vb.height };
@@ -213,10 +213,10 @@
       const r = svg.getBoundingClientRect(); const vx1 = Math.max(0, r.left), vy1 = Math.max(0, r.top); const vx2 = Math.min(window.innerWidth, r.right), vy2 = Math.min(window.innerHeight, r.bottom);
       const hasIntersection = vx2 > vx1 && vy2 > vy1; const cx = hasIntersection ? (vx1 + vx2) / 2 : (r.left + r.width / 2); const cy = hasIntersection ? (vy1 + vy2) / 2 : (r.top + r.height / 2);
       const { x: px, y: py } = clientToViewBox(cx, cy);
-      tx = tx + px * (1 / next - 1 / old); ty = ty + py * (1 / next - 1 / old); scale = next; clampPan(); apply(); }, { passive: false });
+      const ratio = next / old; tx = tx * ratio + px * (1 - ratio); ty = ty * ratio + py * (1 - ratio); scale = next; clampPan(); apply(); }, { passive: false });
     svg.addEventListener('pointerdown', (e) => {
       pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-      if (pointers.size === 1) { const now = performance.now(); if (now - lastTapTime < 300) { const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const old = scale; const next = Math.max(0.4, Math.min(2.5, old * 1.6)); tx = tx + px * (1 / next - 1 / old); ty = ty + py * (1 / next - 1 / old); scale = next; clampPan(); apply(); lastTapTime = 0; } else { lastTapTime = now; } dragCandidate = true; panning = false; lastX = e.clientX; lastY = e.clientY; }
+      if (pointers.size === 1) { const now = performance.now(); if (now - lastTapTime < 300) { const { x: px, y: py } = clientToViewBox(e.clientX, e.clientY); const old = scale; const next = Math.max(0.4, Math.min(2.5, old * 1.6)); const ratio = next / old; tx = tx * ratio + px * (1 - ratio); ty = ty * ratio + py * (1 - ratio); scale = next; clampPan(); apply(); lastTapTime = 0; } else { lastTapTime = now; } dragCandidate = true; panning = false; lastX = e.clientX; lastY = e.clientY; }
       else if (pointers.size === 2) { tryStartPinch(); }
     });
     svg.addEventListener('pointermove', (e) => {
@@ -309,7 +309,7 @@
         let isDraggingNode = false; let blockClickNav = false;
         nodes.forEach(n => {
           const pos = positions.get(n.id) || { x: cx, y: cy }; const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'graph-node'); g.setAttribute('data-id', n.id); g.setAttribute('role', 'button'); g.setAttribute('tabindex', '0'); g.setAttribute('aria-label', `Open tag ${n.id}`);
-          const r = 4 + 8 * (n.count / maxCount); const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', pos.x); c.setAttribute('cy', pos.y); c.setAttribute('r', String(r)); const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', String(pos.x + r + 2)); t.setAttribute('y', String(pos.y + 3)); t.textContent = n.id; g.appendChild(c); g.appendChild(t); root.appendChild(g); nodeRefs.set(n.id, { g, circle: c, text: t, radius: r });
+          const r = 2 + 3 * (n.count / maxCount); const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', pos.x); c.setAttribute('cy', pos.y); c.setAttribute('r', String(r)); const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', String(pos.x + r + 2)); t.setAttribute('y', String(pos.y + 3)); t.textContent = n.id; g.appendChild(c); g.appendChild(t); root.appendChild(g); nodeRefs.set(n.id, { g, circle: c, text: t, radius: r });
 
           g.addEventListener('mouseenter', () => highlight(n.id)); g.addEventListener('mouseleave', () => { if (!isDraggingNode) clear(); });
           

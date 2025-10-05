@@ -308,13 +308,13 @@ Navigate to `/graph.html` (also available in the header) to explore connections 
 - Uses the generated `dist/graph.json` (built from post tags during `npm run build`)
 - Interactions:
   - Pan: click/touch-drag to move the graph
-  - Zoom toward pointer: mouse wheel zoom is centered on the cursor
+  - Zoom toward pointer: mouse wheel zoom is centered on the cursor (viewport-centered zoom with proper transform math)
   - Pinch-zoom (mobile/tablet): two-finger pinch to zoom with the midpoint anchored
   - Double-tap to zoom toward the tap point
-  - Reset: a small “reset” button in the top-right restores the default view
+  - Reset: a small "reset" button in the top-right restores the default view
   - Hover: highlight neighbors when hovering a tag (desktop)
 - Click a tag to jump back to the homepage with that tag preselected (filter applied automatically)
-- Node sizes scale with tag frequency; edge widths scale with co-occurrence weight
+- Node sizes scale with tag frequency (2-5px radius); edge widths scale with co-occurrence weight
 
 Post pages also include a compact topic graph (in the ToC sidebar on desktop) with the same pan/zoom/double‑tap/reset behavior.
 
