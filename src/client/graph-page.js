@@ -329,7 +329,7 @@
         let isDraggingNode = false; let blockClickNav = false;
         nodes.forEach(n => {
           const pos = positions.get(n.id) || { x: cx, y: cy }; const g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'graph-node'); g.setAttribute('data-id', n.id); g.setAttribute('role', 'button'); g.setAttribute('tabindex', '0'); g.setAttribute('aria-label', `Open tag ${n.id}`);
-          const r = 2 + 3 * (n.count / maxCount); const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', pos.x); c.setAttribute('cy', pos.y); c.setAttribute('r', String(r)); const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', String(pos.x + r + 2)); t.setAttribute('y', String(pos.y + 3)); t.textContent = n.id; g.appendChild(c); g.appendChild(t); root.appendChild(g); nodeRefs.set(n.id, { g, circle: c, text: t, radius: r });
+          const r = 3 + 8 * (n.count / maxCount); const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', pos.x); c.setAttribute('cy', pos.y); c.setAttribute('r', String(r)); const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', String(pos.x + r + 2)); t.setAttribute('y', String(pos.y + 3)); t.textContent = n.id; g.appendChild(c); g.appendChild(t); root.appendChild(g); nodeRefs.set(n.id, { g, circle: c, text: t, radius: r });
 
           g.addEventListener('mouseenter', () => highlight(n.id)); g.addEventListener('mouseleave', () => { if (!isDraggingNode) clear(); });
           
