@@ -1,5 +1,6 @@
 const { marked } = require('marked');
 const hljs = require('highlight.js');
+const sanitizeHtml = require('sanitize-html');
 const StringUtils = require('./StringUtils');
 
 // Configure a renderer that adds permalink anchors when IDs are present
@@ -46,8 +47,26 @@ class MarkdownProcessor {
   render(content, cacheKey) {
     if (cacheKey && this.cache.has(cacheKey)) return this.cache.get(cacheKey);
     const html = marked(String(content));
-    if (cacheKey) this.cache.set(cacheKey, html);
-    return html;
+    const sanitized = sanitizeHtml(html, {
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat([
+        'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'code', 'pre'
+      ]),
+      allowedAttributes: {
+        ...sanitizeHtml.defaults.allowedAttributes,
+        '*': Array.from(new Set([...(sanitizeHtml.defaults.allowedAttributes['*'] || []), 'class', 'id', 'aria-label', 'aria-hidden', 'role'])),
+        a: Array.from(new Set([...(sanitizeHtml.defaults.allowedAttributes.a || []), 'href', 'name', 'target', 'rel', 'aria-label'])),
+        img: Array.from(new Set([...(sanitizeHtml.defaults.allowedAttributes.img || []), 'src', 'alt', 'title', 'width', 'height', 'loading'])),
+        code: Array.from(new Set([...(sanitizeHtml.defaults.allowedAttributes.code || []), 'class'])),
+        span: Array.from(new Set([...(sanitizeHtml.defaults.allowedAttributes.span || []), 'class'])),
+        pre: Array.from(new Set([...(sanitizeHtml.defaults.allowedAttributes.pre || []), 'class']))
+      },
+      allowedSchemes: ['http', 'https', 'mailto'],
+      transformTags: {
+        a: sanitizeHtml.simpleTransform('a', { rel: 'noopener noreferrer' }, true)
+      }
+    });
+    if (cacheKey) this.cache.set(cacheKey, sanitized);
+    return sanitized;
   }
 
   addPermalinkAnchors(md) {
