@@ -11,7 +11,7 @@
     window.location.href = '/';
   }
 
-  // Search functionality
+  // Search functionality with multi-tag filtering
   function setupGraphSearch(nodes, nodeRefs, highlightFn, clearFn) {
     const searchInput = document.getElementById('graph-search-input');
     const resultsDisplay = document.getElementById('graph-search-results');
@@ -19,14 +19,88 @@
     if (!searchInput) return;
     
     let searchMatches = [];
+    let selectedTags = [];
+    
+    // Create container for selected tags and actions
+    const actionsContainer = document.createElement('div');
+    actionsContainer.className = 'graph-search-actions';
+    actionsContainer.style.display = 'none';
+    
+    const selectedTagsContainer = document.createElement('div');
+    selectedTagsContainer.className = 'graph-selected-tags';
+    
+    const actionsButtons = document.createElement('div');
+    actionsButtons.className = 'graph-action-buttons';
+    actionsButtons.innerHTML = `
+      <button class="graph-action-btn" id="graph-clear-selection" title="Clear selection">clear</button>
+      <button class="graph-action-btn graph-action-btn-primary" id="graph-apply-filter" title="View posts with selected tags">view posts</button>
+    `;
+    
+    actionsContainer.appendChild(selectedTagsContainer);
+    actionsContainer.appendChild(actionsButtons);
+    
+    // Insert after results display
+    if (resultsDisplay && resultsDisplay.parentElement) {
+      resultsDisplay.parentElement.appendChild(actionsContainer);
+    }
+    
+    function updateSelectedTagsUI() {
+      if (selectedTags.length === 0) {
+        actionsContainer.style.display = 'none';
+        return;
+      }
+      
+      actionsContainer.style.display = 'flex';
+      selectedTagsContainer.innerHTML = selectedTags.map(tag => 
+        `<span class="graph-selected-tag" data-tag="${escapeHTML(tag)}">#${escapeHTML(tag)}<button class="tag-remove" aria-label="Remove tag">×</button></span>`
+      ).join('');
+      
+      // Add click handlers to remove buttons
+      selectedTagsContainer.querySelectorAll('.tag-remove').forEach((btn, idx) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          selectedTags.splice(idx, 1);
+          updateSelectedTagsUI();
+          updateHighlight();
+        });
+      });
+    }
+    
+    function escapeHTML(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/\//g, '&#x2F;');
+    }
+    
+    function updateHighlight() {
+      if (selectedTags.length === 0 && searchMatches.length === 0) {
+        clearFn();
+        return;
+      }
+      
+      let matchIds;
+      if (selectedTags.length > 0) {
+        // When tags are selected, show only nodes matching ALL selected tags
+        // For the graph, we just want to highlight the selected tags themselves
+        matchIds = selectedTags;
+      } else {
+        matchIds = searchMatches.map(n => n.id);
+      }
+      
+      highlightMultiple(matchIds, nodeRefs);
+    }
     
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.toLowerCase().trim();
       
       if (!query) {
-        clearFn();
         if (resultsDisplay) resultsDisplay.textContent = '';
         searchMatches = [];
+        updateHighlight();
         return;
       }
       
@@ -34,17 +108,35 @@
       searchMatches = nodes.filter(n => n.id.toLowerCase().includes(query));
       
       if (searchMatches.length > 0) {
-        // Highlight all matches
-        const matchIds = searchMatches.map(n => n.id);
-        highlightMultiple(matchIds, nodeRefs);
-        
         if (resultsDisplay) {
-          resultsDisplay.textContent = `Found ${searchMatches.length} tag${searchMatches.length === 1 ? '' : 's'}: ${matchIds.slice(0, 5).join(', ')}${searchMatches.length > 5 ? '...' : ''}`;
+          const matchIds = searchMatches.map(n => n.id);
+          resultsDisplay.innerHTML = `Found ${searchMatches.length} tag${searchMatches.length === 1 ? '' : 's'}: ${matchIds.slice(0, 5).map(id => 
+            `<span class="search-result-tag" data-tag="${escapeHTML(id)}">#${escapeHTML(id)}</span>`
+          ).join(', ')}${searchMatches.length > 5 ? '...' : ''}`;
+          
+          // Make result tags clickable to add to selection
+          resultsDisplay.querySelectorAll('.search-result-tag').forEach(el => {
+            el.addEventListener('click', () => {
+              const tag = el.getAttribute('data-tag');
+              if (!selectedTags.includes(tag)) {
+                selectedTags.push(tag);
+                updateSelectedTagsUI();
+                updateHighlight();
+              }
+            });
+          });
+        }
+        
+        // Only highlight search matches if no tags are selected
+        if (selectedTags.length === 0) {
+          updateHighlight();
         }
       } else {
-        clearFn();
         if (resultsDisplay) {
           resultsDisplay.textContent = 'No matching tags found';
+        }
+        if (selectedTags.length === 0) {
+          clearFn();
         }
       }
     });
@@ -54,10 +146,32 @@
       if (e.key === 'Escape') {
         searchInput.value = '';
         searchInput.blur();
-        clearFn();
         if (resultsDisplay) resultsDisplay.textContent = '';
+        searchMatches = [];
+        updateHighlight();
       }
     });
+    
+    // Clear selection button
+    const clearBtn = actionsContainer.querySelector('#graph-clear-selection');
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        selectedTags = [];
+        updateSelectedTagsUI();
+        updateHighlight();
+      });
+    }
+    
+    // Apply filter button - navigate to index with selected tags
+    const applyBtn = actionsContainer.querySelector('#graph-apply-filter');
+    if (applyBtn) {
+      applyBtn.addEventListener('click', () => {
+        if (selectedTags.length > 0) {
+          try { localStorage.setItem('preselectedTags', JSON.stringify(selectedTags)); } catch { }
+          window.location.href = '/';
+        }
+      });
+    }
   }
   
   function highlightMultiple(ids, nodeRefs) {
