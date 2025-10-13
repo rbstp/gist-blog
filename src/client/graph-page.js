@@ -16,7 +16,7 @@
     const searchInput = document.getElementById('graph-search-input');
     const resultsDisplay = document.getElementById('graph-search-results');
     
-    if (!searchInput) return;
+    if (!searchInput) return { addTag: () => {}, hasSelection: () => false };
     
     let searchMatches = [];
     let selectedTags = [];
@@ -172,6 +172,18 @@
         }
       });
     }
+    
+    // Return API for external use
+    return {
+      addTag: (tag) => {
+        if (!selectedTags.includes(tag)) {
+          selectedTags.push(tag);
+          updateSelectedTagsUI();
+          updateHighlight();
+        }
+      },
+      hasSelection: () => selectedTags.length > 0
+    };
   }
   
   function highlightMultiple(ids, nodeRefs) {
@@ -283,7 +295,8 @@
             <div class="help-item"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>Move between tags</div>
             <div class="help-item"><kbd>Home</kbd>First tag</div>
             <div class="help-item"><kbd>End</kbd>Last tag</div>
-            <div class="help-item"><kbd>Enter</kbd>Select tag</div>
+            <div class="help-item"><kbd>Enter</kbd>View posts with tag</div>
+            <div class="help-item"><kbd>Ctrl</kbd>+<kbd>Enter</kbd>Add tag to selection</div>
           </div>
           <div class="help-section">
             <h3>Actions</h3>
@@ -294,6 +307,8 @@
           </div>
           <div class="help-section">
             <h3>Mouse</h3>
+            <div class="help-item">Click tag to view posts</div>
+            <div class="help-item"><kbd>Ctrl</kbd>+Click to add to selection</div>
             <div class="help-item">Drag nodes to reposition</div>
             <div class="help-item">Scroll to zoom</div>
             <div class="help-item">Drag background to pan</div>
@@ -451,7 +466,12 @@
           g.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              navigateWithTag(n.id);
+              if (e.ctrlKey || e.metaKey) {
+                // Ctrl/Cmd+Enter adds to selection
+                searchAPI.addTag(n.id);
+              } else {
+                navigateWithTag(n.id);
+              }
             }
           });
           
@@ -460,7 +480,19 @@
           g.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); isDraggingNode = true; svg.classList.add('dragging-node'); g.classList.add('dragging'); startClient = { x: e.clientX, y: e.clientY }; lastClient = { x: e.clientX, y: e.clientY }; movedVb = 0; g.setPointerCapture?.(e.pointerId); });
           g.addEventListener('pointermove', (e) => { if (!isDraggingNode) return; e.stopPropagation(); e.preventDefault(); const { dx, dy } = pz.toWorldDelta(lastClient.x, lastClient.y, e.clientX, e.clientY); const vb0 = pz.clientToViewBox(startClient.x, startClient.y); const vb1 = pz.clientToViewBox(e.clientX, e.clientY); movedVb = Math.max(movedVb, Math.hypot(vb1.x - vb0.x, vb1.y - vb0.y)); lastClient = { x: e.clientX, y: e.clientY }; if (dx || dy) moveNodeAndNeighbors(n.id, dx, dy, 0.25); });
           function endDrag(e) { if (!isDraggingNode) return; e.stopPropagation(); e.preventDefault(); isDraggingNode = false; g.releasePointerCapture?.(e.pointerId); svg.classList.remove('dragging-node'); g.classList.remove('dragging'); if (movedVb > SUPPRESS_AFTER_VB) { blockClickNav = true; setTimeout(() => { blockClickNav = false; }, 0); } }
-          g.addEventListener('pointerup', endDrag); g.addEventListener('pointercancel', endDrag); g.addEventListener('click', (e) => { if (blockClickNav) { e.stopPropagation(); e.preventDefault(); } else { navigateWithTag(n.id); } }, true);
+          g.addEventListener('pointerup', endDrag); g.addEventListener('pointercancel', endDrag); g.addEventListener('click', (e) => { 
+            if (blockClickNav) { 
+              e.stopPropagation(); 
+              e.preventDefault(); 
+            } else if (e.ctrlKey || e.metaKey) { 
+              // Ctrl/Cmd+Click adds to selection
+              e.stopPropagation(); 
+              e.preventDefault(); 
+              searchAPI.addTag(n.id); 
+            } else { 
+              navigateWithTag(n.id); 
+            } 
+          }, true);
         });
 
         // Highlight helpers
@@ -476,7 +508,7 @@
         const resetBtn = document.querySelector('.graph-reset-btn[data-target="global-tag-graph"]'); if (resetBtn) { resetBtn.addEventListener('click', () => { initialPositions.forEach((p, id) => setNodePosition(id, p.x, p.y)); clear(); }); }
 
         // Setup new features
-        setupGraphSearch(nodes, nodeRefs, highlight, clear);
+        const searchAPI = setupGraphSearch(nodes, nodeRefs, highlight, clear);
         setupKeyboardNavigation(nodes, nodeRefs, positions);
 
         // Terminal title update
