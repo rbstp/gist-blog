@@ -235,6 +235,22 @@ class BlogGenerator {
     }
   }
 
+  async copyRobotsTxt() {
+    // Copy robots.txt to dist directory
+    try {
+      const source = path.join('src', 'robots.txt');
+      const dest = path.join(this.distDir, 'robots.txt');
+
+      const stat = await fs.stat(source).catch(() => null);
+      if (stat && stat.isFile()) {
+        await fs.copyFile(source, dest);
+      }
+    } catch (error) {
+      console.error('Error copying robots.txt:', error.message);
+      throw error;
+    }
+  }
+
   async bundleClientScripts() {
     const outdir = path.join(this.distDir, 'assets');
     await fs.mkdir(outdir, { recursive: true });
@@ -331,6 +347,8 @@ class BlogGenerator {
       this.copyFonts(),
       // Copy favicon
       this.copyFavicon(),
+      // Copy robots.txt
+      this.copyRobotsTxt(),
       // Bundle/copy client scripts
       this.bundleClientScripts()
     ]);

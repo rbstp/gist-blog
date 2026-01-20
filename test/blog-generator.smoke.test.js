@@ -42,15 +42,17 @@ describe('BlogGenerator smoke', () => {
     const postPath = path.join(dist, 'posts', `${gistId}.html`);
     const rssPath = path.join(dist, 'feed.xml');
     const cssPath = path.join(dist, 'styles.css');
+    const robotsPath = path.join(dist, 'robots.txt');
 
-    const [indexOk, postOk, rssOk, cssOk] = await Promise.all([
-      fileExists(indexPath), fileExists(postPath), fileExists(rssPath), fileExists(cssPath)
+    const [indexOk, postOk, rssOk, cssOk, robotsOk] = await Promise.all([
+      fileExists(indexPath), fileExists(postPath), fileExists(rssPath), fileExists(cssPath), fileExists(robotsPath)
     ]);
 
     assert.ok(indexOk, 'index.html missing');
     assert.ok(postOk, 'post page missing');
     assert.ok(rssOk, 'feed.xml missing');
     assert.ok(cssOk, 'styles.css missing');
+    assert.ok(robotsOk, 'robots.txt missing');
   });
 });
 
