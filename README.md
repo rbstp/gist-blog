@@ -58,7 +58,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### Prerequisites
 
-- Node.js 24+ (runs the TypeScript sources directly via native type stripping — no build step)
+- Node.js 26+ (runs the TypeScript sources directly via native type stripping — no build step)
 - npm or yarn
 
 ### Installation
@@ -486,7 +486,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '26'
           cache: 'npm'
 
       - name: Install dependencies
