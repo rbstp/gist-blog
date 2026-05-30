@@ -1,102 +1,45 @@
-<div class="hero-terminal">
-    <div class="terminal-window">
-        <div class="terminal-header">
-            <div class="terminal-controls">
-                <span class="control close"></span>
-                <span class="control minimize"></span>
-                <span class="control maximize"></span>
-            </div>
-            <div class="terminal-title"></div>
-        </div>
-        <div class="terminal-body">
-            <div class="terminal-line">
-                <span class="prompt">rbstp@devops:~$</span>
-                <span class="command">whoami</span>
-            </div>
-            <div class="terminal-output">
-                <span class="output-text">DevOps and Context Engineer</span>
-            </div>
-            <div id="hero-terminal-expanded" style="display: none;">
-                <div class="terminal-line">
-                    <span class="prompt">rbstp@devops:~$</span>
-                    <span class="command">cat thoughts.md</span>
-                </div>
-                <div class="terminal-output">
-                    <span class="output-text">There and Back Again: A DevOps Engineer's Journey Through AI and
-                        Infrastructure</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<section class="intro">
+    <h1 class="intro-name">Richard Boisvert</h1>
+    <p class="intro-tagline">DevOps &amp; Context Engineer. Notes on AI, infrastructure, and developer tooling.</p>
+</section>
 
 <section class="pipeline-section">
     <div class="section-header">
-        <h2 class="section-title">
-            Latest Deployments
-        </h2>
-        <div class="pipeline-status">
-            <span class="build-status success">✓ Build Success</span>
-            <span class="deploy-time">Last deploy: <span class="local-time"
-                    data-timestamp="{{lastUpdate}}">{{lastUpdate}}</span></span>
-        </div>
+        <h2 class="section-title">Latest Posts</h2>
+        <div class="section-meta">{{postsLength}} posts</div>
     </div>
 
     <div class="posts-grid">
         {{#posts}}
         <article class="post-card">
-            <div class="card-header">
-                <div class="commit-info">
-                    <span class="commit-hash">#{{shortId}}</span>
-                    <span class="branch-name">main</span>
-                </div>
-                <div class="deploy-status">
-                    <span class="status-indicator deployed"></span>
-                    <span class="status-text">deployed</span>
-                </div>
-            </div>
-
             <div class="card-content">
                 <h3 class="post-title">
                     <a href="/posts/{{id}}.html">{{title}}</a>
                 </h3>
-                <div class="post-metadata">
-                    <span class="metadata-item">
-                        <time datetime="{{createdAt}}">{{formattedDate}}</time>
-                    </span>
-                    {{#description}}
-                    <span class="metadata-item">
-                        <span class="description">{{description}}</span>
-                    </span>
-                    {{/description}}
-                    {{#hasTags}}
-                    <div class="tags-container">
-                        {{#tags}}
-                        <span class="tag" data-tag="{{.}}">#{{.}}</span>
-                        {{/tags}}
-                    </div>
-                    {{/hasTags}}
+                <div class="post-meta">
+                    <time datetime="{{createdAt}}">{{formattedDate}}</time>
+                    <span class="meta-sep">·</span>
+                    <span>{{readingTime}} read</span>
                 </div>
-
-                <div class="post-stats">
-                    <div class="stat-line">
-                        <code class="stat-command">wc -w {{filename}}</code>
-                        <span class="stat-value">{{wordCount}} words</span>
-                    </div>
-                    <div class="stat-line">
-                        <code class="stat-command">time --read {{filename}}</code>
-                        <span class="stat-value">{{readingTime}} read</span>
-                    </div>
+                {{#description}}
+                <p class="post-excerpt">{{description}}</p>
+                {{/description}}
+                {{#hasTags}}
+                <div class="tags-container">
+                    {{#tags}}
+                    <span class="tag" data-tag="{{.}}">#{{.}}</span>
+                    {{/tags}}
                 </div>
+                {{/hasTags}}
 
                 <div class="card-actions">
                     <a href="/posts/{{id}}.html" class="action-link primary">
+                        <span>Read</span>
                         <span class="action-icon">→</span>
-                        <span>deploy --read</span>
                     </a>
                     <a href="{{url}}" class="action-link secondary" target="_blank" rel="noopener noreferrer">
                         <span class="action-icon"><svg class="nav-icon" width="14" height="14" aria-hidden="true"><use href="#icon-github"/></svg></span>
-                        <span>source</span>
+                        <span>Source</span>
                     </a>
                 </div>
             </div>
@@ -106,49 +49,20 @@
 
     {{#pagination}}
     <div class="pagination-section" id="pagination-section">
-        <div class="pagination-terminal">
-            <div class="pagination-header">
-                <div class="pagination-controls">
-                    <span class="control close"></span>
-                    <span class="control minimize"></span>
-                    <span class="control maximize"></span>
-                </div>
-                <div class="pagination-title"></div>
+        <nav class="pager" aria-label="Pagination">
+            <button class="pagination-link prev" id="prev-btn" disabled>
+                <span class="pagination-icon">←</span>
+                <span>Prev</span>
+            </button>
+            <div class="pagination-pages" id="pagination-pages">
+                <!-- Generated by JavaScript -->
             </div>
-            <div class="pagination-body">
-                <div class="pagination-line">
-                    <span class="pagination-prompt">$</span>
-                    <span class="pagination-command" id="pagination-command">ls posts | less :1/1</span>
-                </div>
-                <div class="pagination-nav" id="pagination-nav">
-                    <button class="pagination-link prev" id="prev-btn" disabled>
-                        <span class="pagination-icon">←</span>
-                        <span>prev</span>
-                    </button>
-                    <div class="pagination-pages" id="pagination-pages">
-                        <!-- Generated by JavaScript -->
-                    </div>
-                    <button class="pagination-link next" id="next-btn">
-                        <span>next</span>
-                        <span class="pagination-icon">→</span>
-                    </button>
-                </div>
-                {{#hasAnyTags}}
-                <div class="pagination-tags-section" id="pagination-tags-section" style="display: none;">
-                    <div class="pagination-line">
-                        <span class="pagination-prompt">$</span>
-                        <span class="pagination-command">grep --tag-filter</span>
-                    </div>
-                    <div class="pagination-tags">
-                        {{#allTags}}
-                        <span class="tag pagination-tag" data-tag="{{.}}">#{{.}}</span>
-                        {{/allTags}}
-                        <button class="clear-filter pagination-clear" onclick="clearFilter()">clear all</button>
-                    </div>
-                </div>
-                {{/hasAnyTags}}
-            </div>
-        </div>
+            <button class="pagination-link next" id="next-btn">
+                <span>Next</span>
+                <span class="pagination-icon">→</span>
+            </button>
+            <span class="pager-status" id="pagination-command">Page 1</span>
+        </nav>
     </div>
     {{/pagination}}
 </section>

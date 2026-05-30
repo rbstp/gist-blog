@@ -92,11 +92,6 @@
         margin: 0 1rem;
     }
 
-    .status-bar {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
     .post-navigation {
         flex-direction: column;
         gap: 1rem;

@@ -4,40 +4,40 @@
     color: var(--text-primary);
 }
 
-/* Language-specific syntax highlighting - Dark theme */
+/* Language-specific syntax highlighting — Tokyo Night (Night) */
 :root {
-    --syntax-comment: #6e7681;
-    --syntax-keyword: #ff7b72;
-    --syntax-string: #a5d6ff;
-    --syntax-number: #79c0ff;
-    --syntax-function: #d2a8ff;
-    --syntax-variable: #ffa657;
-    --syntax-property: #7ee787;
-    --syntax-operator: #ff7b72;
-    --syntax-type: #ffa198;
-    --syntax-tag: #7ee787;
-    --syntax-attribute: #79c0ff;
-    --syntax-value: #a5d6ff;
-    --syntax-meta: #8b949e;
-    --syntax-builtin: #ffa657;
+    --syntax-comment: #565f89;
+    --syntax-keyword: #bb9af7;
+    --syntax-string: #9ece6a;
+    --syntax-number: #ff9e64;
+    --syntax-function: #7aa2f7;
+    --syntax-variable: #c0caf5;
+    --syntax-property: #7dcfff;
+    --syntax-operator: #89ddff;
+    --syntax-type: #2ac3de;
+    --syntax-tag: #f7768e;
+    --syntax-attribute: #bb9af7;
+    --syntax-value: #9ece6a;
+    --syntax-meta: #565f89;
+    --syntax-builtin: #2ac3de;
 }
 
-/* Light theme syntax colors */
+/* Light theme syntax colors — Tokyo Night Day */
 [data-theme="light"] {
-    --syntax-comment: #6a737d;
-    --syntax-keyword: #d73a49;
-    --syntax-string: #032f62;
-    --syntax-number: #005cc5;
-    --syntax-function: #6f42c1;
-    --syntax-variable: #e36209;
-    --syntax-property: #22863a;
-    --syntax-operator: #d73a49;
-    --syntax-type: #b31d28;
-    --syntax-tag: #22863a;
-    --syntax-attribute: #005cc5;
-    --syntax-value: #032f62;
-    --syntax-meta: #6a737d;
-    --syntax-builtin: #e36209;
+    --syntax-comment: #848cb5;
+    --syntax-keyword: #9854f1;
+    --syntax-string: #587539;
+    --syntax-number: #b15c00;
+    --syntax-function: #2e7de9;
+    --syntax-variable: #343b58;
+    --syntax-property: #007197;
+    --syntax-operator: #006a83;
+    --syntax-type: #118c74;
+    --syntax-tag: #f52a65;
+    --syntax-attribute: #9854f1;
+    --syntax-value: #587539;
+    --syntax-meta: #848cb5;
+    --syntax-builtin: #118c74;
 }
 
 /* Apply syntax colors */

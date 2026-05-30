@@ -1,17 +1,16 @@
 # Gist Blog Generator
 
-> "There and Back Again: A DevOps Engineer's Journey Through AI and Infrastructure"
-
-Transform your GitHub Gists into a beautiful, terminal-themed static blog with automatic RSS feeds, tag filtering, and modern responsive design.
+Transform your GitHub Gists into a clean, **Tokyo Night**–themed static blog with a yazi-style status line, automatic RSS feed, tag filtering, an interactive tag graph, and a responsive design.
 
 ## 🚀 Features
 
 ### Core Functionality
 
 - **GitHub Gists Integration** - Automatically fetches and converts your public gists to blog posts
-- **Markdown Processing** - Full markdown support with GitHub-style syntax highlighting
+- **Markdown Processing** - Full markdown support with Tokyo Night syntax highlighting
+- **Tokyo Night Theme** - Clean terminal-style aesthetic; dark = Tokyo Night "Night", light = Tokyo Night "Day"
 - **Dual Theme Support** - Light/dark mode toggle with system preference detection
-- **Terminal Theme** - Cyberpunk/DevOps aesthetic with green terminal prompts
+- **yazi-style Status Line** - Fixed bottom bar showing the current page path and `github · rss · graph` links
 - **Static Generation** - Builds fast, lightweight HTML files ready for deployment
 
 ### Advanced Features
@@ -20,7 +19,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 - **Syntax Highlighting** - GitHub-style code highlighting with language-specific colors for XML, JSON, JavaScript, Python, CSS, and more
 - **Multi-Tag System** - Extract hashtags from gist descriptions for automatic categorization
 - **Advanced Filtering** - Select multiple tags with AND logic for precise content discovery
-- **Reading Analytics** - Terminal-themed word count and estimated reading time for each post
+- **Reading Time** - Estimated reading time shown inline on each post (e.g. "2 min read")
 - **Internal Gist Links** - Automatically converts your gist URLs to internal blog post links for seamless navigation
 - **Table of Contents** - Automatic ToC generation with sticky sidebar navigation and active section highlighting
 - **Permalink Navigation** - Click-to-copy section links with smooth scrolling
@@ -32,27 +31,25 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### UI/UX Highlights
 
-- **Copy Button for Code Blocks** - Hover over code blocks to reveal `$ pbcopy` button with one-click copying and visual "copied!" feedback
-- **Jump to Top** - `$ cd ~` floating button appears when scrolled down (>400px) for quick navigation back to top on long posts
-- **Breadcrumb Navigation** - Shows `$ cd ~ / posts / {slug}` path on post pages with clickable links for site orientation
-- **Reading Progress** - Thin gradient progress bar at top of viewport shows reading progress through posts
-- **Keyboard Shortcuts Help** - Press `?` to open terminal-styled help modal documenting all shortcuts (not shown on graph page which has its own help)
-- **Command Palette** - Press `Cmd/Ctrl+K` for instant fuzzy search across posts, tags, and commands with terminal styling
-- **Enhanced Graph Search** - Real-time tag search on `/graph.html` with visual highlighting and `$ grep --tag` interface
-- **Keyboard Navigation** - Full arrow key navigation on graph page with `?` help overlay and `/` search shortcut
+- **Copy Button for Code Blocks** - Hover over code blocks to reveal a **Copy** button with one-click copying and "Copied" feedback
+- **Jump to Top** - "↑ Top" floating button appears when scrolled down (>400px) on long posts
+- **Breadcrumb Navigation** - "Home / Posts / {title}" path on post pages with clickable links
+- **Reading Progress** - Thin green→blue gradient progress bar at the top of the viewport
+- **Keyboard Shortcuts Help** - Press `?` to open a help modal documenting all shortcuts (not shown on the graph page, which has its own)
+- **Command Palette** - Press `Cmd/Ctrl+K` for instant fuzzy search across posts, tags, and commands
+- **Enhanced Graph Search** - Real-time tag search on `/graph.html` with visual highlighting
+- **Keyboard Navigation** - Full arrow key navigation on the graph page with `?` help overlay and `/` search shortcut
 - **Graph Minimap** - Small overview showing viewport position within the larger tag graph
-- **Modern Graph Styling** - Terminal-themed graph visualizations with grid backgrounds, subtle glows, and improved accessibility
+- **Tokyo Night Graph Styling** - Theme-aware graph visualizations with grid backgrounds and subtle glows
 - **Interactive Tag Graphs** - Explore tag connections with hover highlighting, pointer-centered zoom, pinch gestures, and keyboard navigation
-- **Theme Switching** - Seamless light/dark mode toggle in navigation bar
-- **Interactive Terminal Windows** - Functional close, minimize, and maximize buttons with hover icons
+- **Theme Switching** - Seamless light/dark mode toggle in the navigation bar
 - **Multi-Tag Filtering** - Select multiple tags with AND logic for precise content discovery
-- **Reading Metrics** - Terminal commands show word count and reading time: `$ wc -w file.md` → `1151 words`
-- **Sticky Table of Contents** - Desktop-only floating sidebar with active section highlighting
+- **Reading Time** - Shown inline on each post (e.g. "Nov 2, 2025 · 2 min read")
+- **Sticky Table of Contents** - Desktop-only floating sidebar with active-section highlighting and a yazi-style selection bar
 - **Permalink Anchors** - Hover-activated # links for easy section sharing
-- **Blinking Terminal Cursor** - Authentic terminal feel in the header
-- **Pipeline Theme** - Posts displayed as "deployments" with commit hashes
+- **Content-Focused Post Cards** - Title, date, reading time, excerpt, tags, and Read/Source actions
 - **Compact Post Headers** - Mobile-friendly design that prioritizes content
-- **Advanced Tag Filtering UI** - Multi-tag display: `$ grep --tag #ai #devops → 3 results`
+- **Tag Filter Status** - Shows active tags: "Filtered by #ai #devops → 3 results"
 
 ## 🛠 Setup
 
@@ -262,7 +259,7 @@ Check out my other post: /posts/abc123def456.html
 **Automatic ToC Generation:**
 
 - **Smart Detection** - Automatically generates ToC for posts with heading levels 2-6 (`##`, `###`, etc.)
-- **Terminal Styling** - ToC styled as terminal window with `$ grep -n "^##" filename.md` command
+- **Pane Styling** - ToC shown in a "Contents" pane in the sidebar
 - **Desktop Only** - ToC appears as floating sidebar on desktop, hidden on mobile for clean mobile experience
 
 **Interactive Features:**
@@ -280,39 +277,20 @@ Check out my other post: /posts/abc123def456.html
 - **Responsive Behavior** - Hidden only on narrower screens (≤1080px) or when there truly isn’t space
 - **Footer-Aware** - Sidebar height shrinks as the footer enters view so they never overlap
 
-### Terminal Controls
+### Post Pages
 
-**Interactive Terminal Windows** (Available on index page):
+- **File-tab pane header** - The content pane is titled with the post's filename (e.g. `power-user-claude-code.md`)
+- **Sidebar** (desktop) - A "Topics" mini tag-graph and a "Contents" table of contents, each in its own pane
+- **Page-aware status line** - The bottom status bar shows `~/posts/<file>.md` for the current post
+- **Breadcrumb** - "Home / Posts / {title}" with clickable links
 
-- **Close Button** (red) - Hides the entire terminal section
-- **Minimize Button** (yellow) - Collapses terminal to header-only view
-- **Maximize Button** (green) - Expands terminal to full width
-- **Hover Effects** - Shows macOS-style icons (×, −, ⇱) when hovering over buttons
+### Tag Filtering
 
-**Post Page Terminals**:
-
-- **Terminal Header** - Shows `$ cat filename.md` with green prompt and blue command
-- **Static Display** - No interactive controls for cleaner reading experience
-
-**Multi-Tag Filtering System**:
-
-- **Multiple Selection**: Click multiple tags to combine filters using AND logic
-- **Toggle Behavior**: Click active tags to remove them, inactive tags to add them
-- **Maximize Access**: Maximize the pagination terminal to reveal all available tags
-- **Synchronized State**: Tags in pagination terminal sync with main post area
-- **Smart Display**: Filter status shows all active tags: `$ grep --tag #ai #devops → 3 results`
-- **Persistent Terminal**: Pagination terminal stays visible when tags are active
-- **Precise Filtering**: Posts must contain ALL selected tags to appear in results
-
-**Dev Mode Easter Egg** 🎯:
-
-- **Activation**: Click the "main" branch button in the top navigation
-- **Chaos Mode**: Instantly transforms the site into a DevOps disaster scenario
-- **Visual Changes**: Build failures, error indicators, emergency rollback messages
-- **Branch Switch**: Navigation and post cards change from "main" to "dev" branch
-- **Authentic Errors**: Realistic terminal output with deployment failures and database issues
-- **Toggle Back**: Click "dev" button to restore normal operation
-- **No Persistence**: Easter egg resets on page reload for clean demo experience
+- **Multiple Selection** - Click multiple tags to combine filters using AND logic
+- **Toggle Behavior** - Click active tags to remove them, inactive tags to add them
+- **Filter Status** - Shows all active tags: "Filtered by #ai #devops → 3 results"
+- **Precise Filtering** - Posts must contain ALL selected tags to appear in results
+- **Clean Pager** - "Page X of Y" with Prev/Next and numbered pages (client-side, no reloads)
 
 ## 🕸 Global Tag Graph
 
@@ -370,17 +348,18 @@ The command palette automatically stores blog data for lightning-fast searches w
 ### Styling
 
 Styles are organized into **modular CSS files** in `src/styles/modules/` for easier maintenance:
-- 14 focused modules (variables, base, layout, terminal, tags, cards, post, typography, syntax, dev-mode, command-palette, graph, ux, responsive)
+- 13 focused modules (variables, base, layout, terminal, tags, cards, post, typography, syntax, command-palette, graph, ux, responsive)
+- Colors are defined once as tokens in `variables.css`; translucent glows/tints reference RGB-channel tokens (`--accent-*-rgb`, `--shadow-rgb`, `--halo-rgb`) so the whole UI recolors from one place
 - Build process concatenates modules into a single `dist/styles.css` file
 - See `src/styles/README.md` for detailed module documentation
 
 Key features:
 - **Dual Theme Support** with CSS custom properties
-- **Dark Theme**: GitHub dark color palette (`--bg-primary: #0d1117`)
-- **Light Theme**: Clean light palette (`--bg-primary: #ffffff`)
+- **Dark Theme**: Tokyo Night "Night" palette (`--bg-primary: #1a1b26`)
+- **Light Theme**: Tokyo Night "Day" palette (`--bg-primary: #e1e2e7`)
 - **System Integration**: Automatically detects and follows OS preference
 - **Manual Override**: Theme toggle persists user choice in localStorage
-- Fonts: JetBrains Mono (code) + Inter (text) — self‑hosted (no Google Fonts request)
+- Fonts: JetBrains Mono (mono) — self‑hosted; body text uses the system sans stack (no Google Fonts request)
 - Icons: Inline SVG symbols
 
 #### Self-hosted Fonts
@@ -399,19 +378,17 @@ Implementation:
 - `@font-face` declarations added in `src/styles/modules/base.css`
 - Preload hints added in `layout.html` for faster font availability
 
-Expected filenames (place these manually – they are NOT committed):
+Expected filename (place manually – it is NOT committed):
 
 ```
-src/fonts/InterVariable.woff2
 src/fonts/JetBrainsMono-Variable.woff2
 ```
 
-Obtain them from official releases:
+Obtain it from the official release:
 
-- Inter: https://github.com/rsms/inter/releases
 - JetBrains Mono: https://github.com/JetBrains/JetBrainsMono/releases
 
-Licenses (SIL OFL 1.1) are included as `OFL-INTER.txt` and `OFL-JETBRAINS-MONO.txt` in the same directory.
+Body text uses the system sans-serif stack (no Inter download). The license (SIL OFL 1.1) is included as `OFL-JETBRAINS-MONO.txt` in the same directory.
 
 If the font files are missing the site will gracefully fall back to the system sans/monospace stacks defined in the CSS custom properties.
 
@@ -595,17 +572,14 @@ If the token becomes invalid the build will log a warning and fall back to unaut
 - Extracts `#tagname` from gist descriptions
 - Supports multiple tag selection with AND logic
 - Interactive filter buttons with toggle behavior
-- Terminal-style filter status display showing all active tags
-- Synchronized state across post area and pagination terminal
+- Filter status display showing all active tags
 - Maintains clean descriptions without hashtags
 
-**Reading Analytics**
+**Reading Time**
 
 - Calculates word count by removing markdown syntax and code blocks
 - Estimates reading time based on 225 words per minute average
-- Displays as terminal commands with color-coded output
-- Green `$` prompt and blue command text for authenticity
-- Two-line format: word count and reading time separately
+- Displayed inline in the post/card meta line (e.g. "2 min read")
 
 **Table of Contents System**
 
@@ -690,7 +664,7 @@ gist-blog/
 │   │   ├── config.ts
 │   │   └── types.ts          # Shared domain types (pure type module)
 │   ├── styles/
-│   │   └── modules/          # 14 focused CSS modules → concatenated to dist/styles.css
+│   │   └── modules/          # 13 focused CSS modules → concatenated to dist/styles.css
 │   └── templates/
 │       ├── graph.html
 │       ├── index.html
@@ -722,7 +696,7 @@ gist-blog/
 **Pagination & Filtering**
 
 - All posts loaded once for instant filtering
-- Terminal-themed pagination UI
+- Clean "Page X of Y" pager
 - Smart tag filtering across all posts
 - No server requests for navigation
 

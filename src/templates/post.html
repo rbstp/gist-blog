@@ -2,23 +2,19 @@
     <div class="post-navigation">
         <a href="/" class="back-link">
             <span class="nav-arrow">←</span>
-            <span>back to pipeline</span>
+            <span>Back to posts</span>
         </a>
         <div class="post-actions">
             <a href="{{url}}" class="source-link" target="_blank" rel="noopener noreferrer">
                 <span class="action-icon"><svg class="nav-icon" width="14" height="14" aria-hidden="true"><use href="#icon-github"/></svg></span>
-                <span>view source</span>
+                <span>View source</span>
             </a>
         </div>
     </div>
 
     <header class="post-header-compact">
         <div class="post-meta-line">
-            <div class="post-status">
-                <span class="status-badge">DEPLOYED</span>
-                <span class="commit-info">#{{shortId}}</span>
-            </div>
-            <time datetime="{{createdAt}}" class="post-date">{{formattedDate}}</time>
+            <time datetime="{{createdAt}}" class="post-date">{{formattedDate}} · {{readingTime}} read</time>
         </div>
         <h1 class="post-title-compact">{{title}}</h1>
     </header>
@@ -28,9 +24,7 @@
         <div class="toc-sidebar">
             <div class="graph-terminal" id="topic-graph-terminal">
                 <div class="terminal-header-small">
-                    <div class="terminal-title-small">
-                        <span class="terminal-prompt">$</span><span class="terminal-command">graph --tags</span>
-                    </div>
+                    <div class="terminal-title-small">Topics</div>
                 </div>
                 <div class="graph-content" data-current-topic="{{currentTopic}}" data-all-topics="{{tagsCsv}}">
                     <button class="graph-reset-btn" data-target="topic-graph" title="Reset view">reset</button>
@@ -40,10 +34,7 @@
             </div>
             <div class="toc-terminal">
                 <div class="terminal-header-small">
-                    <div class="terminal-title-small">
-                        <span class="terminal-prompt">$</span><span class="terminal-command">grep -n "^##"
-                            {{filename}}</span>
-                    </div>
+                    <div class="terminal-title-small">Contents</div>
                 </div>
                 <div class="toc-content">
                     <nav class="table-of-contents">
@@ -60,9 +51,7 @@
         {{/hasToc}}
         <div class="content-terminal">
             <div class="terminal-header-small">
-                <div class="terminal-title-small">
-                    <span class="terminal-prompt">$</span><span class="terminal-command">cat {{filename}}</span>
-                </div>
+                <div class="terminal-title-small">{{filename}}</div>
             </div>
             <div class="post-content-advanced">
                 {{htmlContent}}

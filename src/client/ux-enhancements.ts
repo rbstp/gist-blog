@@ -27,7 +27,7 @@ declare global {
 
       const btn = document.createElement('button');
       btn.className = 'copy-btn';
-      btn.innerHTML = '<span class="copy-prompt">$</span> <span class="copy-text">pbcopy</span>';
+      btn.innerHTML = '<span class="copy-text">Copy</span>';
       btn.setAttribute('aria-label', 'Copy code to clipboard');
       btn.title = 'Copy code';
 
@@ -39,7 +39,7 @@ declare global {
           const copyTextEl = btn.querySelector('.copy-text');
           if (!copyTextEl) return;
           const originalText = copyTextEl.textContent;
-          copyTextEl.textContent = 'copied!';
+          copyTextEl.textContent = 'Copied';
           setTimeout(() => {
             btn.classList.remove('copied');
             copyTextEl.textContent = originalText;
@@ -58,7 +58,7 @@ declare global {
   function initJumpToTop(): void {
     const btn = document.createElement('button');
     btn.className = 'jump-to-top';
-    btn.innerHTML = '<span class="jump-prompt">$</span> <span class="jump-text">cd ~</span>';
+    btn.innerHTML = '<span class="jump-text">↑ Top</span>';
     btn.setAttribute('aria-label', 'Jump to top');
     btn.title = 'Jump to top';
     btn.style.display = 'none';
@@ -148,9 +148,7 @@ declare global {
     dialog.innerHTML = `
       <div class="keyboard-help-content">
         <div class="terminal-header-small">
-          <div class="terminal-title-small">
-            <span class="terminal-prompt">$</span><span class="terminal-command">man shortcuts</span>
-          </div>
+          <div class="terminal-title-small">Keyboard shortcuts</div>
           <button class="help-close" aria-label="Close help">&times;</button>
         </div>
         <div class="keyboard-help-body">
@@ -256,20 +254,15 @@ declare global {
     const breadcrumb = document.createElement('div');
     breadcrumb.className = 'breadcrumb-nav';
 
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .substring(0, 40);
+    const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     breadcrumb.innerHTML = `
-      <span class="breadcrumb-prompt">$</span>
       <span class="breadcrumb-path">
-        <a href="/" class="breadcrumb-link">~</a>
+        <a href="/" class="breadcrumb-link">Home</a>
         <span class="breadcrumb-sep">/</span>
-        <a href="/" class="breadcrumb-link">posts</a>
+        <a href="/" class="breadcrumb-link">Posts</a>
         <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">${slug}</span>
+        <span class="breadcrumb-current">${esc(title)}</span>
       </span>
     `;
 

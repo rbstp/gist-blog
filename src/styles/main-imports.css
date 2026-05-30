@@ -35,7 +35,6 @@
 @import "modules/syntax.css";
 
 /* Feature Styles */
-@import "modules/dev-mode.css";
 @import "modules/command-palette.css";
 @import "modules/graph.css";
 @import "modules/ux.css";

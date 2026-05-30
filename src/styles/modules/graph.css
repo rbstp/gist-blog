@@ -33,7 +33,7 @@
 
 .graph-search-prompt:focus-within {
     border-color: var(--accent-primary);
-    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.1);
+    box-shadow: 0 0 0 2px rgba(var(--accent-primary-rgb), 0.15);
 }
 
 .graph-search-prompt .prompt-symbol {
@@ -132,7 +132,7 @@
 }
 
 .graph-selected-tag .tag-remove:hover {
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(var(--shadow-rgb), 0.3);
 }
 
 .graph-action-buttons {
@@ -211,7 +211,7 @@
 .graph-node:focus circle {
     stroke: var(--accent-secondary);
     stroke-width: 2.5;
-    filter: drop-shadow(0 0 8px rgba(247, 129, 102, 0.6));
+    filter: drop-shadow(0 0 8px rgba(var(--accent-secondary-rgb), 0.6));
 }
 
 
@@ -246,79 +246,7 @@
     font-size: 0.9rem;
 }
 
-/* Enhanced terminal glow effect */
-@media (prefers-reduced-motion: no-preference) {
-    .terminal-window {
-        box-shadow: 
-            0 4px 12px rgba(0, 0, 0, 0.15),
-            0 0 20px rgba(88, 166, 255, 0.03);
-    }
-    
-    .terminal-window:hover {
-        box-shadow: 
-            0 4px 16px rgba(0, 0, 0, 0.2),
-            0 0 30px rgba(88, 166, 255, 0.05);
-    }
-}
-
-/* Improved contrast for accessibility */
-.text-muted-accessible {
-    color: #8b949e; /* Slightly lighter for better WCAG contrast */
-}
-
-/* Smooth scroll indicator for ToC */
-.toc-scroll-indicator {
-    position: absolute;
-    left: -3px;
-    width: 3px;
-    background: var(--accent-primary);
-    transition: top 0.3s ease, height 0.3s ease;
-    border-radius: 2px;
-}
-
-/* Copy button for code blocks */
-.code-block-wrapper {
-    position: relative;
-}
-
-.code-copy-btn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    padding: 0.35rem 0.6rem;
-    font-family: var(--mono-font);
-    font-size: 0.7rem;
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-primary);
-    border-radius: 4px;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.2s ease, color 0.2s ease;
-    z-index: 1;
-}
-
-.code-block-wrapper:hover .code-copy-btn {
-    opacity: 1;
-}
-
-.code-copy-btn:hover {
-    color: var(--accent-primary);
-    border-color: var(--accent-primary);
-}
-
-.code-copy-btn.copied {
-    color: var(--accent-success);
-    border-color: var(--accent-success);
-}
-
-.code-copy-btn::before {
-    content: '$ pbcopy';
-}
-
-.code-copy-btn.copied::before {
-    content: '✓ copied';
-}
+/* terminal-window shadow is handled in terminal.css (flat TUI panes) */
 
 /* ================================================
    GRAPH HELP OVERLAY
@@ -330,7 +258,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: rgba(var(--shadow-rgb), 0.7);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 9999;
@@ -344,9 +272,9 @@
     width: 90%;
     max-width: 600px;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 20px 60px rgba(var(--shadow-rgb), 0.5);
     animation: slideDown 0.2s ease;
 }
 
@@ -416,7 +344,7 @@
     font-family: var(--mono-font);
     font-size: 0.75rem;
     color: var(--text-primary);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.2);
     min-width: 24px;
     text-align: center;
     display: inline-block;

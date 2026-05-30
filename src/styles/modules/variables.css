@@ -1,46 +1,100 @@
+/* ==========================================================================
+   Theme tokens — Tokyo Night
+   Dark (default) = Tokyo Night "Night"; light = Tokyo Night "Day".
+   Colors are defined ONCE here. Translucent glows/tints reference the
+   *-rgb channel tokens via rgba(var(--token-rgb), a) so the whole UI
+   recolors from this single source of truth.
+   ========================================================================== */
+
 :root {
-    /* Dark theme (default) */
-    --bg-primary: #0d1117;
-    --bg-secondary: #161b22;
-    --bg-tertiary: #21262d;
-    --bg-card: #0d1117;
-    --border-primary: #21262d;
-    --border-accent: #f78166;
-    --text-primary: #f0f6fc;
-    --text-body: #c9d1d9;
-    --text-secondary: #8b949e;
-    --text-muted: #6e7681;
-    --accent-primary: #58a6ff;
-    --accent-secondary: #f78166;
-    --accent-success: #3fb950;
-    --accent-warning: #d29922;
-    --accent-error: #f85149;
-    --terminal-green: #39d353;
-    --terminal-blue: #58a6ff;
-    --terminal-orange: #ff7b72;
+    color-scheme: dark;
+
+    /* Surfaces */
+    --bg-primary: #1a1b26;     /* page / editor background */
+    --bg-secondary: #16161e;   /* darker bars: nav, headers, status line */
+    --bg-tertiary: #1f2335;    /* lifted panels & cards */
+    --bg-card: #1a1b26;
+    --bg-highlight: #292e42;   /* selection / hover bar */
+
+    /* Borders */
+    --border-primary: #292e42; /* subtle pane border */
+    --border-strong: #3b4261;  /* visible / titled pane border */
+    --border-accent: #7aa2f7;
+
+    /* Text */
+    --text-primary: #c0caf5;   /* fg */
+    --text-body: #a9b1d6;      /* fg_dark — long-form body */
+    --text-secondary: #828bb8; /* muted but readable */
+    --text-muted: #6e76a0;     /* comment (lifted for AA on bg) */
+
+    /* Accents */
+    --accent-primary: #7aa2f7;   /* blue */
+    --accent-secondary: #bb9af7; /* purple / magenta */
+    --accent-success: #9ece6a;   /* green */
+    --accent-warning: #e0af68;   /* yellow */
+    --accent-error: #f7768e;     /* red */
+    --accent-cyan: #7dcfff;
+    --accent-teal: #73daca;
+    --accent-orange: #ff9e64;
+
+    /* Terminal-semantic aliases (kept for existing markup) */
+    --terminal-green: #9ece6a;
+    --terminal-blue: #7aa2f7;
+    --terminal-orange: #ff9e64;
+
+    /* RGB channels — single source for translucent glows/tints */
+    --accent-primary-rgb: 122, 162, 247;
+    --accent-secondary-rgb: 187, 154, 247;
+    --accent-success-rgb: 158, 206, 106;
+    --accent-warning-rgb: 224, 175, 104;
+    --accent-error-rgb: 247, 118, 142;
+    --accent-orange-rgb: 255, 158, 100;
+    --shadow-rgb: 1, 1, 2;     /* near-black, for crisp shadows */
+    --halo-rgb: 26, 27, 38;    /* = bg-primary, graph label halo */
+
+    /* Fonts */
     --mono-font: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-    /* Drop custom Inter font to save bytes; rely on high-quality system UI stack */
     --sans-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
 }
 
-/* Light theme */
+/* Light theme — Tokyo Night "Day" */
 [data-theme="light"] {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f6f8fa;
-    --bg-tertiary: #f1f3f4;
-    --bg-card: #ffffff;
-    --border-primary: #d0d7de;
-    --border-accent: #fd7e14;
-    --text-primary: #24292f;
-    --text-body: #24292f;
-    --text-secondary: #656d76;
-    --text-muted: #8c959f;
-    --accent-primary: #0969da;
-    --accent-secondary: #fd7e14;
-    --accent-success: #1a7f37;
-    --accent-warning: #bf8700;
-    --accent-error: #d1242f;
-    --terminal-green: #1a7f37;
-    --terminal-blue: #0969da;
-    --terminal-orange: #fd7e14;
+    color-scheme: light;
+
+    --bg-primary: #e1e2e7;
+    --bg-secondary: #d4d6e1;
+    --bg-tertiary: #d0d5e3;
+    --bg-card: #e9eaee;
+    --bg-highlight: #c4c8da;
+
+    --border-primary: #b6bcce;
+    --border-strong: #a1a6c5;
+    --border-accent: #2959aa;
+
+    --text-primary: #3760bf;
+    --text-body: #343b58;
+    --text-secondary: #525f9e;
+    --text-muted: #5b6188;
+
+    --accent-primary: #2959aa;
+    --accent-secondary: #9854f1;
+    --accent-success: #587539;
+    --accent-warning: #8c6c3e;
+    --accent-error: #f52a65;
+    --accent-cyan: #007197;
+    --accent-teal: #118c74;
+    --accent-orange: #b15c00;
+
+    --terminal-green: #587539;
+    --terminal-blue: #2959aa;
+    --terminal-orange: #b15c00;
+
+    --accent-primary-rgb: 41, 89, 170;
+    --accent-secondary-rgb: 152, 84, 241;
+    --accent-success-rgb: 88, 117, 57;
+    --accent-warning-rgb: 140, 108, 62;
+    --accent-error-rgb: 245, 42, 101;
+    --accent-orange-rgb: 177, 92, 0;
+    --shadow-rgb: 99, 110, 176;  /* soft blue-grey instead of harsh black */
+    --halo-rgb: 225, 226, 231;   /* = bg-primary */
 }

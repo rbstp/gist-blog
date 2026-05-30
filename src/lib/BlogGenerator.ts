@@ -120,6 +120,7 @@ export default class BlogGenerator {
     const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
       title: 'main',
       content: indexContent,
+      statusPath: '~/rbstp.dev',
       timestamp: buildTs
     });
 
@@ -136,6 +137,7 @@ export default class BlogGenerator {
     const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
       title: post.title,
       content: postContent,
+      statusPath: `~/posts/${post.filename}`,
       timestamp: buildTs
     });
 
@@ -157,6 +159,7 @@ export default class BlogGenerator {
     const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
       title: 'tags graph',
       content,
+      statusPath: '~/graph',
       timestamp: buildTs
     });
     await fs.writeFile(path.join(this.distDir, 'graph.html'), fullPage);
@@ -182,7 +185,6 @@ export default class BlogGenerator {
           'post.css',
           'typography.css',
           'syntax.css',
-          'dev-mode.css',
           'command-palette.css',
           'graph.css',
           'ux.css',

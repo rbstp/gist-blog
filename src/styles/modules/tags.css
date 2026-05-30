@@ -1,8 +1,7 @@
 /* Base tag styling */
 .tag,
-.filter-tag,
-.branch-name {
-    background: rgba(88, 166, 255, 0.15);
+.filter-tag {
+    background: rgba(var(--accent-primary-rgb), 0.15);
     color: var(--accent-primary);
     padding: 0.2rem 0.5rem;
     border: 1px solid var(--accent-primary);
@@ -13,7 +12,7 @@
 }
 
 .tag {
-    border-radius: 12px;
+    border-radius: 4px;
     cursor: pointer;
 }
 
@@ -28,7 +27,7 @@
 }
 
 .tag.active {
-    box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(var(--accent-primary-rgb), 0.3);
 }
 
 .filter-tag {
@@ -59,18 +58,13 @@
     color: var(--bg-primary);
 }
 
-.branch-name {
-    border-radius: 3px;
-    border: none;
-}
-
 .filter-status {
     background: var(--bg-tertiary);
     border: 1px solid var(--accent-primary);
     border-radius: 6px;
     padding: 1rem 1.5rem;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 16px rgba(88, 166, 255, 0.1);
+    box-shadow: 0 4px 16px rgba(var(--accent-primary-rgb), 0.1);
 }
 
 .filter-info {
@@ -82,12 +76,10 @@
     color: var(--text-primary);
 }
 
-.filter-prompt {
-    color: var(--terminal-green);
-    font-weight: 600;
+.filter-label {
+    color: var(--text-secondary);
+    font-weight: 500;
 }
-
-/* .filter-tag styling now consolidated above */
 
 .filter-count {
     color: var(--text-secondary);
@@ -112,51 +104,7 @@
     background: var(--terminal-orange);
     color: var(--bg-primary);
     transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(255, 123, 114, 0.3);
-}
-
-.post-stats {
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-primary);
-    border-radius: 4px;
-    padding: 1rem;
-    margin: 1rem 0;
-    flex-grow: 1;
-    /* Ensure the entire stats block inherits terminal mono styling */
-    font-family: var(--mono-font);
-    font-size: 0.75rem;
-    line-height: 1.3;
-}
-
-.stat-line {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.5rem;
-}
-
-.stat-line:last-child {
-    margin-bottom: 0;
-}
-
-.stat-command {
-    /* Inherit mono font + base size from container; keep color cues */
-    color: var(--terminal-blue);
-    background: none;
-    border: none;
-    padding: 0;
-}
-
-.stat-command::before {
-    content: "$ ";
-    color: var(--terminal-green);
-}
-
-.stat-value {
-    font-family: var(--mono-font);
-    font-size: 0.8rem;
-    color: var(--terminal-green);
-    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(var(--accent-orange-rgb), 0.3);
 }
 
 .card-actions {

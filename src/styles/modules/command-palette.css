@@ -8,7 +8,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(var(--shadow-rgb), 0.7);
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
     z-index: 10000;
@@ -28,11 +28,11 @@
     width: 90%;
     max-width: 640px;
     background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    border: 1px solid var(--border-strong);
     border-radius: 8px;
-    box-shadow: 
-        0 20px 60px rgba(0, 0, 0, 0.5),
-        0 0 0 1px rgba(88, 166, 255, 0.1);
+    box-shadow:
+        0 20px 60px rgba(var(--shadow-rgb), 0.5),
+        0 0 0 1px rgba(var(--accent-primary-rgb), 0.12);
     animation: slideDown 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -125,12 +125,12 @@
 
 .palette-result:hover,
 .palette-result.selected {
-    background: var(--bg-tertiary);
+    background: var(--bg-highlight);
     border-color: var(--accent-primary);
 }
 
 .palette-result.selected {
-    box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+    box-shadow: inset 2px 0 0 var(--accent-primary);
 }
 
 .result-icon {
@@ -223,7 +223,7 @@
     font-family: var(--mono-font);
     font-size: 0.7rem;
     color: var(--text-primary);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 2px rgba(var(--shadow-rgb), 0.2);
 }
 
 /* Mobile adjustments */

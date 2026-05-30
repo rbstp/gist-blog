@@ -8,11 +8,10 @@ export {};
 // - ToC active highlighting and sidebar layout adjustments
 // - Tag preselection bridging from graph page
 
-// Runtime-injected globals (theme toggle bridge, dev-mode state)
+// Runtime-injected globals (theme toggle bridge)
 declare global {
   interface Window {
     toggleTheme?: () => void;
-    originalContent?: { title: string };
   }
 }
 
@@ -277,7 +276,7 @@ interface Point {
       const startIndex = (currentPage - 1) * POSTS_PER_PAGE; const endIndex = startIndex + POSTS_PER_PAGE; filtered.slice(startIndex, endIndex).forEach(p => { p.style.display = 'block'; });
       if (paginationSection && (totalPages > 1 || activeTags.length > 0)) {
         paginationSection.style.display = 'block';
-        if (paginationCommand) paginationCommand.textContent = totalPages > 1 ? `ls posts | less :${currentPage}/${totalPages}` : `ls posts | head -${filtered.length}`;
+        if (paginationCommand) paginationCommand.textContent = totalPages > 1 ? `Page ${currentPage} of ${totalPages}` : `${filtered.length} post${filtered.length !== 1 ? 's' : ''}`;
         if (prevBtn) { if (totalPages > 1) { prevBtn.style.display = 'flex'; prevBtn.disabled = currentPage === 1; } else { prevBtn.style.display = 'none'; } }
         if (nextBtn) { if (totalPages > 1) { nextBtn.style.display = 'flex'; nextBtn.disabled = currentPage === totalPages; } else { nextBtn.style.display = 'none'; } }
         if (paginationPages) {
@@ -293,7 +292,7 @@ interface Point {
     function updateFilterStatus(): void {
       if (activeTags.length === 0) { filterStatus.style.display = 'none'; return; }
       const filteredCount = getFilteredPosts().length; const tagsDisplay = activeTags.map(tag => `<span class="filter-tag clickable-filter-tag" data-tag="${escapeHTML(tag)}">#${escapeHTML(tag)}</span>`).join(' ');
-      filterStatus.innerHTML = `<div class="filter-info"><span class="filter-prompt">$</span><span>grep --tag</span>${tagsDisplay}<span class="filter-count">→ ${filteredCount} result${filteredCount !== 1 ? 's' : ''}</span><button class="clear-filter" data-clear>clear</button></div>`;
+      filterStatus.innerHTML = `<div class="filter-info"><span class="filter-label">Filtered by</span>${tagsDisplay}<span class="filter-count">${filteredCount} result${filteredCount !== 1 ? 's' : ''}</span><button class="clear-filter" data-clear>clear</button></div>`;
       filterStatus.style.display = 'block';
       filterStatus.querySelector('[data-clear]')?.addEventListener('click', () => { activeTags = []; currentPage = 1; document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); updateFilterStatus(); updatePagination(); });
       filterStatus.querySelectorAll('.clickable-filter-tag').forEach(el => {
@@ -327,7 +326,7 @@ interface Point {
     })();
   }
 
-  // Terminal controls (close/minimize/maximize) and dev-mode easter egg
+  // Terminal controls (close/minimize/maximize) for the graph page terminal
   function initTerminalsAndEasterEgg(): void {
     const themeToggle = document.getElementById('theme-toggle'); if (themeToggle && window.toggleTheme) themeToggle.addEventListener('click', window.toggleTheme);
     const terminals = document.querySelectorAll<HTMLElement>('.hero-terminal, .pagination-section');
@@ -349,39 +348,6 @@ interface Point {
         });
       }
     });
-
-    // Dev mode easter egg toggle on clicking the "main" button
-    let isDevMode = false; const mainButton = document.querySelector('a.nav-item[href="/"]');
-    function activateDevMode(): void {
-      document.body.classList.add('dev-mode');
-      if (!window.originalContent) window.originalContent = { title: document.title };
-      document.title = 'SYSTEM FAILURE - rbstp.dev';
-      const buildStatus = document.querySelector('.build-status'); if (buildStatus) { buildStatus.className = 'build-status error'; buildStatus.innerHTML = '✗ Build Failed'; }
-      const heroTerminalBody = document.querySelector('.hero-terminal .terminal-body'); if (heroTerminalBody) {
-        heroTerminalBody.innerHTML = '<div class="terminal-line"><span class="prompt">rbstp@devops:~$</span><span class="command">deploy --production</span></div>' +
-          '<div class="terminal-output error-output"><span class="output-text error">ERROR: Deployment failed at 2025-07-30T15:42:31Z</span></div>' +
-          '<div class="terminal-output error-output"><span class="output-text error">CRITICAL: Database connection lost</span></div>' +
-          '<div class="terminal-line"><span class="prompt">rbstp@devops:~$</span><span class="command">rollback --emergency</span></div>' +
-          '<div class="terminal-output error-output"><span class="output-text warning">INITIATING EMERGENCY ROLLBACK...</span></div>' +
-          '<div class="terminal-output error-output"><span class="output-text error">47 services affected</span></div>';
-      }
-      const footerStatus = document.querySelector('.status-bar'); if (footerStatus) {
-        footerStatus.innerHTML = '<span class="status-item"><span class="status-dot error"></span><span>system: degraded</span></span>' +
-          '<span class="status-item"><span class="status-dot error"></span><span>alerts: <a href="#" style="color: var(--accent-error);">47 active</a></span></span>' +
-          '<span class="status-item"><span class="status-dot warning"></span><span>rollback: in progress</span></span>';
-      }
-      document.querySelectorAll('.post-card').forEach(card => {
-        card.querySelector('.status-indicator')?.classList.add('error');
-        const st = card.querySelector('.status-text') as HTMLElement | null; if (st) { st.textContent = 'failed'; st.style.color = 'var(--accent-error)'; }
-        const bn = card.querySelector('.branch-name'); if (bn) bn.textContent = 'dev';
-      });
-      const sectionTitle = document.querySelector('.section-title'); if (sectionTitle) sectionTitle.textContent = 'Failed Deployments';
-      const pipelineStatus = document.querySelector('.pipeline-status'); if (pipelineStatus) pipelineStatus.innerHTML = '<span class="build-status error">✗ Build Failed</span><span class="deploy-time">Last failure: <span class="local-time">2 min ago</span></span>';
-      const mainButtonSpan = document.querySelector('a.nav-item[href="/"] span'); if (mainButtonSpan) mainButtonSpan.textContent = 'dev';
-    }
-    function deactivateDevMode(): void { document.body.classList.remove('dev-mode'); if (window.originalContent) { document.title = window.originalContent.title; window.location.reload(); } }
-    function toggleDevMode(): void { isDevMode = !isDevMode; if (isDevMode) activateDevMode(); else deactivateDevMode(); }
-    if (mainButton) { mainButton.addEventListener('click', (e) => { e.preventDefault(); toggleDevMode(); }); }
   }
 
   // ToC active section highlighting and sidebar layout adjustments (post pages)
