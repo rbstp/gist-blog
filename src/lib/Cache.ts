@@ -22,7 +22,7 @@ export default class Cache {
       const stat = await fs.stat(full).catch(() => null);
       if (!stat) return null;
       const age = Date.now() - stat.mtimeMs;
-      if (typeof ttlMs === 'number' && age > ttlMs) return null;
+      if (age > ttlMs) return null;
       const buf = await fs.readFile(full, 'utf-8');
       return JSON.parse(buf) as T;
     } catch {

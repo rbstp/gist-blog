@@ -1,49 +1,30 @@
-import { marked } from 'marked';
+import { marked, type Tokens } from 'marked';
 import hljs from 'highlight.js';
 import StringUtils from './StringUtils.ts';
 import type { TocItem } from './types.ts';
 
-// Shape of the heading token marked v16 passes to renderer.heading.
-interface HeadingToken {
-  depth?: number;
-  text?: string;
-}
-
-// Configure a renderer that adds permalink anchors when IDs are present
+// Configure a renderer that adds permalink anchors, honoring custom {#id} anchor syntax.
+// Uses the heading token's raw `text` (not parsed inline tokens) to match the original behavior.
 const renderer = new marked.Renderer();
-renderer.heading = function (text: unknown, level?: number, raw?: string): string {
-  let headingLevel = 1;
-  let textStr = '';
-  if (typeof text === 'object' && text !== null && (text as HeadingToken).depth && (text as HeadingToken).text) {
-    headingLevel = (text as HeadingToken).depth as number; textStr = (text as HeadingToken).text as string;
-  } else {
-    headingLevel = level || 1;
-    if (typeof text === 'string') textStr = text;
-    else if (Array.isArray(text)) textStr = text.map((t: { text?: string }) => t.text || t).join('');
-    else if (text && typeof text === 'object' && (text as HeadingToken).text) textStr = (text as HeadingToken).text as string;
-    else textStr = raw || '';
-  }
+renderer.heading = function ({ text, depth }: Tokens.Heading): string {
+  const m = text.match(/^(.*?)\s*\{#([^}]+)\}$/);
+  const id = m ? (m[2] ?? '') : StringUtils.slugify(text);
+  const clean = m ? (m[1] ?? '').trim() : text;
+  return `<h${depth} id="${id}">${clean}<a href="#${id}" class="permalink" aria-label="Permalink">#</a></h${depth}>`;
+};
 
-  // Check for custom anchor syntax {#id}
-  const m = String(textStr).match(/^(.*?)\s*\{#([^}]+)\}$/);
-  if (m) {
-    const clean = (m[1] ?? '').trim();
-    const id = m[2] ?? '';
-    return `<h${headingLevel} id="${id}">${clean}<a href="#${id}" class="permalink" aria-label="Permalink">#</a></h${headingLevel}>`;
-  }
-  const id = StringUtils.slugify(textStr);
-  return `<h${headingLevel} id="${id}">${textStr}<a href="#${id}" class="permalink" aria-label="Permalink">#</a></h${headingLevel}>`;
-} as unknown as typeof renderer.heading;
+// Highlight code blocks at build time so the shipped HTML already carries hljs classes
+// (styled by src/styles/modules/syntax.css). marked v16 removed the `highlight` option, and
+// no-language fences fall back to auto-detection to mirror the previous client-side highlightAll.
+renderer.code = function ({ text, lang }: Tokens.Code): string {
+  const result = lang && hljs.getLanguage(lang)
+    ? hljs.highlight(text, { language: lang })
+    : hljs.highlightAuto(text);
+  const cls = lang || result.language || 'plaintext';
+  return `<pre><code class="hljs language-${cls}">${result.value}</code></pre>`;
+};
 
-marked.setOptions({
-  renderer,
-  highlight(code: string, lang: string): string {
-    if (lang && hljs.getLanguage(lang)) {
-      try { return hljs.highlight(code, { language: lang }).value; } catch { /* ignore */ }
-    }
-    return hljs.highlightAuto(code).value;
-  },
-} as unknown as Parameters<typeof marked.setOptions>[0]);
+marked.setOptions({ renderer });
 
 export default class MarkdownProcessor {
   cache: Map<string, string>;

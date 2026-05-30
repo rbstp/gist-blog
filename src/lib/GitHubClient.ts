@@ -1,3 +1,4 @@
+import { setTimeout as sleep } from 'node:timers/promises';
 import { USER_AGENT, RATE_LIMIT_DELAY_MS, GITHUB_TOKEN } from './config.ts';
 import type Cache from './Cache.ts';
 import type { FetchJsonResult } from './types.ts';
@@ -38,16 +39,17 @@ class GitHubClient {
   }
 
   async fetchJson(url: string, { etagKey, cache, timeoutMs = 30_000, useEtag = true }: FetchJsonOptions = {}): Promise<FetchJsonResult> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
+    // Each attempt gets its own timeout signal. Crucially, the inter-attempt rate-limit
+    // sleep is left untimed: a single shared timer would abort the retry mid-sleep (the
+    // default 30s timeout fires inside the 60s 403 backoff), so the recovery never worked.
+    // AbortSignal.timeout uses an unref'd timer, so a pending signal never keeps the build alive.
     const getOnce = async (withEtag: boolean, { omitAuth }: GetOnceOptions = {}): Promise<Response> => {
       const etag = withEtag && etagKey && cache ? await cache.readEtag(etagKey) : '';
       const baseHeaders = this.headers(etag ? { 'If-None-Match': etag } : undefined);
       if (omitAuth) delete baseHeaders['Authorization'];
       return fetch(url, {
         headers: baseHeaders,
-        signal: controller.signal,
+        signal: AbortSignal.timeout(timeoutMs),
       });
     };
 
@@ -55,7 +57,6 @@ class GitHubClient {
       let response = await getOnce(useEtag);
 
       if (response.status === 304) {
-        clearTimeout(timeoutId);
         // Use stale cache regardless of TTL
         const stale = etagKey && cache ? await cache.readJson(etagKey, Number.MAX_SAFE_INTEGER) : null;
         if (stale) return { ok: true, status: 304, json: stale };
@@ -65,8 +66,8 @@ class GitHubClient {
 
       if (!response.ok) {
         if (response.status === 403) {
-          // Rate limited: wait then retry once
-          await new Promise<void>((r) => setTimeout(r, this.rateLimitDelayMs));
+          // Rate limited: wait then retry once (untimed sleep — see note above)
+          await sleep(this.rateLimitDelayMs);
           response = await getOnce(false);
         } else if (response.status === 401 && this.token) {
           // Token provided but unauthorized (token invalid or missing scope). Retry once without auth header.
@@ -74,8 +75,6 @@ class GitHubClient {
           response = await getOnce(false, { omitAuth: true });
         }
       }
-
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const text = await response.text().catch(() => '');
@@ -88,8 +87,8 @@ class GitHubClient {
       if (etagKey && respEtag && cache) await cache.writeEtag(etagKey, respEtag);
       return { ok: true, status: response.status, json };
     } catch (error) {
-      clearTimeout(timeoutId);
-      if (error instanceof Error && error.name === 'AbortError') {
+      // AbortSignal.timeout aborts with a TimeoutError; a manual abort would be AbortError.
+      if (error instanceof Error && (error.name === 'TimeoutError' || error.name === 'AbortError')) {
         throw new Error('Request timeout: GitHub API took too long to respond');
       }
       throw error;

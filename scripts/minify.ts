@@ -5,25 +5,6 @@ import path from 'node:path';
 import { minify as minifyHtml } from 'html-minifier-terser';
 import * as esbuild from 'esbuild';
 
-// Function to recursively find all files with specific extensions
-function findFiles(dir: string, extensions: string[]): string[] {
-  let results: string[] = [];
-  const files = fs.readdirSync(dir);
-
-  for (const file of files) {
-    const filePath = path.join(dir, file);
-    const stat = fs.statSync(filePath);
-
-    if (stat.isDirectory()) {
-      results = results.concat(findFiles(filePath, extensions));
-    } else if (extensions.some(ext => file.endsWith(ext))) {
-      results.push(filePath);
-    }
-  }
-
-  return results;
-}
-
 // Function to minify CSS content
 async function minifyCssWithEsbuild(content: string): Promise<string> {
   const result = await esbuild.transform(content, { loader: 'css', minify: true });
@@ -38,9 +19,12 @@ async function minifyFiles(): Promise<void> {
     return;
   }
 
-  // Find all HTML and CSS files
-  const htmlFiles = findFiles(distDir, ['.html']);
-  const cssFiles = findFiles(distDir, ['.css']);
+  // Walk the dist tree once (recursive readdir yields paths relative to distDir,
+  // including nested dirs like posts/), then split by extension.
+  const allFiles = (fs.readdirSync(distDir, { recursive: true }) as string[])
+    .map(rel => path.join(distDir, rel));
+  const htmlFiles = allFiles.filter(f => f.endsWith('.html'));
+  const cssFiles = allFiles.filter(f => f.endsWith('.css'));
 
   console.log(`Found ${htmlFiles.length} HTML files and ${cssFiles.length} CSS files to minify`);
 

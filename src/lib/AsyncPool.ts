@@ -1,32 +1,29 @@
-export function mapWithConcurrency<T, R>(
+export async function mapWithConcurrency<T, R>(
   items: readonly T[],
   worker: (item: T, index: number) => R | Promise<R>,
   concurrency: number,
 ): Promise<(R | null)[]> {
   const results: (R | null)[] = new Array(items.length);
-  let index = 0;
-  let active = 0;
-  return new Promise((resolve) => {
-    function next(): void {
-      if (index >= items.length && active === 0) return resolve(results);
-      while (active < concurrency && index < items.length) {
-        const cur = index++;
-        active++;
-        Promise.resolve(worker(items[cur] as T, cur))
-          .then((res) => {
-            results[cur] = res;
-          })
-          .catch((err: unknown) => {
-            const message = err instanceof Error ? err.message : String(err);
-            console.error('Worker error:', message);
-            results[cur] = null;
-          })
-          .finally(() => {
-            active--;
-            next();
-          });
+  let cursor = 0;
+
+  // Each worker pulls the next item from a shared cursor until the list is drained.
+  // Clamp to [1, items.length] so concurrency <= 0 can't silently drop work and an
+  // empty list yields zero workers (→ []).
+  const workerCount = Math.min(Math.max(1, concurrency), items.length);
+
+  const run = async (): Promise<void> => {
+    while (cursor < items.length) {
+      const i = cursor++;
+      try {
+        results[i] = await worker(items[i] as T, i);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        console.error('Worker error:', message);
+        results[i] = null;
       }
     }
-    next();
-  });
+  };
+
+  await Promise.all(Array.from({ length: workerCount }, run));
+  return results;
 }

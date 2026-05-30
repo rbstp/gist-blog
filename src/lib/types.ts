@@ -98,7 +98,6 @@ export interface PostTemplateData extends Post {
   shortId: string;
   currentTopic: string;
   tagsCsv: string;
-  timestamp: number;
 }
 
 /** A post shaped for rendering within the index listing. */
@@ -119,7 +118,6 @@ export interface IndexTemplateData {
   lastUpdate: string;
   allTags: string[];
   hasAnyTags: boolean;
-  timestamp: number;
   pagination: Pagination | null;
 }
 

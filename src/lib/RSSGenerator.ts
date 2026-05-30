@@ -23,10 +23,10 @@ export default class RSSGenerator {
   }
 
   generateFeed(posts: Post[]): string {
-    // Assume posts are already sorted (they are sorted in BlogGenerator.generateIndex)
-    // If not sorted, we could add a safety sort, but avoid redundant sorting
-    const sortedPosts = posts.length > 1 && new Date(posts[0]!.createdAt).getTime() < new Date(posts[1]!.createdAt).getTime()
-      ? posts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    // Callers pass an already-sorted array; sort defensively but never in place,
+    // since the same array is shared with the index render.
+    const sortedPosts = posts.length > 1
+      ? [...posts].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
       : posts;
 
     const buildDate = new Date().toUTCString();

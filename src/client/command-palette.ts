@@ -48,7 +48,9 @@ interface PaletteResult {
     if (paletteData) return paletteData;
 
     try {
-      const response = await fetch('/graph.json');
+      // Cache-bust per build (matches main.ts / topic-graph / graph-page) so the palette
+      // never reads a stale graph.json after a deploy and shares the HTTP cache entry.
+      const response = await fetch('/graph.json?v=' + (document.body.getAttribute('data-build-ts') || ''));
       const graphData = await response.json() as { nodes?: Array<{ id?: string }> };
 
       // Extract posts and tags from the graph data structure
