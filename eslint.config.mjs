@@ -1,32 +1,34 @@
 import js from "@eslint/js";
 import globals from "globals";
 import css from "@eslint/css";
+import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 
 export default defineConfig([
   // Ignore generated output and caches
   { ignores: ["dist/**", ".cache/**"] },
 
-  // Node/CommonJS sources (build scripts and generator code)
+  // Node TypeScript sources (build entry, generator code, scripts, tests)
   {
-    files: ["src/**/*.js", "scripts/**/*.js", "src/build.js"],
-    plugins: { js },
-    extends: ["js/recommended"],
+    files: ["src/build.ts", "src/lib/**/*.ts", "scripts/**/*.ts", "test/**/*.ts"],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "commonjs",
+      sourceType: "module",
       globals: globals.node,
+    },
+    rules: {
+      "@typescript-eslint/no-unused-vars": ["warn", { args: "none", varsIgnorePattern: "^_" }],
     },
   },
 
-  // Browser client scripts
+  // Browser client TypeScript scripts
   {
-    files: ["src/client/**/*.js"],
-    plugins: { js },
-    extends: ["js/recommended"],
+    files: ["src/client/**/*.ts"],
+    extends: [js.configs.recommended, tseslint.configs.recommended],
     languageOptions: {
       ecmaVersion: "latest",
-      sourceType: "script",
+      sourceType: "module",
       globals: {
         ...globals.browser,
         // Allow bundlers or loaders to inject these at runtime
@@ -34,7 +36,7 @@ export default defineConfig([
       },
     },
     rules: {
-      "no-unused-vars": ["warn", { args: "none", vars: "all", varsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { args: "none", vars: "all", varsIgnorePattern: "^_" }],
     },
   },
 
@@ -52,7 +54,7 @@ export default defineConfig([
       "css/no-invalid-properties": "off", // Modules reference vars from other modules
     },
   },
-  
+
   // CSS linting for concatenated/generated styles - strict validation
   {
     files: ["dist/**/*.css"],

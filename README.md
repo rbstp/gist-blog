@@ -58,7 +58,7 @@ Transform your GitHub Gists into a beautiful, terminal-themed static blog with a
 
 ### Prerequisites
 
-- Node.js 24+
+- Node.js 24+ (runs the TypeScript sources directly via native type stripping — no build step)
 - npm or yarn
 
 ### Installation
@@ -84,10 +84,10 @@ Prefer setting an environment variable:
 export GIST_USERNAME=your-github-username
 ```
 
-Or change the default in `src/lib/config.js`:
+Or change the default in `src/lib/config.ts`:
 
-```javascript
-DEFAULT_GIST_USERNAME: process.env.GIST_USERNAME || 'rbstp';
+```typescript
+export const DEFAULT_GIST_USERNAME = process.env.GIST_USERNAME || 'rbstp';
 ```
 
 4. **Optional: Configure RSS metadata**
@@ -101,12 +101,12 @@ DEFAULT_GIST_USERNAME: process.env.GIST_USERNAME || 'rbstp';
 5. **Build your blog**
    ```bash
    npm run build
-   # or directly: node src/build.js
+   # or directly: node src/build.ts
    ```
 
 ### Linting
 
-This repo uses ESLint (flat config) for JS and CSS.
+This repo uses ESLint (flat config) with [typescript-eslint](https://typescript-eslint.io/) for TypeScript and CSS.
 
 - Run lints:
   ```bash
@@ -121,6 +121,19 @@ Notes:
 
 - Generated output in `dist/` and the local cache `.cache/` are ignored by ESLint.
 - CSS linting is scoped to `src/**/*.css`. Rules that flagged modern properties and important flags have been relaxed for this project.
+
+### Type checking
+
+The project is written in **TypeScript** and runs directly via Node's native type
+stripping — there is no build/emit step. Type-check with:
+
+```bash
+npm run typecheck
+```
+
+This runs `tsc --noEmit` against `tsconfig.json` (Node generator code + tests) and
+`tsconfig.client.json` (browser client scripts, checked against the DOM lib). CI runs
+it on every push, after linting.
 
 #### Optional: GitHub token and conditional requests
 
@@ -327,7 +340,7 @@ Post pages also include a compact topic graph (in the ToC sidebar on desktop) wi
 
 Notes:
 
-- By default, the graph includes up to 20 most frequent tags. You can change this via `GRAPH_MAX_NODES` in `src/lib/config.js` (or env var `GRAPH_MAX_NODES`).
+- By default, the graph includes up to 20 most frequent tags. You can change this via `GRAPH_MAX_NODES` in `src/lib/config.ts` (or env var `GRAPH_MAX_NODES`).
 
 ### Command Palette
 
@@ -425,7 +438,7 @@ Override by creating files in `templates/` directory.
 
 ### Site Configuration
 
-Most knobs live in `src/lib/config.js` and can also be set via environment variables:
+Most knobs live in `src/lib/config.ts` and can also be set via environment variables:
 
 - `POSTS_PER_PAGE` (default 6)
 - `GRAPH_MAX_NODES` (default 20)
@@ -481,6 +494,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
 
       - name: Test
         run: npm test
@@ -539,23 +555,26 @@ If the token becomes invalid the build will log a warning and fall back to unaut
 
 ### Architecture
 
-- **Zero dependencies** at runtime (pure HTML/CSS/JS)
+- **Zero runtime dependencies** in the generated site (pure HTML/CSS/JS output)
+- **Written in TypeScript**, run directly via Node's native type stripping (no compile step); shared domain types live in `src/lib/types.ts`
 - **Modular build system** with separated concerns:
-  - `BlogGenerator.js` - Build orchestrator: fetch → parse → shape → render → emit
-  - `GistParser.js` - High-level parser delegating to focused modules
-  - `TagManager.js` - Extracts/cleans hashtags with caching
-  - `MarkdownProcessor.js` - marked + highlight.js wrapper with anchors/ToC and caching
-  - `LinkTransformer.js` - Converts own gist URLs into internal post links
-  - `GraphBuilder.js` - Builds tag co-occurrence graph data
-  - `DataShaper.js` - Shapes view-models for templates (single-pass reduce, DI for date utils)
-  - `TemplateEngine.js` - Custom mustache-like template rendering
-  - `TemplateLoader.js` - Cached template file loader
-  - `RSSGenerator.js` - RSS feed generation with configurable metadata
-  - `config.js` - Central configuration (env + defaults)
-  - `Cache.js` - JSON/ETag on-disk caching
-  - `GitHubClient.js` - Fetch with timeout, ETag handling, 304 reuse, 403 backoff
-  - `AsyncPool.js` - Controlled concurrency helper
-  - `DateUtils.js` - ISO date formatting utilities
+  - `BlogGenerator.ts` - Build orchestrator: fetch → parse → shape → render → emit
+  - `GistParser.ts` - High-level parser delegating to focused modules
+  - `TagManager.ts` - Extracts/cleans hashtags with caching
+  - `MarkdownProcessor.ts` - marked + highlight.js wrapper with anchors/ToC and caching
+  - `LinkTransformer.ts` - Converts own gist URLs into internal post links
+  - `GraphBuilder.ts` - Builds tag co-occurrence graph data
+  - `DataShaper.ts` - Shapes view-models for templates (single-pass reduce, DI for date utils)
+  - `TemplateEngine.ts` - Custom mustache-like template rendering
+  - `TemplateLoader.ts` - Cached template file loader
+  - `RSSGenerator.ts` - RSS feed generation with configurable metadata
+  - `StringUtils.ts` - Slug helper for anchors and internal links
+  - `config.ts` - Central configuration (env + defaults)
+  - `Cache.ts` - JSON/ETag on-disk caching
+  - `GitHubClient.ts` - Fetch with timeout, ETag handling, 304 reuse, 403 backoff
+  - `AsyncPool.ts` - Controlled concurrency helper
+  - `DateUtils.ts` - ISO date formatting utilities
+  - `types.ts` - Shared domain types (Gist, Post, GraphData, template view-models)
 - **External templates** in `src/templates/` for easy customization
 - **Rate limit handling** with automatic retries and 30s request timeouts
 - **Template caching** for improved build performance
@@ -639,47 +658,53 @@ gist-blog/
 ├── README.md
 ├── eslint.config.mjs
 ├── package.json
+├── tsconfig.base.json        # Shared strict compiler options (noEmit, nodenext, erasableSyntaxOnly)
+├── tsconfig.json             # Node project: src/lib, src/build.ts, scripts, test
+├── tsconfig.client.json      # Browser project: src/client (DOM lib)
 ├── scripts/
-│   └── minify.js
+│   └── minify.ts
 ├── src/
-│   ├── build.js
-│   ├── client/
-│   │   ├── main.js
-│   │   ├── command-palette.js
-│   │   ├── graph-page.js
-│   │   ├── topic-graph-enhance.js
-│   │   └── ux-enhancements.js
+│   ├── build.ts
+│   ├── client/               # Browser scripts (esbuild → dist/assets/*.js)
+│   │   ├── main.ts
+│   │   ├── command-palette.ts
+│   │   ├── graph-page.ts
+│   │   ├── topic-graph-enhance.ts
+│   │   └── ux-enhancements.ts
 │   ├── lib/
-│   │   ├── AsyncPool.js
-│   │   ├── BlogGenerator.js
-│   │   ├── Cache.js
-│   │   ├── DataShaper.js
-│   │   ├── DateUtils.js
-│   │   ├── GistParser.js
-│   │   ├── GitHubClient.js
-│   │   ├── GraphBuilder.js
-│   │   ├── LinkTransformer.js
-│   │   ├── MarkdownProcessor.js
-│   │   ├── RSSGenerator.js
-│   │   ├── StringUtils.js
-│   │   ├── TagManager.js
-│   │   └── config.js
+│   │   ├── AsyncPool.ts
+│   │   ├── BlogGenerator.ts
+│   │   ├── Cache.ts
+│   │   ├── DataShaper.ts
+│   │   ├── DateUtils.ts
+│   │   ├── GistParser.ts
+│   │   ├── GitHubClient.ts
+│   │   ├── GraphBuilder.ts
+│   │   ├── LinkTransformer.ts
+│   │   ├── MarkdownProcessor.ts
+│   │   ├── RSSGenerator.ts
+│   │   ├── StringUtils.ts
+│   │   ├── TagManager.ts
+│   │   ├── TemplateEngine.ts
+│   │   ├── TemplateLoader.ts
+│   │   ├── config.ts
+│   │   └── types.ts          # Shared domain types (pure type module)
 │   ├── styles/
-│   │   └── main.css
+│   │   └── modules/          # 14 focused CSS modules → concatenated to dist/styles.css
 │   └── templates/
 │       ├── graph.html
 │       ├── index.html
 │       ├── layout.html
 │       └── post.html
 ├── test/
-│   ├── blog-generator.smoke.test.js
-│   ├── bloggenerator.data.test.js
-│   ├── cache.test.js
-│   ├── config.test.js
-│   ├── gist-parser.test.js
-│   ├── github-client.test.js
-│   └── template-engine.test.js
-└── dist/
+│   ├── blog-generator.smoke.test.ts
+│   ├── bloggenerator.data.test.ts
+│   ├── cache.test.ts
+│   ├── config.test.ts
+│   ├── gist-parser.test.ts
+│   ├── github-client.test.ts
+│   └── template-engine.test.ts
+└── dist/                     # Generated site (after build); esbuild emits .js from .ts entries
   ├── assets/
   │   ├── main.js
   │   ├── command-palette.js
