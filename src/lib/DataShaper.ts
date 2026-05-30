@@ -20,7 +20,6 @@ class DataShaper {
       shortId: post.id.substring(0, 7),
       currentTopic,
       tagsCsv: Array.isArray(post.tags) ? post.tags.join(',') : '',
-      timestamp: Date.now()
     };
   }
 
@@ -53,7 +52,6 @@ class DataShaper {
       lastUpdate: new Date().toISOString(),
       allTags,
       hasAnyTags: allTags.length > 0,
-      timestamp: Date.now(),
       pagination: totalPages > 1 ? { totalPages, postsPerPage: POSTS_PER_PAGE } : null
     };
   }

@@ -26,8 +26,7 @@ export default class TemplateLoader {
   }
 
   async loadMany(names: string[]): Promise<Record<string, string>> {
-    const out: Record<string, string> = {};
-    for (const n of names) out[n] = await this.load(n);
-    return out;
+    const loaded = await Promise.all(names.map(async (n) => [n, await this.load(n)] as const));
+    return Object.fromEntries(loaded);
   }
 }

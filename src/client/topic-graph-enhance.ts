@@ -43,16 +43,6 @@ interface TopicGraphContext {
     const m = /scale\(\s*([0-9.]+)\s*\)/.exec(transform);
     return m ? parseFloat(m[1] ?? '') || 1 : 1;
   }
-  function clientToViewBox(svg: SVGSVGElement, cx: number, cy: number): Point {
-    const rect = svg.getBoundingClientRect();
-    const vb = svg.viewBox?.baseVal || { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value };
-    return { x: vb.x + ((cx - rect.left) / rect.width) * vb.width, y: vb.y + ((cy - rect.top) / rect.height) * vb.height };
-  }
-  function toWorldDelta(svg: SVGSVGElement, root: SVGGElement, c0x: number, c0y: number, c1x: number, c1y: number): { dx: number; dy: number } {
-    const p0 = clientToViewBox(svg, c0x, c0y), p1 = clientToViewBox(svg, c1x, c1y);
-    const scale = parseScaleFromTransform(root.getAttribute('transform') || '');
-    return { dx: (p1.x - p0.x) / (scale || 1), dy: (p1.y - p0.y) / (scale || 1) };
-  }
   function keyFor(a: string, b: string): string { return a < b ? a + '|' + b : b + '|' + a; }
   function closestNodeIdToPoint(nodesPos: Map<string, Point>, x: number, y: number): string | null {
     let bestId: string | null = null, bestD = Infinity;
@@ -126,9 +116,18 @@ interface TopicGraphContext {
         // Drag wiring
         let isDraggingNode = false, blockClickNav = false;
         nodeRefs.forEach((ref, id) => {
-          let startClient: Point = { x: 0, y: 0 }, lastClient: Point = { x: 0, y: 0 }, movedVb = 0; const SUPPRESS_AFTER_VB = 3;
-          ref.g.addEventListener('pointerdown', (e) => { const pe = e as PointerEvent; pe.stopPropagation(); pe.preventDefault(); isDraggingNode = true; svg.classList.add('dragging-node'); ref.g.classList.add('dragging'); startClient = { x: pe.clientX, y: pe.clientY }; lastClient = { x: pe.clientX, y: pe.clientY }; movedVb = 0; ref.g.setPointerCapture?.(pe.pointerId); });
-          ref.g.addEventListener('pointermove', (e) => { if (!isDraggingNode) return; const pe = e as PointerEvent; pe.stopPropagation(); pe.preventDefault(); const { dx, dy } = toWorldDelta(svg, root, lastClient.x, lastClient.y, pe.clientX, pe.clientY); const vb0 = clientToViewBox(svg, startClient.x, startClient.y); const vb1 = clientToViewBox(svg, pe.clientX, pe.clientY); movedVb = Math.max(movedVb, Math.hypot(vb1.x - vb0.x, vb1.y - vb0.y)); lastClient = { x: pe.clientX, y: pe.clientY }; if (dx || dy) moveNodeAndNeighbors(id, dx, dy, 0.25); });
+          // Cache the SVG rect + viewBox once per drag and project client→viewBox inline, instead of
+          // 4 getBoundingClientRect per pointermove. Scale is parsed fresh from the root transform (cheap).
+          let movedVb = 0; const SUPPRESS_AFTER_VB = 3;
+          let dragRect: DOMRect | null = null;
+          let dragVb: { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 };
+          let dragStartVb: Point = { x: 0, y: 0 }, dragLastVb: Point = { x: 0, y: 0 };
+          const projectClient = (cx: number, cy: number): Point => {
+            const rect = dragRect!;
+            return { x: dragVb.x + ((cx - rect.left) / rect.width) * dragVb.width, y: dragVb.y + ((cy - rect.top) / rect.height) * dragVb.height };
+          };
+          ref.g.addEventListener('pointerdown', (e) => { const pe = e as PointerEvent; pe.stopPropagation(); pe.preventDefault(); isDraggingNode = true; svg.classList.add('dragging-node'); ref.g.classList.add('dragging'); movedVb = 0; dragRect = svg.getBoundingClientRect(); dragVb = svg.viewBox?.baseVal ?? { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value }; dragStartVb = projectClient(pe.clientX, pe.clientY); dragLastVb = dragStartVb; ref.g.setPointerCapture?.(pe.pointerId); });
+          ref.g.addEventListener('pointermove', (e) => { if (!isDraggingNode) return; const pe = e as PointerEvent; pe.stopPropagation(); pe.preventDefault(); const vb1 = projectClient(pe.clientX, pe.clientY); const scale = parseScaleFromTransform(root.getAttribute('transform')) || 1; const dx = (vb1.x - dragLastVb.x) / scale, dy = (vb1.y - dragLastVb.y) / scale; movedVb = Math.max(movedVb, Math.hypot(vb1.x - dragStartVb.x, vb1.y - dragStartVb.y)); dragLastVb = vb1; if (dx || dy) moveNodeAndNeighbors(id, dx, dy, 0.25); });
           function endDrag(e: Event): void { if (!isDraggingNode) return; const pe = e as PointerEvent; pe.stopPropagation(); pe.preventDefault(); isDraggingNode = false; ref.g.releasePointerCapture?.(pe.pointerId); svg.classList.remove('dragging-node'); ref.g.classList.remove('dragging'); if (movedVb > SUPPRESS_AFTER_VB) { blockClickNav = true; setTimeout(() => { blockClickNav = false; }, 0); } }
           ref.g.addEventListener('pointerup', endDrag); ref.g.addEventListener('pointercancel', endDrag); ref.g.addEventListener('click', (e) => { if (blockClickNav) { e.stopPropagation(); e.preventDefault(); } }, true);
         });
@@ -141,6 +140,6 @@ interface TopicGraphContext {
   }
 
   const ready = () => whenTopicGraphReady().then(ctx => { if (ctx) enhanceTopicGraph(ctx.svg, ctx.root); });
-  if (document.readyState === 'complete' || document.readyState === 'interactive') ready();
-  else document.addEventListener('DOMContentLoaded', ready);
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ready);
+  else ready();
 })();

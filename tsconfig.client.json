@@ -1,6 +1,9 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    // Browser baseline. Kept at ES2022 (not the base's ES2023 target) and intentionally not
+    // raised: esbuild emits es2019 and does NOT polyfill newer runtime APIs, so the lib must
+    // stay at or below what the shipped bundle supports.
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": []
   },

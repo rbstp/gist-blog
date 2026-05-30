@@ -3,16 +3,14 @@ export {};
 /* eslint-disable no-empty */
 // Main client script: shared behaviors across pages
 // - Theme management and toggle
-// - Conditional highlight.js loader
 // - Index page: filtering, pagination, terminal controls
 // - Post page: small topic graph rendering (base)
 // - ToC active highlighting and sidebar layout adjustments
 // - Tag preselection bridging from graph page
 
-// Runtime-injected globals (highlight.js CDN, theme toggle bridge, dev-mode state)
+// Runtime-injected globals (theme toggle bridge, dev-mode state)
 declare global {
   interface Window {
-    hljs?: { highlightAll?: () => void };
     toggleTheme?: () => void;
     originalContent?: { title: string };
   }
@@ -47,16 +45,8 @@ interface Point {
     });
   }
 
-  // Conditionally load highlight.js only if code blocks exist
-  (function maybeLoadHighlight() {
-    try {
-      if (document.querySelector('pre code')) {
-        loadScript('https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js')
-          .then(() => { try { if (window.hljs && typeof window.hljs.highlightAll === 'function') { window.hljs.highlightAll(); } } catch { } })
-          .catch(() => { /* ignore */ });
-      }
-    } catch { /* ignore */ }
-  })();
+  // Syntax highlighting is applied at build time (see src/lib/MarkdownProcessor.ts);
+  // no client-side highlighter is loaded.
 
   // Theme management - initialize ASAP to avoid FOUC
   (function setupTheme() {
@@ -140,7 +130,7 @@ interface Point {
         visibleEdges.forEach(e => {
           const p1 = nodesPos.get(e.source), p2 = nodesPos.get(e.target); if (!p1 || !p2) return;
           const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-          line.setAttribute('x1', p1.x as unknown as string); line.setAttribute('y1', p1.y as unknown as string); line.setAttribute('x2', p2.x as unknown as string); line.setAttribute('y2', p2.y as unknown as string);
+          line.setAttribute('x1', String(p1.x)); line.setAttribute('y1', String(p1.y)); line.setAttribute('x2', String(p2.x)); line.setAttribute('y2', String(p2.y));
           line.setAttribute('class', 'graph-link');
           line.setAttribute('stroke-width', String(0.5 + 1.5 * ((e.weight || 1) / maxWeight)));
           const opacity = 0.2 + 0.6 * ((e.weight || 1) / maxWeight); line.setAttribute('stroke-opacity', String(opacity));
@@ -149,14 +139,15 @@ interface Point {
         });
 
         const maxCount = Math.max(1, ...graph.nodes.map(n => n.count));
+        const nodeById = new Map(graph.nodes.map(n => [n.id, n] as const));
         visibleIds.forEach(nid => {
-          const n = graph.nodes.find(nn => nn.id === nid) || { id: nid, count: 1 };
+          const n = nodeById.get(nid) ?? { id: nid, count: 1 };
           const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
           g.setAttribute('class', 'graph-node'); g.setAttribute('data-id', n.id);
           if (topicsSet.has(n.id)) g.classList.add('topic');
           const pos = nodesPos.get(n.id); if (!pos) return; const { x, y } = pos;
           const r = 3 + 6 * (n.count / maxCount);
-          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', x as unknown as string); c.setAttribute('cy', y as unknown as string); c.setAttribute('r', String(r));
+          const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', String(x)); c.setAttribute('cy', String(y)); c.setAttribute('r', String(r));
           const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', String(x + r + 2)); t.setAttribute('y', String(y + 3)); t.textContent = n.id;
           g.appendChild(c); g.appendChild(t); root.appendChild(g);
           g.addEventListener('mouseenter', () => setHighlight(n.id));

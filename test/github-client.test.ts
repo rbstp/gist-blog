@@ -88,6 +88,35 @@ describe('GitHubClient', () => {
     assert.ok(elapsed >= 0);
   });
 
+  it('403 retry succeeds even when timeoutMs is shorter than the rate-limit delay', async () => {
+    // Regression: a single shared timeout once governed the whole call, including the
+    // 403 backoff sleep — so the default timeout fired mid-sleep and aborted the retry,
+    // surfacing a bogus "Request timeout". A correct impl gives each attempt a fresh
+    // timeout signal, so the retry (fired after the sleep) never sees an aborted signal.
+    const dir = await mkTmp();
+    const cache = new Cache(dir, true);
+
+    let calls = 0;
+    global.fetch = (async (_: unknown, opts: { signal?: AbortSignal }) => {
+      if (opts?.signal?.aborted) {
+        const err = new Error('aborted');
+        err.name = 'TimeoutError';
+        throw err;
+      }
+      calls += 1;
+      if (calls === 1) {
+        return { ok: false, status: 403, statusText: 'Forbidden', text: async () => '', headers: { get: () => null } };
+      }
+      return { ok: true, status: 200, json: async () => ({ recovered: true }), headers: { get: () => null } };
+    }) as unknown as typeof fetch;
+
+    // timeoutMs (20) < rateLimitDelayMs (50): the old shared-timer impl aborted the retry mid-sleep.
+    const client = new GitHubClient({ token: '', rateLimitDelayMs: 50 });
+    const { json } = await client.fetchJson('https://api.example.com', { etagKey: 'rl', cache, timeoutMs: 20 });
+    assert.deepStrictEqual(json, { recovered: true });
+    assert.strictEqual(calls, 2, 'should make the initial call plus exactly one retry');
+  });
+
   it('falls back without auth header on 401 when token supplied', async () => {
     const dir = await mkTmp();
     const cache = new Cache(dir, true);

@@ -524,10 +524,19 @@ interface PanZoomAPI {
             }
           });
 
-          // Dragging
-          let startClient: Point = { x: 0, y: 0 }, lastClient: Point = { x: 0, y: 0 }, movedVb = 0; const SUPPRESS_AFTER_VB = 3;
-          g.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); isDraggingNode = true; svg.classList.add('dragging-node'); g.classList.add('dragging'); startClient = { x: e.clientX, y: e.clientY }; lastClient = { x: e.clientX, y: e.clientY }; movedVb = 0; g.setPointerCapture?.(e.pointerId); });
-          g.addEventListener('pointermove', (e) => { if (!isDraggingNode) return; e.stopPropagation(); e.preventDefault(); const { dx, dy } = pz.toWorldDelta(lastClient.x, lastClient.y, e.clientX, e.clientY); const vb0 = pz.clientToViewBox(startClient.x, startClient.y); const vb1 = pz.clientToViewBox(e.clientX, e.clientY); movedVb = Math.max(movedVb, Math.hypot(vb1.x - vb0.x, vb1.y - vb0.y)); lastClient = { x: e.clientX, y: e.clientY }; if (dx || dy) moveNodeAndNeighbors(n.id, dx, dy, 0.25); });
+          // Dragging. Cache the SVG rect + viewBox once per drag and project client→viewBox
+          // inline, instead of calling pz.clientToViewBox 4× per pointermove (each a layout read).
+          // Pointer capture keeps the rect valid for the drag; scale is read fresh (cheap, no layout).
+          let movedVb = 0; const SUPPRESS_AFTER_VB = 3;
+          let dragRect: DOMRect | null = null;
+          let dragVb: { x: number; y: number; width: number; height: number } = { x: 0, y: 0, width: 0, height: 0 };
+          let dragStartVb: Point = { x: 0, y: 0 }, dragLastVb: Point = { x: 0, y: 0 };
+          const projectClient = (cx: number, cy: number): Point => {
+            const rect = dragRect!;
+            return { x: dragVb.x + ((cx - rect.left) / rect.width) * dragVb.width, y: dragVb.y + ((cy - rect.top) / rect.height) * dragVb.height };
+          };
+          g.addEventListener('pointerdown', (e) => { e.stopPropagation(); e.preventDefault(); isDraggingNode = true; svg.classList.add('dragging-node'); g.classList.add('dragging'); movedVb = 0; dragRect = svg.getBoundingClientRect(); dragVb = svg.viewBox?.baseVal ?? { x: 0, y: 0, width: svg.width.baseVal.value, height: svg.height.baseVal.value }; dragStartVb = projectClient(e.clientX, e.clientY); dragLastVb = dragStartVb; g.setPointerCapture?.(e.pointerId); });
+          g.addEventListener('pointermove', (e) => { if (!isDraggingNode) return; e.stopPropagation(); e.preventDefault(); const vb1 = projectClient(e.clientX, e.clientY); const s = pz.getScale(); const dx = (vb1.x - dragLastVb.x) / s, dy = (vb1.y - dragLastVb.y) / s; movedVb = Math.max(movedVb, Math.hypot(vb1.x - dragStartVb.x, vb1.y - dragStartVb.y)); dragLastVb = vb1; if (dx || dy) moveNodeAndNeighbors(n.id, dx, dy, 0.25); });
           function endDrag(e: PointerEvent): void { if (!isDraggingNode) return; e.stopPropagation(); e.preventDefault(); isDraggingNode = false; g.releasePointerCapture?.(e.pointerId); svg!.classList.remove('dragging-node'); g.classList.remove('dragging'); if (movedVb > SUPPRESS_AFTER_VB) { blockClickNav = true; setTimeout(() => { blockClickNav = false; }, 0); } }
           g.addEventListener('pointerup', endDrag); g.addEventListener('pointercancel', endDrag); g.addEventListener('click', (e) => {
             if (blockClickNav) {

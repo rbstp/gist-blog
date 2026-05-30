@@ -36,7 +36,6 @@ describe('DataShaper shaping helpers', () => {
     assert.strictEqual(shaped.tagsCsv, 'topic,extra');
     assert.ok(typeof shaped.formattedDate === 'string' && shaped.formattedDate.length > 0);
     assert.strictEqual(shaped.formattedUpdateDate, null);
-    assert.ok(typeof shaped.timestamp === 'number');
   });
 
   it('buildIndexData aggregates tags and pagination in single pass', () => {
@@ -79,6 +78,5 @@ describe('DataShaper shaping helpers', () => {
     assert.ok(data.hasAnyTags);
     // Each post has extra derived fields
     assert.ok(data.posts[0]!.formattedDate && data.posts[0]!.shortId);
-    assert.ok(typeof data.timestamp === 'number');
   });
 });

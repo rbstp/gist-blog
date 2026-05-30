@@ -110,7 +110,7 @@ export default class BlogGenerator {
     return this.templateLoader.loadMany(templateNames);
   }
 
-  async generateIndex(posts: Post[]): Promise<void> {
+  async generateIndex(posts: Post[], buildTs: number): Promise<void> {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
     const templateData = this.shaper.buildIndexData(posts);
@@ -120,14 +120,14 @@ export default class BlogGenerator {
     const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
       title: 'main',
       content: indexContent,
-      timestamp: Date.now()
+      timestamp: buildTs
     });
 
     // Only generate index.html - no separate page files needed
     await fs.writeFile(path.join(this.distDir, 'index.html'), fullPage);
   }
 
-  async generatePost(post: Post): Promise<void> {
+  async generatePost(post: Post, buildTs: number): Promise<void> {
     const { 'layout.html': layoutTemplate, 'post.html': postTemplate } =
       await this.loadTemplatesCached(['layout.html', 'post.html']);
     const postData = this.shaper.buildPostData(post);
@@ -136,12 +136,11 @@ export default class BlogGenerator {
     const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
       title: post.title,
       content: postContent,
-      timestamp: Date.now()
+      timestamp: buildTs
     });
 
-    const postsDir = path.join(this.distDir, 'posts');
-    await fs.mkdir(postsDir, { recursive: true });
-    await fs.writeFile(path.join(postsDir, `${post.id}.html`), fullPage);
+    // The posts directory is created once in build() before posts are generated.
+    await fs.writeFile(path.join(this.distDir, 'posts', `${post.id}.html`), fullPage);
   }
 
   async generateRSSFeed(posts: Post[]): Promise<void> {
@@ -149,15 +148,16 @@ export default class BlogGenerator {
     await fs.writeFile(path.join(this.distDir, 'feed.xml'), rssXml);
   }
 
-  async generateGraphPage(): Promise<void> {
+  async generateGraphPage(buildTs: number): Promise<void> {
     const { 'layout.html': layoutTemplate, 'graph.html': graphTemplate } =
       await this.loadTemplatesCached(['layout.html', 'graph.html']);
 
-    const content = this.templateEngine.render(graphTemplate ?? '', { timestamp: Date.now() });
+    // graph.html has no template variables, so its content render takes no data.
+    const content = this.templateEngine.render(graphTemplate ?? '', {});
     const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
       title: 'tags graph',
       content,
-      timestamp: Date.now()
+      timestamp: buildTs
     });
     await fs.writeFile(path.join(this.distDir, 'graph.html'), fullPage);
   }
@@ -189,14 +189,10 @@ export default class BlogGenerator {
           'responsive.css'
         ];
 
-        let concatenatedCSS = '';
-        for (const moduleName of moduleOrder) {
-          const modulePath = path.join(modulesDir, moduleName);
-          const moduleContent = await fs.readFile(modulePath, 'utf8');
-          concatenatedCSS += moduleContent + '\n';
-        }
-
-        await fs.writeFile(destStylesPath, concatenatedCSS);
+        const parts = await Promise.all(
+          moduleOrder.map((moduleName) => fs.readFile(path.join(modulesDir, moduleName), 'utf8'))
+        );
+        await fs.writeFile(destStylesPath, parts.join('\n') + '\n');
       }
     } catch (error) {
       console.error('Error copying styles:', error instanceof Error ? error.message : String(error));
@@ -346,16 +342,22 @@ export default class BlogGenerator {
     // Sort posts by createdAt once for reuse
     const sortedPostsByDate = posts.slice().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
+    // Ensure the posts directory exists once, rather than per-post inside generatePost().
+    await fs.mkdir(path.join(this.distDir, 'posts'), { recursive: true });
+
+    // One build timestamp shared across all pages for consistent asset cache-busting.
+    const buildTs = Date.now();
+
     // Generate all files in parallel for better performance
     await Promise.all([
       // Generate individual post files
-      ...posts.map(post => this.generatePost(post)),
+      ...posts.map(post => this.generatePost(post, buildTs)),
       // Generate index page (uses sorted posts)
-      this.generateIndex(sortedPostsByDate),
+      this.generateIndex(sortedPostsByDate, buildTs),
       // Generate RSS feed (uses sorted posts)
       this.generateRSSFeed(sortedPostsByDate),
       // Generate global tag graph page
-      this.generateGraphPage(),
+      this.generateGraphPage(buildTs),
       // Generate tag graph data
       this.generateGraphData(posts),
       // Copy styles
