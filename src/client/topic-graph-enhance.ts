@@ -1,4 +1,3 @@
-/* eslint-env browser */
 
 import type { GraphData } from '../lib/types.ts';
 

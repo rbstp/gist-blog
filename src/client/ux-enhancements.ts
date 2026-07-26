@@ -1,4 +1,3 @@
-/* eslint-env browser */
 // UX enhancements module
 // - Copy button for code blocks
 // - Jump to top button
