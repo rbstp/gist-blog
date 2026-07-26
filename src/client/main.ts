@@ -1,5 +1,4 @@
 export {};
-/* eslint-env browser */
 /* eslint-disable no-empty */
 // Main client script: shared behaviors across pages
 // - Theme management and toggle

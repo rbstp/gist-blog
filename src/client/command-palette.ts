@@ -1,4 +1,3 @@
-/* eslint-env browser */
 /* eslint-disable no-empty */
 export {};
 
