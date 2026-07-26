@@ -20,6 +20,9 @@
     "forceConsistentCasingInFileNames": true,
 
     "esModuleInterop": true,
+    "paths": {
+      "sharp": ["./node_modules/sharp/lib/index.d.ts"]
+    },
     "resolveJsonModule": true,
     "skipLibCheck": true
   }
