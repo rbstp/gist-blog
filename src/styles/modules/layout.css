@@ -146,9 +146,11 @@ nav {
 }
 
 .intro-rss-badge {
-    margin-top: 1rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
     font-family: var(--mono-font);
     font-size: 0.95rem;
+    text-align: center;
 }
 
 .intro-rss-badge a {
