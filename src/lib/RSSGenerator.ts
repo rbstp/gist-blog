@@ -55,7 +55,7 @@ export default class RSSGenerator {
     }).join('\n');
 
     const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:source="https://source.scripting.com/">
   <channel>
     <title>${this.title}</title>
     <link>${this.siteUrl}</link>
@@ -66,6 +66,7 @@ export default class RSSGenerator {
     <ttl>60</ttl>
     <atom:link href="${this.siteUrl}/feed.xml" rel="self" type="application/rss+xml"/>
     <generator>gist-blog-generator</generator>
+    <cloud domain="rpc.rsscloud.io" port="5337" path="/pleaseNotify" registerProcedure="" protocol="http-post"/>
     <image>
       <url>${this.siteUrl}/favicon.png</url>
       <title>${this.title}</title>
