@@ -144,3 +144,18 @@ nav {
     color: var(--text-secondary);
     max-width: 60ch;
 }
+
+.intro-rss-badge {
+    margin-top: 1rem;
+    font-family: var(--mono-font);
+    font-size: 0.95rem;
+}
+
+.intro-rss-badge a {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+.intro-rss-badge a:hover {
+    color: var(--accent-secondary);
+}
