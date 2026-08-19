@@ -94,6 +94,16 @@ describe('design tokens', () => {
     assert.deepStrictEqual(missing, [], `light theme is missing: ${missing.join(', ')}`);
   });
 
+  it('draws a flat favicon in palette colours', async () => {
+    const svg = await fs.readFile(path.join('src', 'favicon.svg'), 'utf8');
+    assert.ok(!/Gradient|<filter|filter=/.test(svg), 'the site mark stays flat');
+
+    const fills = [...new Set([...svg.matchAll(/fill="(#[0-9a-f]{6})"/gi)].map((m) => m[1]!.toLowerCase()))];
+    assert.ok(fills.length > 0, 'the mark should declare its colours');
+    const strays = fills.filter((hex) => !css.includes(hex));
+    assert.deepStrictEqual(strays, [], `favicon colours outside the palette: ${strays.join(', ')}`);
+  });
+
   it('keeps the monospace stack for code only (the redesign is sans-serif)', () => {
     const codeSelector = /^(?:code|kbd|pre|samp|\.hljs[\w-]*|[.#][\w-]*(?:code|mono)[\w-]*)$/;
     const monoRules = [...css.matchAll(/([^{}]+)\{[^{}]*var\(--font-mono\)[^{}]*\}/g)]

@@ -90,7 +90,8 @@
    Name, one line of context. No badge, no counters, no call to action. */
 
 .masthead {
-    max-width: 36rem;
+    /* Wide enough that the lede sets on one line at desktop widths. */
+    max-width: 42rem;
     padding-block: var(--space-16) var(--space-12);
 }
 
@@ -106,8 +107,8 @@
     font-size: var(--text-lg);
     line-height: var(--leading-normal);
     color: var(--text-secondary);
-    /* Two even lines read better here than one long line and a stub. */
-    text-wrap: balance;
+    /* If it ever has to wrap, break it sensibly rather than leaving a stub. */
+    text-wrap: pretty;
 }
 
 /* --- Section headings ---------------------------------------------------

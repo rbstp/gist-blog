@@ -24,11 +24,21 @@
     border-bottom-color: var(--accent-primary);
 }
 
+/* The count trails the name at the same size so the figures stay legible;
+   colour alone carries the hierarchy, and it follows the tag's own state. */
 .tag-count {
-    margin-left: 0.15rem;
+    margin-left: 0.3rem;
     color: var(--text-muted);
-    font-size: var(--text-2xs);
     font-variant-numeric: tabular-nums;
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+.tag:hover .tag-count {
+    color: var(--text-secondary);
+}
+
+.tag.active .tag-count {
+    color: inherit;
 }
 
 /* --- Filter row ---------------------------------------------------------- */
