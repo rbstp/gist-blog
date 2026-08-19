@@ -1,43 +1,39 @@
 /**
  * Main CSS Entry Point
- * 
- * This file imports all CSS modules in the correct order.
- * The build process will concatenate these into a single styles.css file.
- * 
- * Module Organization:
- * 1. Variables & Theming - CSS custom properties for colors, fonts, etc.
- * 2. Base - Resets, fonts, utility classes
- * 3. Layout - Navigation, header, container structures
- * 4. Terminal - Terminal window component styles
- * 5. Tags - Tag and filter UI components
- * 6. Cards - Post card grid layouts
- * 7. Post - Post content, ToC sidebar, topic graph
- * 8. Typography - Content typography and formatting
- * 9. Syntax - Code syntax highlighting
- * 10. Dev Mode - Development mode easter egg
- * 11. Responsive - Media queries and mobile layouts
- * 12. Command Palette - Command palette UI
- * 13. Graph - Graph enhancements and help overlay
- * 14. UX - UX enhancements (copy buttons, jump to top, etc.)
+ *
+ * This file documents the module order. The build (BlogGenerator.copyStyles)
+ * concatenates the same list into a single dist/styles.css.
+ *
+ * 1. Variables       - design tokens: colour, type, space, radii, elevation, motion
+ * 2. Base            - reset, self-hosted fonts, element defaults, focus & selection
+ * 3. Layout          - page frame, header, hero, section headings, footer
+ * 4. Tags            - topic chips and the index filter bar
+ * 5. Cards           - post cards, listing grid, pager
+ * 6. Post            - article page layout, outline sidebar, topic graph panels
+ * 7. Typography      - article body typography
+ * 8. Syntax          - code syntax highlighting
+ * 9. Command palette - search dialog (Cmd/Ctrl+K)
+ * 10. Graph          - topic graph page, dialogs
+ * 11. UX             - reading affordances (copy, progress, back to top)
+ * 12. Responsive     - breakpoints and motion preferences (last for specificity)
  */
 
-/* Core Styles */
+/* Core */
 @import "modules/variables.css";
 @import "modules/base.css";
 @import "modules/layout.css";
 
-/* Component Styles */
-@import "modules/terminal.css";
+/* Components */
 @import "modules/tags.css";
 @import "modules/cards.css";
 @import "modules/post.css";
 @import "modules/typography.css";
 @import "modules/syntax.css";
 
-/* Feature Styles */
+/* Features */
 @import "modules/command-palette.css";
 @import "modules/graph.css";
 @import "modules/ux.css";
 
-/* Responsive Styles - Keep last for specificity */
+/* Responsive - keep last */
 @import "modules/responsive.css";

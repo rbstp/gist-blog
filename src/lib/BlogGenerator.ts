@@ -14,14 +14,26 @@ import { mapWithConcurrency } from './AsyncPool.ts';
 import DateUtils from './DateUtils.ts';
 import GraphBuilder from './GraphBuilder.ts';
 import DataShaper from './DataShaper.ts';
+import OgImageGenerator from './OgImageGenerator.ts';
+import StringUtils from './StringUtils.ts';
 import {
   DEFAULT_GIST_USERNAME,
   TTL_LIST_MS,
   TTL_GIST_MS,
   GRAPH_MAX_NODES,
   FETCH_CONCURRENCY,
+  OG_DIR,
+  OG_IMAGES_ENABLED,
+  SITE_AUTHOR,
+  SITE_TAGLINE,
+  SEARCH_SUMMARY_LENGTH,
+  SITE_TITLE,
+  STYLE_MODULES,
 } from './config.ts';
-import type { Post, Gist } from './types.ts';
+import type { Post, Gist, PageMeta } from './types.ts';
+
+/** Site-root-relative path of the shared social card used by non-post pages. */
+const DEFAULT_OG_IMAGE = `/${OG_DIR}/index.png`;
 
 // Data shaping logic moved to DataShaper
 
@@ -38,6 +50,7 @@ export default class BlogGenerator {
   rssGenerator: RSSGenerator;
   dates: DateUtils;
   shaper: DataShaper;
+  og: OgImageGenerator;
   cache: Cache;
   github: GitHubClient;
 
@@ -61,6 +74,9 @@ export default class BlogGenerator {
       now: (fmt: string) => this.dates.now(fmt),
     });
 
+    // Social card renderer (Open Graph images)
+    this.og = new OgImageGenerator();
+
     // On-disk cache and GitHub client
     this.cache = new Cache();
     this.github = new GitHubClient();
@@ -72,6 +88,21 @@ export default class BlogGenerator {
     const builder = new GraphBuilder();
     const graph = builder.buildFromPosts(posts, GRAPH_MAX_NODES);
     await fs.writeFile(path.join(this.distDir, 'graph.json'), JSON.stringify(graph));
+  }
+
+  /**
+   * Flat index consumed by the client search dialog (Cmd/Ctrl+K). Kept deliberately small:
+   * title, one-line summary, topics and date are enough to rank a few dozen posts in the browser.
+   */
+  async generateSearchIndex(sortedPosts: Post[]): Promise<void> {
+    const index = sortedPosts.map((post) => ({
+      id: post.id,
+      title: post.title,
+      summary: StringUtils.summarize(post.description || post.content, SEARCH_SUMMARY_LENGTH),
+      tags: Array.isArray(post.tags) ? post.tags : [],
+      date: this.dates.formatISO(post.createdAt, 'MMM d, yyyy'),
+    }));
+    await fs.writeFile(path.join(this.distDir, 'search.json'), JSON.stringify(index));
   }
 
   async fetchGists(): Promise<Gist[]> {
@@ -110,6 +141,24 @@ export default class BlogGenerator {
     return this.templateLoader.loadMany(templateNames);
   }
 
+  /**
+   * Render the shared layout. Every page funnels through here so the document metadata
+   * (description, canonical URL, Open Graph/Twitter tags) is always populated — the template
+   * engine warns on undefined variables, which keeps this honest.
+   */
+  renderLayout(layoutTemplate: string, options: {
+    content: string;
+    timestamp: number;
+    meta: PageMeta;
+  }): string {
+    const { content, timestamp, meta } = options;
+    return this.templateEngine.render(layoutTemplate, {
+      ...meta,
+      content,
+      timestamp,
+    });
+  }
+
   async generateIndex(posts: Post[], buildTs: number): Promise<void> {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
@@ -117,11 +166,16 @@ export default class BlogGenerator {
 
     const indexContent = this.templateEngine.render(indexTemplate ?? '', templateData);
 
-    const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
-      title: 'main',
+    const fullPage = this.renderLayout(layoutTemplate ?? '', {
       content: indexContent,
-      statusPath: '~/rbstp.dev',
-      timestamp: buildTs
+      timestamp: buildTs,
+      meta: this.shaper.buildPageMeta({
+        title: SITE_AUTHOR,
+        description: SITE_TAGLINE,
+        path: '/',
+        image: DEFAULT_OG_IMAGE,
+        type: 'website',
+      }),
     });
 
     // Only generate index.html - no separate page files needed
@@ -134,11 +188,16 @@ export default class BlogGenerator {
     const postData = this.shaper.buildPostData(post);
 
     const postContent = this.templateEngine.render(postTemplate ?? '', postData);
-    const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
-      title: post.title,
+    const fullPage = this.renderLayout(layoutTemplate ?? '', {
       content: postContent,
-      statusPath: `~/posts/${post.filename}`,
-      timestamp: buildTs
+      timestamp: buildTs,
+      meta: this.shaper.buildPageMeta({
+        title: post.title,
+        description: postData.summary,
+        path: `/posts/${post.id}.html`,
+        image: postData.ogImage,
+        type: 'article',
+      }),
     });
 
     // The posts directory is created once in build() before posts are generated.
@@ -156,13 +215,54 @@ export default class BlogGenerator {
 
     // graph.html has no template variables, so its content render takes no data.
     const content = this.templateEngine.render(graphTemplate ?? '', {});
-    const fullPage = this.templateEngine.render(layoutTemplate ?? '', {
-      title: 'tags graph',
+    const fullPage = this.renderLayout(layoutTemplate ?? '', {
       content,
-      statusPath: '~/graph',
-      timestamp: buildTs
+      timestamp: buildTs,
+      meta: this.shaper.buildPageMeta({
+        title: 'Topic graph',
+        description: 'Explore posts by topic through the tag co-occurrence graph.',
+        path: '/graph.html',
+        image: DEFAULT_OG_IMAGE,
+        type: 'website',
+      }),
     });
     await fs.writeFile(path.join(this.distDir, 'graph.html'), fullPage);
+  }
+
+  /**
+   * Render one 1200x630 social card per post plus a site-wide default. Failures are logged and
+   * skipped rather than fatal: the cards are cosmetic and must never break a deploy.
+   */
+  async generateOgImages(posts: Post[]): Promise<void> {
+    if (!OG_IMAGES_ENABLED) return;
+
+    const outDir = path.join(this.distDir, OG_DIR);
+    await fs.mkdir(outDir, { recursive: true });
+
+    const cards: Array<{ file: string; card: Parameters<OgImageGenerator['writeCard']>[0] }> = [
+      {
+        file: 'index.png',
+        card: { title: SITE_AUTHOR, subtitle: SITE_TAGLINE, meta: `${posts.length} posts · ${SITE_TITLE}` },
+      },
+      ...posts.map((post) => ({
+        file: `${post.id}.png`,
+        card: {
+          title: post.title,
+          tags: post.tags,
+          meta: `${this.dates.formatISO(post.createdAt, 'MMM d, yyyy')} · ${post.readingTime} read`,
+        },
+      })),
+    ];
+
+    // Bounded concurrency: each card is an independent libvips render.
+    await mapWithConcurrency(cards, async ({ file, card }) => {
+      try {
+        await this.og.writeCard(card, path.join(outDir, file));
+      } catch (error) {
+        console.warn(`Skipped social card ${file}:`, error instanceof Error ? error.message : String(error));
+      }
+      return null;
+    }, Math.max(1, Math.min(4, FETCH_CONCURRENCY)));
   }
 
   async copyStyles(): Promise<void> {
@@ -174,25 +274,9 @@ export default class BlogGenerator {
       const stat = await fs.stat(modulesDir).catch(() => null);
 
       if (stat && stat.isDirectory()) {
-        // Concatenate CSS modules in the correct order
-        const moduleOrder = [
-          'variables.css',
-          'base.css',
-          'layout.css',
-          'terminal.css',
-          'tags.css',
-          'cards.css',
-          'post.css',
-          'typography.css',
-          'syntax.css',
-          'command-palette.css',
-          'graph.css',
-          'ux.css',
-          'responsive.css'
-        ];
-
+        // Concatenate the CSS modules in the order declared in config.
         const parts = await Promise.all(
-          moduleOrder.map((moduleName) => fs.readFile(path.join(modulesDir, moduleName), 'utf8'))
+          STYLE_MODULES.map((moduleName) => fs.readFile(path.join(modulesDir, moduleName), 'utf8'))
         );
         await fs.writeFile(destStylesPath, parts.join('\n') + '\n');
       }
@@ -362,6 +446,10 @@ export default class BlogGenerator {
       this.generateGraphPage(buildTs),
       // Generate tag graph data
       this.generateGraphData(posts),
+      // Generate the client search index (uses sorted posts)
+      this.generateSearchIndex(sortedPostsByDate),
+      // Generate social cards (Open Graph images)
+      this.generateOgImages(sortedPostsByDate),
       // Copy styles
       this.copyStyles(),
       // Copy fonts (if any present)

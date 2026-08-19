@@ -1,55 +1,48 @@
 # Gist Blog Generator
 
-Transform your GitHub Gists into a clean, **Tokyo Night**–themed static blog with a yazi-style status line, automatic RSS feed, tag filtering, an interactive tag graph, and a responsive design.
+Turn your GitHub gists into a calm, editorial static blog: a dark (and light) design system, generated social cards, an RSS feed, topic filtering, an interactive topic graph and a client-side search dialog.
 
 ## 🚀 Features
 
 ### Core Functionality
 
 - **GitHub Gists Integration** - Automatically fetches and converts your public gists to blog posts
-- **Markdown Processing** - Full markdown support with Tokyo Night syntax highlighting
-- **Tokyo Night Theme** - Clean terminal-style aesthetic; dark = Tokyo Night "Night", light = Tokyo Night "Day"
-- **Dual Theme Support** - Light/dark mode toggle with system preference detection
-- **yazi-style Status Line** - Fixed bottom bar showing the current page path and `github · rss · graph` links
+- **Markdown Processing** - Full markdown support with build-time syntax highlighting (no client-side highlighter)
+- **Editorial Design System** - Every colour, type step, space, radius, shadow and easing is a token in `variables.css`; sans-serif UI and prose, monospace reserved for code
+- **Dual Theme Support** - Light/dark toggle with system preference detection and localStorage persistence
+- **Social Cards** - A 1200×630 Open Graph image rendered per post at build time, plus canonical/OG/Twitter metadata on every page
 - **Static Generation** - Builds fast, lightweight HTML files ready for deployment
 
 ### Advanced Features
 
-- **Theme Toggle** - Smart light/dark mode with system preference detection and localStorage persistence
-- **Syntax Highlighting** - GitHub-style code highlighting with language-specific colors for XML, JSON, JavaScript, Python, CSS, and more
+- **Per-Topic Colours** - Each tag is hashed to a stable hue, so a topic keeps the same colour on chips, cards and social cards
+- **Featured Post** - The newest post anchors the listing grid as a wide hero card
+- **Relative Dates** - Recent posts read as "today" / "3 days ago" and carry a **New** badge; older ones show an absolute date
 - **Multi-Tag System** - Extract hashtags from gist descriptions for automatic categorization
-- **Advanced Filtering** - Select multiple tags with AND logic for precise content discovery
+- **Advanced Filtering** - Select multiple topics with AND logic for precise content discovery
 - **Reading Time** - Estimated reading time shown inline on each post (e.g. "2 min read")
 - **Internal Gist Links** - Automatically converts your gist URLs to internal blog post links for seamless navigation
-- **Table of Contents** - Automatic ToC generation with sticky sidebar navigation and active section highlighting
+- **Table of Contents** - Automatic outline with a sticky sidebar (pure CSS grid, no layout JS) and active-section highlighting
 - **Permalink Navigation** - Click-to-copy section links with smooth scrolling
-- **Global Tag Graph** - Explore connections between tags across all posts; hover to highlight, click a tag to filter the homepage
+- **Global Topic Graph** - Explore connections between topics across all posts; hover to highlight, click a topic to filter the writing page
   - Pointer-centered zoom, pinch-zoom on touch, double-tap to zoom, and a reset view button
 - **RSS Feed** - Auto-generated RSS 2.0 feed with proper metadata and categories
-- **Responsive Design** - Mobile-optimized layouts with compact headers
+- **Responsive Design** - Mobile-first layouts; the grid, hero and sidebar collapse gracefully
 - **Cache Busting** - Timestamp-driven cache busting for CSS and JS assets
 
 ### UI/UX Highlights
 
+- **Search Dialog** - Press `Cmd/Ctrl+K` for fuzzy search across posts, topics and pages, backed by a generated `search.json`
 - **Copy Button for Code Blocks** - Hover over code blocks to reveal a **Copy** button with one-click copying and "Copied" feedback
-- **Jump to Top** - "↑ Top" floating button appears when scrolled down (>400px) on long posts
-- **Breadcrumb Navigation** - "Home / Posts / {title}" path on post pages with clickable links
-- **Reading Progress** - Thin green→blue gradient progress bar at the top of the viewport
-- **Keyboard Shortcuts Help** - Press `?` to open a help modal documenting all shortcuts (not shown on the graph page, which has its own)
-- **Command Palette** - Press `Cmd/Ctrl+K` for instant fuzzy search across posts, tags, and commands
-- **Enhanced Graph Search** - Real-time tag search on `/graph.html` with visual highlighting
+- **Jump to Top** - Floating button appears when scrolled down (>400px) on long posts
+- **Reading Progress** - Thin accent progress bar at the top of the viewport
+- **Keyboard Shortcuts Help** - Press `?` to open a help dialog documenting all shortcuts (not shown on the graph page, which has its own)
+- **Graph Search** - Real-time topic search on `/graph.html` with visual highlighting
 - **Keyboard Navigation** - Full arrow key navigation on the graph page with `?` help overlay and `/` search shortcut
-- **Graph Minimap** - Small overview showing viewport position within the larger tag graph
-- **Tokyo Night Graph Styling** - Theme-aware graph visualizations with grid backgrounds and subtle glows
-- **Interactive Tag Graphs** - Explore tag connections with hover highlighting, pointer-centered zoom, pinch gestures, and keyboard navigation
-- **Theme Switching** - Seamless light/dark mode toggle in the navigation bar
-- **Multi-Tag Filtering** - Select multiple tags with AND logic for precise content discovery
-- **Reading Time** - Shown inline on each post (e.g. "Nov 2, 2025 · 2 min read")
-- **Sticky Table of Contents** - Desktop-only floating sidebar with active-section highlighting and a yazi-style selection bar
-- **Permalink Anchors** - Hover-activated # links for easy section sharing
-- **Content-Focused Post Cards** - Title, date, reading time, excerpt, tags, and Read/Source actions
-- **Compact Post Headers** - Mobile-friendly design that prioritizes content
-- **Tag Filter Status** - Shows active tags: "Filtered by #ai #devops → 3 results"
+- **Graph Minimap** - Small overview showing viewport position within the larger topic graph
+- **Skip Link & Focus Ring** - Visible focus styles and a skip-to-content link on every page
+- **Content-Sized Cards** - Date, reading time, title, excerpt, topic chips and a source link
+- **Topic Filter Status** - Shows active topics and the result count, with one-click removal
 
 ## 🛠 Setup
 
@@ -227,9 +220,10 @@ Your gist should contain:
 
 Add hashtags anywhere in your gist description:
 
-- `#ai #devops #tutorial` → Creates clickable filter tags
+- `#ai #devops #tutorial` → Creates clickable topic chips
 - Tags are extracted and removed from the display description
-- Click tags to filter posts with a terminal-style interface
+- Each topic gets a stable colour (hashed in `src/lib/TagPalette.ts`) that follows it everywhere
+- Click a chip anywhere on the site to filter the writing page by that topic
 
 ### Internal Gist Links
 
@@ -256,41 +250,39 @@ Check out my other post: /posts/abc123def456.html
 
 ### Table of Contents & Navigation
 
-**Automatic ToC Generation:**
+**Automatic outline generation:**
 
-- **Smart Detection** - Automatically generates ToC for posts with heading levels 2-6 (`##`, `###`, etc.)
-- **Pane Styling** - ToC shown in a "Contents" pane in the sidebar
-- **Desktop Only** - ToC appears as floating sidebar on desktop, hidden on mobile for clean mobile experience
+- **Smart Detection** - Automatically generates an outline for posts with heading levels 2-6 (`##`, `###`, etc.)
+- **Desktop Only** - The outline is a sidebar column on wide screens and is dropped on narrow ones
 
 **Interactive Features:**
 
-- **Sticky Positioning** - ToC follows along as you scroll, always accessible
-- **Active Section Highlighting** - Current section highlighted in blue with bold text
-- **Smooth Scrolling** - Clicking ToC links smoothly scrolls to target section
+- **Sticky Positioning** - The outline follows along as you scroll, always accessible
+- **Active Section Highlighting** - The section being read is highlighted
+- **Smooth Scrolling** - Clicking an outline link smoothly scrolls to the target section
 - **Permalink Anchors** - Hover over headings to reveal clickable # symbols for easy link sharing
 
 **Layout:**
 
-- **Container-Aligned** - On wide viewports, the ToC/graph sidebar aligns with the main content container
-- **Smart Sizing** - Width uses a clamp (min ~240px, ideal ~22vw, max ~360px) for a stable ratio across screen sizes
-- **Fallback Docking** - If there isn’t enough room next to content, it docks to the right edge and reserves space so content isn’t overlapped
-- **Responsive Behavior** - Hidden only on narrower screens (≤1080px) or when there truly isn’t space
-- **Footer-Aware** - Sidebar height shrinks as the footer enters view so they never overlap
+- **CSS-only** - The article and sidebar are a two-column CSS grid with `position: sticky`; there is no measuring/positioning JavaScript
+- **Reading Measure** - Body copy is capped at `--measure` (74ch) so long-form text stays comfortable
+- **Graceful Collapse** - Below 64rem the sidebar (and its topic graph) is hidden and the article takes the full width
 
 ### Post Pages
 
-- **File-tab pane header** - The content pane is titled with the post's filename (e.g. `power-user-claude-code.md`)
-- **Sidebar** (desktop) - A "Topics" mini tag-graph and a "Contents" table of contents, each in its own pane
-- **Page-aware status line** - The bottom status bar shows `~/posts/<file>.md` for the current post
-- **Breadcrumb** - "Home / Posts / {title}" with clickable links
+- **Article nav** - "All posts" back link and a "View source" link to the originating gist
+- **Header** - Date, reading time, title and topic chips
+- **Sidebar** (desktop) - "On this page" outline plus a "Related topics" mini graph
+- **Social card** - Each post gets `/og/<gist-id>.png` referenced from its Open Graph tags
 
-### Tag Filtering
+### Topic Filtering
 
-- **Multiple Selection** - Click multiple tags to combine filters using AND logic
-- **Toggle Behavior** - Click active tags to remove them, inactive tags to add them
-- **Filter Status** - Shows all active tags: "Filtered by #ai #devops → 3 results"
-- **Precise Filtering** - Posts must contain ALL selected tags to appear in results
-- **Clean Pager** - "Page X of Y" with Prev/Next and numbered pages (client-side, no reloads)
+- **Filter Bar** - The most-used topics are shown with post counts (capped by `MAX_FILTER_TAGS`)
+- **Multiple Selection** - Click multiple topics to combine filters using AND logic
+- **Toggle Behavior** - Click active chips to remove them, inactive chips to add them
+- **Filter Status** - Shows the active topics and result count, each chip removable
+- **Precise Filtering** - Posts must contain ALL selected topics to appear in results
+- **Clean Pager** - "Page X of Y" with Previous/Next and numbered pages (client-side, no reloads)
 
 ## 🕸 Global Tag Graph
 
@@ -320,47 +312,47 @@ Notes:
 
 - By default, the graph includes up to 20 most frequent tags. You can change this via `GRAPH_MAX_NODES` in `src/lib/config.ts` (or env var `GRAPH_MAX_NODES`).
 
-### Command Palette
+### Search Dialog
 
-Press `Cmd/Ctrl+K` anywhere on the site to open a terminal-styled command palette for instant navigation.
+Press `Cmd/Ctrl+K` anywhere on the site to open the search dialog.
 
 **Features:**
-- **Universal Search**: Find posts, tags, and commands in one place
-- **Fuzzy Matching**: Type partial words (e.g., "demi" finds "deming")
-- **Keyboard Shortcuts**: 
+- **Recent Posts First**: Opens as a jump list of the five newest posts before you type anything
+- **Universal Search**: Posts, topics and pages in one list
+- **Fuzzy Matching**: Type partial words (e.g., "demi" finds "deming"); title matches outrank summary and topic matches
+- **Keyboard Shortcuts**:
   - `Cmd/Ctrl+K` to open
   - `↑↓` to navigate results
   - `Enter` to select
   - `Esc` to close
-- **Smart Categorization**: Results tagged as "post", "tag", or "command"
+- **Categorised Results**: Each row is labelled "post", "topic" or "page"
 - **Instant Results**: Data preloads on idle for zero-latency search
-- **Terminal Styling**: Authentic command prompt interface with color-coded output
 
-**Search Capabilities:**
-- Post titles and descriptions
-- Tag names (e.g., "#ai", "#devops")
-- Navigation commands ("Home", "Tag Graph", "RSS Feed")
-
-The command palette automatically stores blog data for lightning-fast searches without network requests.
+**Data:**
+- Posts come from `dist/search.json`, generated at build time (id, title, summary, topics, date)
+- Topics come from `dist/graph.json`
+- Both requests are cache-busted with the build timestamp, so a deploy never serves a stale index
 
 ## 🎨 Customization
 
 ### Styling
 
 Styles are organized into **modular CSS files** in `src/styles/modules/` for easier maintenance:
-- 13 focused modules (variables, base, layout, terminal, tags, cards, post, typography, syntax, command-palette, graph, ux, responsive)
-- Colors are defined once as tokens in `variables.css`; translucent glows/tints reference RGB-channel tokens (`--accent-*-rgb`, `--shadow-rgb`, `--halo-rgb`) so the whole UI recolors from one place
+- 12 focused modules (variables, base, layout, tags, cards, post, typography, syntax, command-palette, graph, ux, responsive)
+- The order lives in one place, `STYLE_MODULES` in `src/lib/config.ts`; `main-imports.css` documents it and `test/styles.test.ts` keeps them in agreement
+- Colours, type, space, radii, shadows and easings are defined once as tokens in `variables.css`; translucent tints reference RGB-channel tokens (`--accent-*-rgb`, `--shadow-rgb`, `--halo-rgb`) so the whole UI recolours from one place
 - Build process concatenates modules into a single `dist/styles.css` file
 - See `src/styles/README.md` for detailed module documentation
 
 Key features:
 - **Dual Theme Support** with CSS custom properties
-- **Dark Theme**: Tokyo Night "Night" palette (`--bg-primary: #1a1b26`)
-- **Light Theme**: Tokyo Night "Day" palette (`--bg-primary: #e1e2e7`)
+- **Dark Theme** (default): deep neutral surfaces (`--bg-primary: #0f1017`) with cards lifted off the page
+- **Light Theme**: a single `[data-theme="light"]` override block (`--bg-primary: #f6f7fb`)
 - **System Integration**: Automatically detects and follows OS preference
 - **Manual Override**: Theme toggle persists user choice in localStorage
-- Fonts: JetBrains Mono (mono) — self‑hosted; body text uses the system sans stack (no Google Fonts request)
-- Icons: Inline SVG symbols
+- **Topic Hues**: `--tag-hue-0` … `--tag-hue-7` map the palette in `src/lib/TagPalette.ts` onto the chips and card accents
+- Fonts: Inter (UI + prose) and JetBrains Mono (code only) — both self-hosted variable fonts
+- Icons: Inline SVG symbol sprite
 
 #### Self-hosted Fonts
 
@@ -378,23 +370,26 @@ Implementation:
 - `@font-face` declarations added in `src/styles/modules/base.css`
 - Preload hints added in `layout.html` for faster font availability
 
-Expected filename (place manually – it is NOT committed):
+Expected filenames in `src/fonts/`:
 
 ```
-src/fonts/JetBrainsMono-Variable.woff2
+Inter-Variable-latin.woff2          # UI + prose (subset: latin)
+Inter-Variable-latin-ext.woff2      # extended latin, loaded on demand via unicode-range
+JetBrainsMono-Variable.woff2        # code
 ```
 
-Obtain it from the official release:
+Obtain them from the official releases:
 
+- Inter: https://github.com/rsms/inter/releases
 - JetBrains Mono: https://github.com/JetBrains/JetBrainsMono/releases
 
-Body text uses the system sans-serif stack (no Inter download). The license (SIL OFL 1.1) is included as `OFL-JETBRAINS-MONO.txt` in the same directory.
+Both licenses (SIL OFL 1.1) are included as `OFL-INTER.txt` and `OFL-JETBRAINS-MONO.txt` in the same directory.
 
-If the font files are missing the site will gracefully fall back to the system sans/monospace stacks defined in the CSS custom properties.
+If a font file is missing the site gracefully falls back to the system sans/monospace stacks defined in the CSS custom properties.
 
 #### Icons (SVG, no external font)
 
-Previously icons were provided by Font Awesome via a CDN stylesheet which triggered font downloads (`fa-solid-900.woff2`, `fa-brands-400.woff2`). These external requests have been removed. A tiny inline SVG sprite (sun, moon, branch, github, rss, graph) now serves icons:
+Previously icons were provided by Font Awesome via a CDN stylesheet which triggered font downloads (`fa-solid-900.woff2`, `fa-brands-400.woff2`). These external requests have been removed. A tiny inline SVG sprite (sun, moon, github, rss, search, doc, hash, arrow-left, compass) now serves icons:
 
 - No layout shift waiting for icon font
 - No cross‑origin font requests
@@ -406,10 +401,10 @@ Theme toggle now swaps the `<use>` target between `#icon-sun` and `#icon-moon` i
 
 The system includes built-in templates for:
 
-- `layout.html` - Main page wrapper with navigation; loads `/assets/main.js` with a build timestamp
-- `index.html` - Homepage with post grid
-- `post.html` - Individual post pages with compact topic graph and ToC sidebar; no inline scripts or styles
-- `graph.html` - Global tag graph page; scripts are loaded dynamically by `main.js`
+- `layout.html` - Document shell: metadata (canonical/OG/Twitter), sticky header, icon sprite, footer; loads `/assets/main.js` with a build timestamp
+- `index.html` - Hero, topic filter bar and the post grid (with a featured card)
+- `post.html` - Individual post pages with the outline sidebar and related-topics graph; no inline scripts or styles
+- `graph.html` - Global topic graph page; scripts are loaded dynamically by `main.js`
 
 Override by creating files in `templates/` directory.
 
@@ -423,7 +418,17 @@ Most knobs live in `src/lib/config.ts` and can also be set via environment varia
 - `GIST_CACHE` (true/false), `GIST_CACHE_TTL_LIST_MS`, `GIST_CACHE_TTL_GIST_MS`
 - `FETCH_CONCURRENCY` (default 5)
 
-Configure RSS feed via environment variables:
+Presentation:
+
+- `SITE_AUTHOR`, `SITE_ROLE`, `SITE_TAGLINE` - hero copy and metadata author
+- `NEW_POST_DAYS` (default 14) - recency window for relative dates and the **New** badge
+- `MAX_FILTER_TAGS` (default 14) - topic chips in the index filter bar
+- `EXCERPT_LENGTH` (default 180) - card excerpt length
+- `META_DESCRIPTION_LENGTH` (default 160) - `<meta name="description">` / og:description length
+- `SEARCH_SUMMARY_LENGTH` (default 120) - summary length in `search.json`
+- `OG_IMAGES` (true/false) - set `false` to skip social card rendering
+
+Configure RSS feed and canonical URLs via environment variables:
 
 ```bash
 export SITE_URL=https://yourdomain.com
@@ -541,11 +546,13 @@ If the token becomes invalid the build will log a warning and fall back to unaut
   - `MarkdownProcessor.ts` - marked + highlight.js wrapper with anchors/ToC and caching
   - `LinkTransformer.ts` - Converts own gist URLs into internal post links
   - `GraphBuilder.ts` - Builds tag co-occurrence graph data
-  - `DataShaper.ts` - Shapes view-models for templates (single-pass reduce, DI for date utils)
+  - `DataShaper.ts` - Shapes view-models for templates (single-pass reduce, DI for date/clock utils)
+  - `TagPalette.ts` - Hashes tag names to stable hues shared by CSS and social cards
+  - `OgImageGenerator.ts` - Composes 1200×630 social cards as SVG and rasterises them with sharp
   - `TemplateEngine.ts` - Custom mustache-like template rendering
   - `TemplateLoader.ts` - Cached template file loader
   - `RSSGenerator.ts` - RSS feed generation with configurable metadata
-  - `StringUtils.ts` - Slug helper for anchors and internal links
+  - `StringUtils.ts` - Slugs for anchors plus markdown→plain-text summarising
   - `config.ts` - Central configuration (env + defaults)
   - `Cache.ts` - JSON/ETag on-disk caching
   - `GitHubClient.ts` - Fetch with timeout, ETag handling, 304 reuse, 403 backoff
@@ -574,6 +581,15 @@ If the token becomes invalid the build will log a warning and fall back to unaut
 - Interactive filter buttons with toggle behavior
 - Filter status display showing all active tags
 - Maintains clean descriptions without hashtags
+- Hashes each tag to one of eight hues (FNV-1a), so colours never shift between builds
+
+**Social Cards**
+
+- One 1200×630 PNG per post in `dist/og/`, plus a site-wide `index.png`
+- Composed as SVG (wordmark, headline, topic pills, date/reading time) and rasterised by sharp
+- The headline is wrapped and shrunk to fit at most three lines
+- The card's accent colour comes from the post's first topic
+- Rendering failures are logged and skipped: cards are cosmetic and never break a deploy
 
 **Reading Time**
 
@@ -586,10 +602,9 @@ If the token becomes invalid the build will log a warning and fall back to unaut
 - Extracts headings (levels 2-6) from markdown content during build
 - Generates URL-friendly anchor IDs with proper slug formatting
 - Custom marked.js renderer adds permalink anchors with hover effects
-- JavaScript scroll tracking with throttled active section detection
-- Fixed positioning with proper z-index management for overlay behavior
-- CSS media queries ensure desktop-only display (hidden below 768px)
-- Performance optimized with requestAnimationFrame for smooth scroll updates
+- Laid out by CSS (sticky grid column); JavaScript only highlights the active section
+- Throttled with requestAnimationFrame for smooth scroll updates
+- Hidden below 64rem, where the article takes the full width
 
 **RSS Feed**
 
@@ -608,8 +623,8 @@ If the token becomes invalid the build will log a warning and fall back to unaut
 - Minimal CSS/JS payload
 - Static HTML generation
 - Timestamp cache-busting for assets
-- Lazy-loaded highlight.js only on pages containing code blocks
-- rAF-throttled ToC layout adjustments on scroll/resize
+- Syntax highlighting runs at build time — no highlighter is shipped to the browser
+- No layout JavaScript for the outline sidebar (CSS sticky grid)
 - CSS `content-visibility` + `contain-intrinsic-size` to speed initial render of heavy/offscreen sections
 - Respects `prefers-reduced-motion` to disable animations and smooth scrolling
 
@@ -626,7 +641,6 @@ If the token becomes invalid the build will log a warning and fall back to unaut
 
 ```
 gist-blog/
-├── CLAUDE.md
 ├── CNAME
 ├── LICENSE
 ├── README.md
@@ -645,6 +659,7 @@ gist-blog/
 │   │   ├── graph-page.ts
 │   │   ├── topic-graph-enhance.ts
 │   │   └── ux-enhancements.ts
+│   ├── fonts/                # Self-hosted variable fonts (Inter, JetBrains Mono) + licenses
 │   ├── lib/
 │   │   ├── AsyncPool.ts
 │   │   ├── BlogGenerator.ts
@@ -656,28 +671,38 @@ gist-blog/
 │   │   ├── GraphBuilder.ts
 │   │   ├── LinkTransformer.ts
 │   │   ├── MarkdownProcessor.ts
+│   │   ├── OgImageGenerator.ts
 │   │   ├── RSSGenerator.ts
 │   │   ├── StringUtils.ts
 │   │   ├── TagManager.ts
+│   │   ├── TagPalette.ts
 │   │   ├── TemplateEngine.ts
 │   │   ├── TemplateLoader.ts
 │   │   ├── config.ts
 │   │   └── types.ts          # Shared domain types (pure type module)
 │   ├── styles/
-│   │   └── modules/          # 13 focused CSS modules → concatenated to dist/styles.css
+│   │   ├── main-imports.css  # Documents the module order
+│   │   └── modules/          # 12 focused CSS modules → concatenated to dist/styles.css
 │   └── templates/
 │       ├── graph.html
 │       ├── index.html
 │       ├── layout.html
 │       └── post.html
 ├── test/
+│   ├── async-pool.test.ts
 │   ├── blog-generator.smoke.test.ts
 │   ├── bloggenerator.data.test.ts
 │   ├── cache.test.ts
 │   ├── config.test.ts
+│   ├── data-shaper.test.ts
 │   ├── gist-parser.test.ts
 │   ├── github-client.test.ts
-│   └── template-engine.test.ts
+│   ├── og-image.test.ts
+│   ├── string-utils.test.ts
+│   ├── styles.test.ts
+│   ├── tag-palette.test.ts
+│   ├── template-engine.test.ts
+│   └── templates.test.ts
 └── dist/                     # Generated site (after build); esbuild emits .js from .ts entries
   ├── assets/
   │   ├── main.js
@@ -685,11 +710,15 @@ gist-blog/
   │   ├── graph-page.js
   │   ├── topic-graph-enhance.js
   │   └── ux-enhancements.js
+  ├── fonts/
+  ├── og/                    # Generated social cards ({gist-id}.png + index.png)
   ├── posts/
   │   └── {gist-id}.html
   ├── feed.xml
   ├── graph.html
+  ├── graph.json
   ├── index.html
+  ├── search.json
   └── styles.css
 ```
 
@@ -709,9 +738,12 @@ This repo uses Node’s built-in test runner (no external frameworks).
   npm test
   ```
 
-```
+The tests isolate temp `dist/` and cache directories, and stub network calls where needed. Coverage worth knowing about:
 
-The tests isolate temp `dist/` and cache directories, and stub network calls where needed. The smoke test ensures the generator can build a minimal site with fake gist data.
+- `blog-generator.smoke.test.ts` builds a whole site from canned gists and asserts the emitted metadata, social cards, search index and assets
+- `templates.test.ts` renders the real templates and fails if a template variable is left undefined
+- `styles.test.ts` keeps `STYLE_MODULES`, `main-imports.css` and the files on disk in agreement, rejects dangling/unused CSS tokens, and guards against terminal-era markup returning
+- `tag-palette.test.ts` pins the tag hash and keeps `TAG_HUE_COLORS` in sync with `variables.css`
 
 ## 🤝 Contributing
 
@@ -727,5 +759,5 @@ MIT License - feel free to use for your own blog!
 
 ---
 
-_Built with ❤️ for developers who love terminals, gists, and clean code._
+_Built with ❤️ for developers who love writing, gists, and clean code._
 ```

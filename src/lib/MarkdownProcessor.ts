@@ -4,13 +4,16 @@ import StringUtils from './StringUtils.ts';
 import type { TocItem } from './types.ts';
 
 // Configure a renderer that adds permalink anchors, honoring custom {#id} anchor syntax.
-// Uses the heading token's raw `text` (not parsed inline tokens) to match the original behavior.
+// The id is derived from the raw text (so it matches extractToc/addPermalinkAnchors), while the
+// visible heading is re-parsed as inline markdown — otherwise code spans, emphasis and links in a
+// heading would render as literal syntax (`CLAUDE.md`).
 const renderer = new marked.Renderer();
 renderer.heading = function ({ text, depth }: Tokens.Heading): string {
   const m = text.match(/^(.*?)\s*\{#([^}]+)\}$/);
   const id = m ? (m[2] ?? '') : StringUtils.slugify(text);
-  const clean = m ? (m[1] ?? '').trim() : text;
-  return `<h${depth} id="${id}">${clean}<a href="#${id}" class="permalink" aria-label="Permalink">#</a></h${depth}>`;
+  const raw = m ? (m[1] ?? '').trim() : text;
+  const inline = marked.parseInline(raw) as string;
+  return `<h${depth} id="${id}">${inline}<a href="#${id}" class="permalink" aria-label="Permalink">#</a></h${depth}>`;
 };
 
 // Highlight code blocks at build time so the shipped HTML already carries hljs classes
@@ -53,9 +56,11 @@ export default class MarkdownProcessor {
     let m: RegExpExecArray | null; let line = 1;
     while ((m = re.exec(md)) !== null) {
       const level = (m[1] ?? '').length;
-      const title = (m[2] ?? '').trim();
-      const anchor = StringUtils.slugify(title);
-      out.push({ level, title, anchor, lineNumber: line++ });
+      const raw = (m[2] ?? '').trim();
+      // The anchor must come from the raw heading to match the rendered id, but the outline
+      // shows prose: markdown syntax inside a heading would otherwise leak into the sidebar.
+      const anchor = StringUtils.slugify(raw);
+      out.push({ level, title: StringUtils.toPlainText(raw), anchor, lineNumber: line++ });
     }
     return out;
   }

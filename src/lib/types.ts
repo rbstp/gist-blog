@@ -88,6 +88,18 @@ export interface Pagination {
   postsPerPage: number;
 }
 
+/** A tag rendered as a coloured chip; `hue` indexes the shared tag palette. */
+export interface TagChip {
+  [key: string]: unknown;
+  name: string;
+  hue: number;
+}
+
+/** A tag chip in the index filter bar, carrying how many posts use it. */
+export interface TagFilterChip extends TagChip {
+  count: number;
+}
+
 /** Per-post data shaped for the post template. */
 export interface PostTemplateData extends Post {
   // Template data is consumed via dynamic key lookup by TemplateEngine, so it is an
@@ -98,16 +110,30 @@ export interface PostTemplateData extends Post {
   shortId: string;
   currentTopic: string;
   tagsCsv: string;
+  tagList: TagChip[];
+  hasTags: boolean;
+  /** Plain-text summary used for meta descriptions and social cards. */
+  summary: string;
+  /** Site-root-relative path of the post's Open Graph image. */
+  ogImage: string;
 }
 
 /** A post shaped for rendering within the index listing. */
 export interface IndexPostData extends Post {
   [key: string]: unknown;
   formattedDate: string;
+  /** Relative age for recent posts, absolute date for older ones. */
+  displayDate: string;
+  isNew: boolean;
   excerpt: string;
   shortId: string;
   lastUpdate: string;
   hasTags: boolean;
+  tagList: TagChip[];
+  /** Palette index of the post's primary topic, used to tint the card. */
+  hue: number;
+  /** True for the newest post, which renders as a wide hero card. */
+  isFeatured: boolean;
 }
 
 /** Data shaped for the index template. */
@@ -118,12 +144,49 @@ export interface IndexTemplateData {
   lastUpdate: string;
   allTags: string[];
   hasAnyTags: boolean;
+  /** Most-used tags, capped for the filter bar. */
+  topTags: TagFilterChip[];
+  tagCount: number;
+  latestPostDate: string;
+  tagline: string;
+  role: string;
+  author: string;
   pagination: Pagination | null;
+}
+
+/** Inputs for building a page's metadata block. */
+export interface PageMetaInput {
+  /** Human title used for og:title / twitter:title. */
+  title: string;
+  /** Source text for the meta description (summarised and truncated). */
+  description: string;
+  /** Site-root-relative path of the page, e.g. `/posts/abc.html`. */
+  path: string;
+  /** Site-root-relative path of the social card image. */
+  image: string;
+  /** Open Graph object type. */
+  type?: 'website' | 'article';
+}
+
+/** Resolved page metadata handed to the layout template. */
+export interface PageMeta {
+  [key: string]: unknown;
+  siteName: string;
+  author: string;
+  /** Contents of `<title>`: the page title qualified with the site name. */
+  documentTitle: string;
+  canonicalUrl: string;
+  metaDescription: string;
+  ogTitle: string;
+  ogType: string;
+  ogImageUrl: string;
+  ogImageAlt: string;
 }
 
 /** Date-formatting callbacks injected into DataShaper to keep it pure/testable. */
 export type FormatDateFn = (iso: string, fmt: string) => string;
 export type NowFn = (fmt: string) => string;
+export type NowMsFn = () => number;
 
 /** Result of a JSON fetch via GitHubClient. */
 export interface FetchJsonResult<T = unknown> {

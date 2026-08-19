@@ -1,22 +1,27 @@
 /* eslint-disable no-empty */
 export {};
 
-// Command Palette: Terminal-style fuzzy finder for posts, tags, and navigation
-// Activated with Cmd/Ctrl+K
+// Search dialog: fuzzy finder for posts, topics and navigation.
+// Activated with Cmd/Ctrl+K.
 
 // Local shapes for the data this client script works with
 interface PaletteCommand {
   type: string;
   title: string;
-  command: string;
+  /** Secondary line shown under the title. */
+  subtitle: string;
   url: string;
+  /** Id of a symbol in the page's inline SVG sprite. */
   icon: string;
 }
 
+/** One entry of dist/search.json (see BlogGenerator.generateSearchIndex). */
 interface PalettePost {
   id?: string;
   title?: string;
-  description?: string;
+  summary?: string;
+  tags?: string[];
+  date?: string;
 }
 
 interface PaletteData {
@@ -28,10 +33,9 @@ interface PaletteData {
 interface PaletteResult {
   type: string;
   title: string;
-  command: string;
+  subtitle: string;
   url: string;
   icon: string;
-  description?: string;
   score: number;
   matchType: string;
 }
@@ -48,38 +52,26 @@ interface PaletteResult {
 
     try {
       // Cache-bust per build (matches main.ts / topic-graph / graph-page) so the palette
-      // never reads a stale graph.json after a deploy and shares the HTTP cache entry.
-      const response = await fetch('/graph.json?v=' + (document.body.getAttribute('data-build-ts') || ''));
-      const graphData = await response.json() as { nodes?: Array<{ id?: string }> };
+      // never reads a stale index after a deploy and shares the HTTP cache entry.
+      const version = document.body.getAttribute('data-build-ts') || '';
+      // Topics come from the graph, posts from the build-time search index.
+      const [graphData, searchIndex] = await Promise.all([
+        fetchJson<{ nodes?: Array<{ id?: string }> }>(`/graph.json?v=${version}`),
+        fetchJson<PalettePost[]>(`/search.json?v=${version}`),
+      ]);
 
-      // Extract posts and tags from the graph data structure
-      const posts: PalettePost[] = [];
+      const posts: PalettePost[] = Array.isArray(searchIndex) ? searchIndex : [];
       const tags = new Set<string>();
-
-      // Parse nodes and edges to build searchable data
-      if (graphData.nodes) {
-        graphData.nodes.forEach((node) => {
-          if (node.id) tags.add(node.id);
-        });
-      }
-
-      // Try to get posts from localStorage or parse current page
-      try {
-        const postsJson = localStorage.getItem('blogPosts');
-        if (postsJson) {
-          const parsed = JSON.parse(postsJson) as unknown;
-          if (Array.isArray(parsed)) {
-            posts.push(...(parsed as PalettePost[]));
-          }
-        }
-      } catch { }
+      graphData?.nodes?.forEach((node) => {
+        if (node.id) tags.add(node.id);
+      });
 
       // Build commands list
       const commands: PaletteCommand[] = [
-        { type: 'nav', title: 'Home', command: 'cd ~', url: '/', icon: '🏠' },
-        { type: 'nav', title: 'Tag Graph', command: 'cd ~/graph', url: '/graph.html', icon: '📊' },
-        { type: 'nav', title: 'RSS Feed', command: 'curl /feed.xml', url: '/feed.xml', icon: '📡' },
-        { type: 'nav', title: 'GitHub Source', command: 'git clone', url: 'https://github.com/rbstp/gist-blog', icon: '🔧' },
+        { type: 'nav', title: 'Writing', subtitle: 'All posts', url: '/', icon: 'icon-doc' },
+        { type: 'nav', title: 'Topics', subtitle: 'Explore the topic graph', url: '/graph.html', icon: 'icon-compass' },
+        { type: 'nav', title: 'RSS feed', subtitle: 'Subscribe', url: '/feed.xml', icon: 'icon-rss' },
+        { type: 'nav', title: 'GitHub', subtitle: 'Source of this site', url: 'https://github.com/rbstp/gist-blog', icon: 'icon-github' },
       ];
 
       paletteData = { posts, tags: Array.from(tags), commands };
@@ -87,6 +79,17 @@ interface PaletteResult {
     } catch (err) {
       console.warn('Failed to load palette data:', err);
       return { posts: [], tags: [], commands: [] };
+    }
+  }
+
+  /** Fetch JSON, resolving to null on any transport or parse failure. */
+  async function fetchJson<T>(url: string): Promise<T | null> {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      return await response.json() as T;
+    } catch {
+      return null;
     }
   }
 
@@ -116,22 +119,38 @@ interface PaletteResult {
     return score;
   }
 
+  /** Result row for a post from the search index. */
+  function postResult(post: PalettePost, score: number): PaletteResult {
+    return {
+      type: 'post',
+      title: post.title || 'Untitled',
+      subtitle: post.summary || post.date || 'Post',
+      url: `/posts/${post.id}.html`,
+      icon: 'icon-doc',
+      score,
+      matchType: 'post',
+    };
+  }
+
+  /** With an empty query the dialog is a jump list of the most recent writing. */
+  function recentPosts(): PaletteResult[] {
+    if (!paletteData) return [];
+    // The index is generated newest-first.
+    return paletteData.posts.slice(0, 5).map((post) => postResult(post, 0));
+  }
+
   // Filter and rank results
   function search(query: string): PaletteResult[] {
-    if (!paletteData || !query.trim()) {
-      return [];
-    }
+    if (!paletteData) return [];
+    if (!query.trim()) return recentPosts();
 
     const results: PaletteResult[] = [];
 
     // Search commands
     paletteData.commands.forEach((cmd) => {
-      const titleScore = fuzzyScore(cmd.title, query);
-      const commandScore = fuzzyScore(cmd.command, query);
-      const score = Math.max(titleScore, commandScore);
-
+      const score = Math.max(fuzzyScore(cmd.title, query), fuzzyScore(cmd.subtitle, query));
       if (score > 0) {
-        results.push({ ...cmd, score, matchType: 'command' });
+        results.push({ ...cmd, score, matchType: 'page' });
       }
     });
 
@@ -141,34 +160,25 @@ interface PaletteResult {
       if (score > 0) {
         results.push({
           type: 'tag',
-          title: `#${tag}`,
-          command: `grep --tag #${tag}`,
+          title: tag,
+          subtitle: 'Filter posts by this topic',
           url: `/?tag=${encodeURIComponent(tag)}`,
-          icon: '🏷️',
+          icon: 'icon-hash',
           score,
-          matchType: 'tag'
+          matchType: 'topic'
         });
       }
     });
 
-    // Search posts (if we have them)
+    // Search posts: titles rank above summaries and topics so exact-ish title hits win.
     paletteData.posts.forEach((post) => {
-      const titleScore = post.title ? fuzzyScore(post.title, query) : 0;
-      const descScore = post.description ? fuzzyScore(post.description, query) : 0;
-      const score = Math.max(titleScore, descScore);
+      const score = Math.max(
+        post.title ? fuzzyScore(post.title, query) * 2 : 0,
+        post.summary ? fuzzyScore(post.summary, query) : 0,
+        ...(post.tags ?? []).map((tag) => fuzzyScore(tag, query))
+      );
 
-      if (score > 0) {
-        results.push({
-          type: 'post',
-          title: post.title || 'Untitled',
-          command: `cat ${post.id}.md`,
-          url: `/posts/${post.id}.html`,
-          icon: '📄',
-          description: post.description,
-          score,
-          matchType: 'post'
-        });
-      }
+      if (score > 0) results.push(postResult(post, score));
     });
 
     // Sort by score descending
@@ -184,37 +194,23 @@ interface PaletteResult {
     overlay.id = 'command-palette-overlay';
     overlay.className = 'command-palette-overlay';
     overlay.innerHTML = `
-      <div class="command-palette-terminal">
-        <div class="terminal-header-small">
-          <div class="terminal-controls-small">
-            <span class="control close"></span>
-            <span class="control minimize"></span>
-            <span class="control maximize"></span>
-          </div>
-          <div class="terminal-title-small">command palette</div>
+      <div class="command-palette-panel" role="dialog" aria-modal="true" aria-label="Search">
+        <div class="palette-search">
+          <svg aria-hidden="true"><use href="#icon-search"/></svg>
+          <input
+            type="text"
+            id="command-palette-input"
+            placeholder="Search posts and topics…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Search posts and topics"
+          />
         </div>
-        <div class="command-palette-body">
-          <div class="command-palette-prompt">
-            <span class="prompt-symbol">$</span>
-            <input
-              type="text"
-              id="command-palette-input"
-              placeholder="search posts, tags, commands..."
-              autocomplete="off"
-              spellcheck="false"
-              aria-label="Command palette search"
-            />
-          </div>
-          <div class="command-palette-results" id="command-palette-results" role="listbox">
-            <div class="palette-hint">
-              <span class="hint-text">💡 Try: "ai", "devops", "home", or any post title</span>
-            </div>
-          </div>
-        </div>
+        <div class="command-palette-results" id="command-palette-results" role="listbox"></div>
         <div class="command-palette-footer">
-          <span class="palette-shortcut"><kbd>↑↓</kbd> navigate</span>
-          <span class="palette-shortcut"><kbd>enter</kbd> select</span>
-          <span class="palette-shortcut"><kbd>esc</kbd> close</span>
+          <span class="palette-shortcut"><kbd>↑</kbd><kbd>↓</kbd> navigate</span>
+          <span class="palette-shortcut"><kbd>↵</kbd> open</span>
+          <span class="palette-shortcut"><kbd>Esc</kbd> close</span>
         </div>
       </div>
     `;
@@ -224,12 +220,15 @@ interface PaletteResult {
   }
 
   // Render results
-  function renderResults(results: PaletteResult[]): void {
+  function renderResults(results: PaletteResult[], query: string = ''): void {
     const container = document.getElementById('command-palette-results');
     if (!container) return;
 
     if (results.length === 0) {
-      container.innerHTML = '<div class="palette-no-results">$ echo "No matches found" | grep -i ".*"</div>';
+      // Nothing to jump to yet vs. a query that genuinely matched nothing.
+      container.innerHTML = query.trim()
+        ? '<p class="palette-no-results">No matches found.</p>'
+        : '<p class="palette-hint">Start typing to search posts, topics and pages.</p>';
       return;
     }
 
@@ -240,12 +239,12 @@ interface PaletteResult {
         role="option"
         aria-selected="${idx === selectedIndex}"
       >
-        <span class="result-icon">${result.icon}</span>
+        <span class="result-icon"><svg aria-hidden="true"><use href="#${escapeHtml(result.icon)}"/></svg></span>
         <div class="result-content">
           <div class="result-title">${escapeHtml(result.title)}</div>
-          <div class="result-command">${escapeHtml(result.command)}</div>
+          <div class="result-subtitle">${escapeHtml(result.subtitle)}</div>
         </div>
-        <span class="result-type">${result.matchType}</span>
+        <span class="result-type">${escapeHtml(result.matchType)}</span>
       </div>
     `).join('');
 
@@ -307,7 +306,8 @@ interface PaletteResult {
     overlay.style.display = 'flex';
     isOpen = true;
     selectedIndex = 0;
-    filteredResults = [];
+    filteredResults = recentPosts();
+    renderResults(filteredResults);
 
     const input = document.getElementById('command-palette-input') as HTMLInputElement | null;
     if (input) {
@@ -355,7 +355,7 @@ interface PaletteResult {
         const query = target.value;
         filteredResults = search(query);
         selectedIndex = 0;
-        renderResults(filteredResults);
+        renderResults(filteredResults, query);
       }
     });
 

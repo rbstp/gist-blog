@@ -1,61 +1,57 @@
 <article class="post-container">
-    <div class="post-navigation">
+    <div class="article-nav">
         <a href="/" class="back-link">
-            <span class="nav-arrow">←</span>
-            <span>Back to posts</span>
+            <svg aria-hidden="true"><use href="#icon-arrow-left"/></svg>
+            <span>All posts</span>
         </a>
-        <div class="post-actions">
-            <a href="{{url}}" class="source-link" target="_blank" rel="noopener noreferrer">
-                <span class="action-icon"><svg class="nav-icon" width="14" height="14" aria-hidden="true"><use href="#icon-github"/></svg></span>
-                <span>View source</span>
-            </a>
-        </div>
+        <a href="{{url}}" class="source-link" target="_blank" rel="noopener noreferrer">
+            <svg aria-hidden="true"><use href="#icon-github"/></svg>
+            <span>View source</span>
+        </a>
     </div>
 
-    <header class="post-header-compact">
-        <div class="post-meta-line">
-            <time datetime="{{createdAt}}" class="post-date">{{formattedDate}} · {{readingTime}} read</time>
+    <header class="article-header">
+        <p class="article-kicker">
+            <time datetime="{{createdAt}}">{{formattedDate}}</time>
+            <span class="meta-sep" aria-hidden="true">&middot;</span>
+            <span>{{readingTime}} read</span>
+        </p>
+        <h1 class="article-title">{{title}}</h1>
+        {{#hasTags}}
+        <div class="article-tags">
+            {{#tagList}}
+            <button type="button" class="tag post-tag" data-tag="{{name}}" data-hue="{{hue}}">{{name}}</button>
+            {{/tagList}}
         </div>
-        <h1 class="post-title-compact">{{title}}</h1>
+        {{/hasTags}}
     </header>
 
-    <div class="post-content-wrapper">
+    <div class="post-content-wrapper{{#hasToc}} has-sidebar{{/hasToc}}">
+        <div class="article-body">
+            {{htmlContent}}
+        </div>
+
         {{#hasToc}}
-        <div class="toc-sidebar">
-            <div class="graph-terminal" id="topic-graph-terminal">
-                <div class="terminal-header-small">
-                    <div class="terminal-title-small">Topics</div>
+        <aside class="toc-sidebar" aria-label="Article outline">
+            <nav>
+                <h2 class="panel-title">On this page</h2>
+                <div class="toc-list">
+                    {{#toc}}
+                    <div class="toc-item toc-level-{{level}}">
+                        <a href="#{{anchor}}" class="toc-link">{{title}}</a>
+                    </div>
+                    {{/toc}}
                 </div>
+            </nav>
+            <div class="graph-panel">
+                <h2 class="panel-title">Related topics</h2>
                 <div class="graph-content" data-current-topic="{{currentTopic}}" data-all-topics="{{tagsCsv}}">
-                    <button class="graph-reset-btn" data-target="topic-graph" title="Reset view">reset</button>
+                    <button class="graph-reset-btn" data-target="topic-graph" title="Reset view">Reset</button>
                     <svg id="topic-graph" class="graph-svg" viewBox="0 0 220 232" width="220" height="232"
                         aria-label="Topic graph"></svg>
                 </div>
             </div>
-            <div class="toc-terminal">
-                <div class="terminal-header-small">
-                    <div class="terminal-title-small">Contents</div>
-                </div>
-                <div class="toc-content">
-                    <nav class="table-of-contents">
-                        {{#toc}}
-                        <div class="toc-item toc-level-{{level}}">
-                            <span class="toc-line-number">{{lineNumber}}</span>
-                            <a href="#{{anchor}}" class="toc-link">{{title}}</a>
-                        </div>
-                        {{/toc}}
-                    </nav>
-                </div>
-            </div>
-        </div>
+        </aside>
         {{/hasToc}}
-        <div class="content-terminal">
-            <div class="terminal-header-small">
-                <div class="terminal-title-small">{{filename}}</div>
-            </div>
-            <div class="post-content-advanced">
-                {{htmlContent}}
-            </div>
-        </div>
     </div>
 </article>
