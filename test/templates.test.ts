@@ -255,9 +255,11 @@ describe('layout template', () => {
     }
   });
 
-  it('busts caches for styles and scripts with the build timestamp', () => {
+  it('busts caches for styles, scripts and icons with the build timestamp', () => {
     assert.ok(html.includes('/styles.css?v=1234'));
     assert.ok(html.includes('/assets/main.js?v=1234'));
+    assert.ok(html.includes('/favicon.svg?v=1234'));
+    assert.ok(html.includes('/favicon.png?v=1234'));
     assert.ok(html.includes('data-build-ts="1234"'));
   });
 });
