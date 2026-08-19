@@ -33,6 +33,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border-strong);
     border-radius: var(--radius-lg);
+    /* The one place elevation is warranted: a modal genuinely floats. */
     box-shadow: var(--shadow-lg);
     animation: riseIn var(--dur-base) var(--ease-out);
 }
@@ -41,7 +42,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
-    padding: var(--space-4) var(--space-5);
+    padding: var(--space-3) var(--space-4);
     border-bottom: 1px solid var(--border-primary);
 }
 
@@ -58,7 +59,7 @@
     border: none;
     outline: none;
     color: var(--text-primary);
-    font-size: var(--text-lg);
+    font-size: var(--text-base);
 }
 
 #command-palette-input::placeholder {
@@ -110,7 +111,7 @@
 .result-title {
     color: var(--text-primary);
     font-size: var(--text-md);
-    font-weight: 550;
+    font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -127,9 +128,6 @@
 
 .result-type {
     flex-shrink: 0;
-    padding: 0.05rem var(--space-2);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-pill);
     color: var(--text-muted);
     font-size: var(--text-2xs);
     font-weight: 600;
@@ -141,7 +139,7 @@
 .palette-no-results {
     padding: var(--space-8) var(--space-4);
     color: var(--text-muted);
-    font-size: var(--text-md);
+    font-size: var(--text-sm);
     text-align: center;
 }
 
@@ -164,15 +162,14 @@
 
 kbd {
     display: inline-block;
-    min-width: 1.4rem;
+    min-width: 1.35rem;
     padding: 0.05rem var(--space-2);
     border: 1px solid var(--border-primary);
-    border-bottom-width: 2px;
     border-radius: var(--radius-sm);
     background: var(--bg-tertiary);
     color: var(--text-secondary);
     font-family: var(--font-sans);
     font-size: var(--text-2xs);
-    font-weight: 600;
+    font-weight: 500;
     text-align: center;
 }

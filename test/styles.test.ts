@@ -4,7 +4,6 @@ import path from 'node:path';
 import { describe, it, before } from 'node:test';
 
 import { STYLE_MODULES } from '../src/lib/config.ts';
-import { TAG_HUE_COUNT } from '../src/lib/TagPalette.ts';
 
 const MODULES_DIR = path.join('src', 'styles', 'modules');
 const IMPORTS_FILE = path.join('src', 'styles', 'main-imports.css');
@@ -67,13 +66,24 @@ describe('design tokens', () => {
     assert.deepStrictEqual(orphans, [], `unused custom properties: ${orphans.join(', ')}`);
   });
 
-  it('styles every palette hue for chips and cards', () => {
-    // Hue 0 is the default declared on the base rule, so only 1..n-1 need overrides.
-    for (let hue = 1; hue < TAG_HUE_COUNT; hue++) {
-      assert.ok(css.includes(`.tag[data-hue="${hue}"]`), `.tag missing hue ${hue}`);
-      assert.ok(css.includes(`.post-card[data-hue="${hue}"]`), `.post-card missing hue ${hue}`);
-    }
-    assert.ok(!css.includes(`.tag[data-hue="${TAG_HUE_COUNT}"]`), 'hue rule beyond the palette');
+  it('declares exactly one accent, so colour stays meaningful', () => {
+    const accents = [...new Set([...css.matchAll(/(--accent-[a-z0-9-]+)\s*:/g)].map((m) => m[1]))].sort();
+    assert.deepStrictEqual(accents, ['--accent-primary', '--accent-primary-rgb', '--accent-primary-soft']);
+    assert.ok(!/--tag-hue-/.test(css), 'per-topic hues are gone: topics are set as text');
+  });
+
+  it('paints no decorative gradients', () => {
+    const gradients = [...css.matchAll(/\w*-?(?:linear|radial|conic)-gradient\(/g)].map((m) => m[0]);
+    assert.deepStrictEqual(gradients, [], 'flat surfaces only — gradients read as decoration');
+  });
+
+  it('reserves elevation for things that genuinely float', () => {
+    // Every other surface is separated by a hairline instead of a shadow.
+    const allowed = ['.skip-link', '.command-palette-panel', '.keyboard-help-content', '.jump-to-top'];
+    const shadowed = [...css.matchAll(/([^{}]+)\{[^{}]*box-shadow:[^;}]+;/g)]
+      .map((m) => m[1]!.trim().split('\n').pop()!.trim())
+      .filter((selector) => !allowed.some((ok) => selector.includes(ok)));
+    assert.deepStrictEqual(shadowed, [], `unexpected box-shadow on: ${shadowed.join(', ')}`);
   });
 
   it('defines a light theme counterpart for every surface and text token', () => {
@@ -98,40 +108,58 @@ describe('design tokens', () => {
   });
 });
 
-describe('card topic accent', () => {
-  let cards = '';
-  let rule = '';
+describe('archive list', () => {
+  let posts = '';
+  let item = '';
 
   before(async () => {
-    cards = stripComments(await fs.readFile(path.join(MODULES_DIR, 'cards.css'), 'utf8'));
-    const match = /\.post-card::before\s*\{([^}]*)\}/.exec(cards);
-    assert.ok(match, 'the .post-card::before accent rule disappeared');
-    rule = match[1] ?? '';
+    posts = stripComments(await fs.readFile(path.join(MODULES_DIR, 'posts.css'), 'utf8'));
+    const match = /\.post-item\s*\{([^}]*)\}/.exec(posts);
+    assert.ok(match, 'the .post-item rule disappeared');
+    item = match[1] ?? '';
   });
 
-  it('rides the card outline so it follows the rounded corners', () => {
-    // The accent is the top border of a full-size overlay: the adjacent borders
-    // are transparent, so the colour tapers along each corner arc.
-    assert.match(rule, /border-top-color:\s*var\(--card-accent\)/);
-    assert.match(rule, /border-radius:[^;]*--radius-lg/, 'the overlay must share the card radius');
+  it('lays each entry out against the date rail', () => {
+    // The rail is what makes titles align on one optical edge down the page.
+    assert.match(item, /grid-template-columns:\s*var\(--rail-width\)/);
+    assert.match(item, /border-bottom:\s*1px solid var\(--border-primary\)/);
   });
 
-  it('is never a straight bar clipped across the corners', () => {
-    // A painted background plus a fixed height draws a chord over the corner
-    // arcs, which is the artefact this rule exists to avoid.
-    assert.doesNotMatch(rule, /(?:^|;)\s*height\s*:/, 'a fixed height turns the accent back into a chord');
-    assert.doesNotMatch(rule, /background/, 'the accent must be painted by the border, not a background');
+  it('separates entries with rules rather than boxing them', () => {
+    assert.doesNotMatch(item, /background/, 'entries sit on the page, not on a panel');
+    assert.doesNotMatch(item, /box-shadow/);
+    assert.doesNotMatch(item, /border-radius/);
+    assert.doesNotMatch(item, /transform/, 'rows must not lift or scale on hover');
   });
 
-  it('dissolves toward the trailing edge instead of stopping abruptly', () => {
-    assert.match(rule, /mask-image:/);
-    assert.match(rule, /mask-composite:\s*intersect/, 'the fade and corner masks must intersect');
+  it('keeps the whole row clickable while topics stay their own targets', () => {
+    assert.match(posts, /\.post-title a::after\s*\{[^}]*inset:\s*0/);
+    assert.match(posts, /\.post-topics[^{]*\{[^}]*z-index:\s*1/);
   });
+});
 
-  it('only shows on hover or keyboard focus', () => {
-    assert.match(rule, /opacity:\s*0/);
-    assert.ok(cards.includes('.post-card:hover::before'), 'hover never reveals the accent');
-    assert.ok(cards.includes('.post-card:focus-within::before'), 'keyboard focus never reveals the accent');
+describe('no card chrome', () => {
+  // The archive replaced the card grid. These names must not come back.
+  const BANNED = ['post-card', 'posts-grid', 'is-featured', 'card-body', 'card-title', 'badge-new', 'data-hue'];
+
+  it('is absent from templates, stylesheets and client scripts', async () => {
+    const roots = [
+      { dir: path.join('src', 'templates'), ext: '.html' },
+      { dir: MODULES_DIR, ext: '.css' },
+      { dir: path.join('src', 'client'), ext: '.ts' },
+    ];
+
+    const offenders: string[] = [];
+    for (const { dir, ext } of roots) {
+      for (const name of await fs.readdir(dir)) {
+        if (!name.endsWith(ext)) continue;
+        const content = await fs.readFile(path.join(dir, name), 'utf8');
+        for (const needle of BANNED) {
+          if (content.includes(needle)) offenders.push(`${path.join(dir, name)}: ${needle}`);
+        }
+      }
+    }
+    assert.deepStrictEqual(offenders, [], `card chrome resurfaced:\n${offenders.join('\n')}`);
   });
 });
 

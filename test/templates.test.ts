@@ -4,7 +4,6 @@ import { describe, it, before } from 'node:test';
 import TemplateEngine from '../src/lib/TemplateEngine.ts';
 import DataShaper from '../src/lib/DataShaper.ts';
 import DateUtils from '../src/lib/DateUtils.ts';
-import { tagHue } from '../src/lib/TagPalette.ts';
 import { SITE_TITLE, SITE_URL } from '../src/lib/config.ts';
 import type { Post } from '../src/lib/types.ts';
 
@@ -69,50 +68,45 @@ describe('index template', () => {
     assert.ok(!html.includes('{{'), 'unresolved template tag left in output');
   });
 
-  it('renders the hero with role, name, tagline and counts', () => {
-    assert.ok(html.includes('class="hero"'));
-    assert.ok(html.includes('class="hero-eyebrow"'));
-    assert.ok(html.includes('class="hero-name"'));
-    assert.ok(html.includes('class="hero-tagline"'));
-    assert.match(html, /<strong>7<\/strong> posts/);
-    assert.match(html, /<strong>2<\/strong> topics/);
+  it('renders a masthead of name and one line of context', () => {
+    assert.ok(html.includes('class="masthead"'));
+    assert.ok(html.includes('class="masthead-name"'));
+    assert.ok(html.includes('class="masthead-lede"'));
+    // No badge, no counters: the archive header carries the post count instead.
+    assert.ok(html.includes('class="section-meta">7 posts'));
   });
 
-  it('promotes exactly one featured card', () => {
-    assert.strictEqual((html.match(/class="post-card is-featured"/g) ?? []).length, 1);
-    assert.strictEqual((html.match(/class="post-card"/g) ?? []).length, 6);
-    // The featured card is the first one in document order.
-    assert.ok(html.indexOf('is-featured') < html.indexOf('class="post-card"'));
+  it('renders one flat archive entry per post', () => {
+    assert.ok(html.includes('<ol class="post-list">'));
+    assert.strictEqual((html.match(/class="post-item"/g) ?? []).length, 7);
+    // Nothing is promoted, tinted or otherwise singled out.
+    assert.ok(!html.includes('is-featured'));
   });
 
-  it('renders a topic filter bar with hue-coded chips', () => {
-    assert.ok(html.includes('class="topic-bar"'));
-    assert.ok(html.includes(`data-tag="ai" data-hue="${tagHue('ai')}"`));
-    assert.ok(html.includes(`data-tag="devops" data-hue="${tagHue('devops')}"`));
+  it('renders a topic filter row of plain text buttons', () => {
+    assert.ok(html.includes('class="topic-filter"'));
+    assert.ok(html.includes('<button type="button" class="tag" data-tag="ai">'));
+    assert.ok(html.includes('<button type="button" class="tag" data-tag="devops">'));
     assert.ok(html.includes('class="tag-count"'));
-    // Filter chips are buttons, so keyboard users get them for free.
-    assert.ok(html.includes('<button type="button" class="tag"'));
+    assert.ok(!html.includes('data-hue'), 'topics are no longer colour-coded');
   });
 
-  it('shows a New badge only for posts inside the recency window', () => {
-    // Posts are 0, 3, 6, 9, 12, 15 and 18 days old; NEW_POST_DAYS defaults to 14.
-    assert.strictEqual((html.match(/class="badge-new"/g) ?? []).length, 5);
+  it('dates every entry absolutely, in one format', () => {
+    const dates = [...html.matchAll(/class="post-date" datetime="[^"]+">([^<]+)</g)].map((m) => m[1]);
+    assert.strictEqual(dates.length, 7);
+    for (const date of dates) {
+      assert.match(date!, /^[A-Z][a-z]{2} \d{1,2}, \d{4}$/, 'archive dates must not be relative');
+    }
   });
 
-  it('uses relative dates for recent posts', () => {
-    assert.ok(html.includes('>today</time>'));
-    assert.ok(html.includes('>3 days ago</time>'));
+  it('omits the summary and topic row when a post has neither', () => {
+    assert.strictEqual((html.match(/class="post-summary"/g) ?? []).length, 6);
+    assert.strictEqual((html.match(/class="post-topics"/g) ?? []).length, 6);
   });
 
-  it('omits the excerpt and tag row when a post has neither', () => {
-    assert.strictEqual((html.match(/class="card-excerpt"/g) ?? []).length, 6);
-    assert.strictEqual((html.match(/class="card-tags"/g) ?? []).length, 6);
-  });
-
-  it('links every card to its post and source gist', () => {
+  it('links every entry to its post', () => {
     assert.strictEqual((html.match(/href="\/posts\/id\d+\.html"/g) ?? []).length, 7);
-    assert.strictEqual((html.match(/class="card-source"/g) ?? []).length, 7);
-    assert.ok(html.includes('rel="noopener noreferrer"'));
+    assert.strictEqual((html.match(/class="post-title"/g) ?? []).length, 7);
   });
 
   it('renders the pager when there is more than one page', () => {
@@ -158,9 +152,9 @@ describe('post template', () => {
     assert.ok(html.includes('1 min read'));
   });
 
-  it('renders hue-coded topic chips as buttons', () => {
-    assert.ok(html.includes(`class="tag post-tag" data-tag="ai" data-hue="${tagHue('ai')}"`));
-    assert.ok(html.includes(`class="tag post-tag" data-tag="howto" data-hue="${tagHue('howto')}"`));
+  it('renders topics as buttons that filter the index', () => {
+    assert.ok(html.includes('class="tag post-tag" data-tag="ai"'));
+    assert.ok(html.includes('class="tag post-tag" data-tag="howto"'));
   });
 
   it('renders the outline sidebar and marks the layout as two-column', () => {

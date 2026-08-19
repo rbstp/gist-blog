@@ -13,15 +13,13 @@ export const SITE_TITLE = process.env.SITE_TITLE || 'rbstp.dev';
 export const SITE_AUTHOR = process.env.SITE_AUTHOR || 'Richard Boisvert';
 export const SITE_DESCRIPTION = process.env.SITE_DESCRIPTION
   || 'There and Back Again: A DevOps Engineer\'s Journey Through AI and Infrastructure';
-/** Short role label shown above the name in the hero. */
+/** Short role label, used to open the masthead line under the name. */
 export const SITE_ROLE = process.env.SITE_ROLE || 'DevOps & Context Engineer';
 export const SITE_TAGLINE = process.env.SITE_TAGLINE
   || 'Notes on AI, infrastructure, and developer tooling.';
 
 // Presentation
-/** Posts newer than this many days are flagged `new` and get a relative date label. */
-export const NEW_POST_DAYS = Number(process.env.NEW_POST_DAYS || 14);
-/** Maximum number of topic chips rendered in the index filter bar. */
+/** Maximum number of topics offered in the index filter row. */
 export const MAX_FILTER_TAGS = Number(process.env.MAX_FILTER_TAGS || 14);
 /** Target length (characters) of the generated plain-text excerpt. */
 export const EXCERPT_LENGTH = Number(process.env.EXCERPT_LENGTH || 180);
@@ -40,7 +38,7 @@ export const STYLE_MODULES = [
   'base.css',
   'layout.css',
   'tags.css',
-  'cards.css',
+  'posts.css',
   'post.css',
   'typography.css',
   'syntax.css',

@@ -17,13 +17,24 @@
     }
 }
 
-@media (max-width: 48rem) {
-    .site-header .container {
+/* Below the rail width the date can no longer sit beside the title, so both the
+   archive rows and the filter row collapse to a single column. */
+@media (max-width: 40rem) {
+    .post-item,
+    .topic-filter {
+        grid-template-columns: minmax(0, 1fr);
         gap: var(--space-2);
     }
 
-    .brand-name {
-        font-size: var(--text-md);
+    .post-date,
+    .topic-filter-label {
+        padding-top: 0;
+    }
+}
+
+@media (max-width: 48rem) {
+    .site-header .container {
+        gap: var(--space-4);
     }
 
     /* Links that also live in the footer make room for the essentials. */
@@ -31,17 +42,8 @@
         display: none;
     }
 
-    .nav-link {
-        padding: var(--space-2);
-        font-size: var(--text-md);
-    }
-
-    .hero {
-        padding-top: var(--space-10);
-    }
-
-    .hero-meta {
-        margin-top: var(--space-6);
+    .masthead {
+        padding-block: var(--space-10) var(--space-8);
     }
 
     .article-nav {

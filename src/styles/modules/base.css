@@ -69,7 +69,9 @@ h4,
 h5,
 h6 {
     color: var(--text-primary);
-    font-weight: 700;
+    /* 600 is the heaviest weight used anywhere: hierarchy comes from size,
+       spacing and colour rather than from weight. */
+    font-weight: 600;
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-tight);
     text-wrap: balance;
@@ -78,6 +80,14 @@ h6 {
 a {
     color: var(--accent-primary);
     text-decoration: none;
+    text-underline-offset: 0.2em;
+    text-decoration-thickness: 1px;
+}
+
+/* Dates, counts and pagination line up when digits share one advance width. */
+time,
+data {
+    font-variant-numeric: tabular-nums;
 }
 
 img,
@@ -172,8 +182,8 @@ samp {
     border-radius: var(--radius-md);
     color: var(--text-primary);
     font-size: var(--text-sm);
-    font-weight: 600;
-    box-shadow: var(--shadow-md);
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
     transform: translateY(-160%);
     transition: transform var(--dur-fast) var(--ease-out);
 }

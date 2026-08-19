@@ -1,8 +1,6 @@
 import StringUtils from './StringUtils.ts';
-import { tagHue } from './TagPalette.ts';
 import {
   POSTS_PER_PAGE,
-  NEW_POST_DAYS,
   MAX_FILTER_TAGS,
   EXCERPT_LENGTH,
   META_DESCRIPTION_LENGTH,
@@ -27,10 +25,6 @@ import type {
   PageMetaInput,
 } from './types.ts';
 
-/** Minimum number of posts before the newest one is promoted to a featured card. */
-const MIN_POSTS_FOR_FEATURE = 3;
-const MS_PER_DAY = 24 * 60 * 60 * 1000;
-
 class DataShaper {
   private formatDate: FormatDateFn;
   private now: NowFn;
@@ -48,30 +42,9 @@ class DataShaper {
     this.nowMs = nowMs;           // () => epoch ms
   }
 
-  /** Whole days elapsed since an ISO timestamp (negative values clamped to 0). */
-  daysSince(iso: string): number {
-    const then = new Date(iso).getTime();
-    if (!Number.isFinite(then)) return Number.POSITIVE_INFINITY;
-    return Math.max(0, Math.floor((this.nowMs() - then) / MS_PER_DAY));
-  }
-
   /**
-   * Human date for listings: recent posts read better as a relative age, older ones as an
-   * absolute date. The absolute date always remains available as `formattedDate`.
-   */
-  displayDate(iso: string): string {
-    const days = this.daysSince(iso);
-    if (days > NEW_POST_DAYS) return this.formatDate(iso, 'MMM d, yyyy');
-    if (days <= 0) return 'today';
-    if (days === 1) return 'yesterday';
-    if (days < 7) return `${days} days ago`;
-    const weeks = Math.floor(days / 7);
-    return weeks === 1 ? 'last week' : `${weeks} weeks ago`;
-  }
-
-  /**
-   * Preview line for a listing card. The gist description is preferred, but GistParser falls
-   * back to the title (or a placeholder) when a gist has no description, and a card that repeats
+   * Preview line for an archive entry. The gist description is preferred, but GistParser falls
+   * back to the title (or a placeholder) when a gist has no description, and an entry that repeats
    * its own heading reads as noise — in that case the opening prose of the post is used instead.
    */
   buildExcerpt(post: Post): string {
@@ -82,9 +55,9 @@ class DataShaper {
     return StringUtils.summarize(source, EXCERPT_LENGTH);
   }
 
-  /** Tag names paired with their deterministic hue index, for coloured chips in templates. */
+  /** Tag names wrapped as objects, which is the shape the template engine iterates. */
   buildTagChips(tags: string[] | undefined): TagChip[] {
-    return Array.isArray(tags) ? tags.map((name) => ({ name, hue: tagHue(name) })) : [];
+    return Array.isArray(tags) ? tags.map((name) => ({ name })) : [];
   }
 
   /** Absolute URL of a post's social card. */
@@ -130,24 +103,18 @@ class DataShaper {
 
   buildIndexData(sortedPosts: Post[]): IndexTemplateData {
     const lastUpdateFormatted = this.now('MMM d, HH:mm');
-    const canFeature = sortedPosts.length >= MIN_POSTS_FOR_FEATURE;
 
-    const acc = sortedPosts.reduce((state: { posts: IndexPostData[]; tagCounts: Map<string, number> }, post, index) => {
+    const acc = sortedPosts.reduce((state: { posts: IndexPostData[]; tagCounts: Map<string, number> }, post) => {
       const hasTags = Array.isArray(post.tags) && post.tags.length > 0;
       const shaped: IndexPostData = {
         ...post,
+        // One date format everywhere: an archive is easier to scan than it is charming.
         formattedDate: this.formatDate(post.createdAt, 'MMM d, yyyy'),
-        displayDate: this.displayDate(post.createdAt),
-        isNew: this.daysSince(post.createdAt) <= NEW_POST_DAYS,
         excerpt: this.buildExcerpt(post),
         shortId: post.id.substring(0, 7),
         lastUpdate: lastUpdateFormatted,
         hasTags,
         tagList: this.buildTagChips(post.tags),
-        // Hue of the post's primary topic, so a card's accent matches its first chip.
-        hue: hasTags ? tagHue(String(post.tags[0])) : 0,
-        // The newest post anchors the grid as a wide card; everything else is a uniform tile.
-        isFeatured: canFeature && index === 0,
       };
       state.posts.push(shaped);
       if (hasTags) {
@@ -157,15 +124,14 @@ class DataShaper {
     }, { posts: [], tagCounts: new Map<string, number>() });
 
     const allTags = Array.from(acc.tagCounts.keys()).sort();
-    // Filter bar: most-used topics first, alphabetical within the same count, capped for layout.
+    // Filter row: most-used topics first, alphabetical within the same count, capped for layout.
     const topTags: TagFilterChip[] = Array.from(acc.tagCounts.entries())
       .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0]))
       .slice(0, MAX_FILTER_TAGS)
-      .map(([name, count]) => ({ name, count, hue: tagHue(name) }));
+      .map(([name, count]) => ({ name, count }));
 
     const totalPosts = acc.posts.length;
     const totalPages = Math.ceil(totalPosts / POSTS_PER_PAGE);
-    const newest = acc.posts[0];
 
     return {
       posts: acc.posts,
@@ -174,8 +140,6 @@ class DataShaper {
       allTags,
       hasAnyTags: allTags.length > 0,
       topTags,
-      tagCount: allTags.length,
-      latestPostDate: newest ? newest.formattedDate : lastUpdateFormatted,
       tagline: SITE_TAGLINE,
       role: SITE_ROLE,
       author: SITE_AUTHOR,

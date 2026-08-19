@@ -6,9 +6,9 @@
  *
  * 1. Variables       - design tokens: colour, type, space, radii, elevation, motion
  * 2. Base            - reset, self-hosted fonts, element defaults, focus & selection
- * 3. Layout          - page frame, header, hero, section headings, footer
- * 4. Tags            - topic chips and the index filter bar
- * 5. Cards           - post cards, listing grid, pager
+ * 3. Layout          - page frame, header, masthead, section headings, footer
+ * 4. Tags            - topics: filter row, per-post lists, filter summary
+ * 5. Posts           - the dated archive list and its pager
  * 6. Post            - article page layout, outline sidebar, topic graph panels
  * 7. Typography      - article body typography
  * 8. Syntax          - code syntax highlighting
@@ -25,7 +25,7 @@
 
 /* Components */
 @import "modules/tags.css";
-@import "modules/cards.css";
+@import "modules/posts.css";
 @import "modules/post.css";
 @import "modules/typography.css";
 @import "modules/syntax.css";

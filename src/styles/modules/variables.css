@@ -1,79 +1,47 @@
 /* ==========================================================================
    Design tokens
-   A calm, editorial dark theme (with a light counterpart). Colours, type,
-   spacing, radii, elevation and motion are defined ONCE here so the whole UI
-   can be retuned from a single file. Translucent tints reference the *-rgb
-   channel tokens via rgba(var(--token-rgb), a).
+   A restrained, typographic theme: neutral greys, hairline rules and exactly
+   one accent. Colours, type, spacing, radii, elevation and motion are defined
+   ONCE here so the whole UI can be retuned from a single file. Translucent
+   tints reference the *-rgb channel tokens via rgba(var(--token-rgb), a).
    ========================================================================== */
 
 :root {
     color-scheme: dark;
 
-    /* --- Surfaces ------------------------------------------------------- */
-    --bg-primary: #0f1017;     /* page */
-    --bg-secondary: #14161f;   /* header / footer bars */
-    --bg-tertiary: #1c1f2b;    /* inputs, hovered rows, code wells */
-    --bg-card: #171a24;        /* cards & panels: deliberately lifted off the page */
-    --bg-highlight: #232735;   /* selected / active rows */
+    /* --- Surfaces --------------------------------------------------------
+       Near-neutral and close together on purpose: the page carries the design,
+       not a stack of tinted panels. */
+    --bg-primary: #0d0e10;     /* page */
+    --bg-secondary: #111214;   /* footer, dialog footers */
+    --bg-tertiary: #16181b;    /* inputs and code wells */
+    --bg-card: #131417;        /* dialogs and panels */
+    --bg-highlight: #1c1e22;   /* hovered / selected rows */
 
-    --bg-primary-rgb: 15, 16, 23;
-    --bg-secondary-rgb: 20, 22, 31;
+    --bg-primary-rgb: 13, 14, 16;
 
-    /* --- Lines ---------------------------------------------------------- */
-    --border-primary: #232735; /* hairlines */
-    --border-strong: #333a4f;  /* visible edges */
+    /* --- Lines -----------------------------------------------------------
+       Rules do the structural work that borders, fills and shadows used to. */
+    --border-primary: #23252a; /* hairlines */
+    --border-strong: #33363c;  /* visible edges */
 
     /* --- Text ----------------------------------------------------------- */
-    --text-primary: #e8eaf4;   /* headings */
-    --text-body: #b7bdd2;      /* long-form body */
-    --text-secondary: #9aa1ba; /* meta, labels */
-    --text-muted: #79809a;     /* de-emphasised */
+    --text-primary: #f2f3f5;   /* headings */
+    --text-body: #c6c9cf;      /* long-form body */
+    --text-secondary: #a3a7ae; /* meta, labels */
+    --text-muted: #868a92;     /* de-emphasised */
 
-    /* --- Accents -------------------------------------------------------- */
-    --accent-primary: #7aa2f7;
-    --accent-primary-soft: #9bb8ff;
-    --accent-secondary: #bb9af7;
-    --accent-success: #9ece6a;
-    --accent-warning: #e0af68;
-    --accent-error: #f7768e;
-    --accent-cyan: #7dcfff;
-    --accent-teal: #73daca;
-    --accent-orange: #ff9e64;
+    /* --- Accent ----------------------------------------------------------
+       One accent, spent only on links, current state and focus. */
+    --accent-primary: #8ab4f8;
+    --accent-primary-soft: #adc8fa;
     /* Text/icon colour on top of a filled accent surface. */
-    --on-accent: #0f1017;
+    --on-accent: #0d0e10;
 
-    --accent-primary-rgb: 122, 162, 247;
-    --accent-secondary-rgb: 187, 154, 247;
-    --accent-success-rgb: 158, 206, 106;
-    --accent-warning-rgb: 224, 175, 104;
-    --accent-error-rgb: 247, 118, 142;
-    --accent-cyan-rgb: 125, 207, 255;
-    --accent-teal-rgb: 115, 218, 202;
-    --accent-orange-rgb: 255, 158, 100;
+    --accent-primary-rgb: 138, 180, 248;
 
     --shadow-rgb: 0, 0, 0;
-    --halo-rgb: 28, 31, 43;    /* = bg-tertiary, used behind graph labels */
-
-    /* --- Topic hues ------------------------------------------------------
-       Indexed by the `data-hue` attribute emitted from lib/TagPalette.ts, so a
-       topic keeps the same colour everywhere it appears. Order must match
-       TAG_HUE_TOKENS. */
-    --tag-hue-0: var(--accent-primary);
-    --tag-hue-0-rgb: var(--accent-primary-rgb);
-    --tag-hue-1: var(--accent-secondary);
-    --tag-hue-1-rgb: var(--accent-secondary-rgb);
-    --tag-hue-2: var(--accent-cyan);
-    --tag-hue-2-rgb: var(--accent-cyan-rgb);
-    --tag-hue-3: var(--accent-teal);
-    --tag-hue-3-rgb: var(--accent-teal-rgb);
-    --tag-hue-4: var(--accent-success);
-    --tag-hue-4-rgb: var(--accent-success-rgb);
-    --tag-hue-5: var(--accent-warning);
-    --tag-hue-5-rgb: var(--accent-warning-rgb);
-    --tag-hue-6: var(--accent-orange);
-    --tag-hue-6-rgb: var(--accent-orange-rgb);
-    --tag-hue-7: var(--accent-error);
-    --tag-hue-7-rgb: var(--accent-error-rgb);
+    --halo-rgb: 22, 24, 27;    /* = bg-tertiary, used behind graph labels */
 
     /* --- Type ----------------------------------------------------------- */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
@@ -88,18 +56,17 @@
     --text-xl: 1.25rem;
     --text-2xl: 1.5rem;
     --text-3xl: 1.875rem;
-    --text-4xl: 2.25rem;
 
-    --leading-tight: 1.08;   /* display headings */
+    --leading-tight: 1.15;   /* display headings */
     --leading-snug: 1.35;
     --leading-normal: 1.55;
-    --leading-relaxed: 1.75;
+    --leading-relaxed: 1.7;
 
-    --tracking-tight: -0.021em;
-    --tracking-wide: 0.04em;
+    --tracking-tight: -0.014em;
+    --tracking-wide: 0.07em;
 
     /* Comfortable reading measure for long-form text. */
-    --measure: 74ch;
+    --measure: 68ch;
 
     /* --- Space (4px scale) ---------------------------------------------- */
     --space-1: 0.25rem;
@@ -112,74 +79,60 @@
     --space-10: 2.5rem;
     --space-12: 3rem;
     --space-16: 4rem;
-    --space-20: 5rem;
 
-    /* --- Shape & elevation ---------------------------------------------- */
-    --radius-sm: 0.375rem;
-    --radius-md: 0.625rem;
-    --radius-lg: 0.875rem;
+    /* --- Shape & elevation ----------------------------------------------
+       Tight radii and almost no elevation: only overlays float. */
+    --radius-sm: 0.1875rem;
+    --radius-md: 0.3125rem;
+    --radius-lg: 0.5rem;
     --radius-pill: 999px;
 
-    --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), 0.24);
-    --shadow-md: 0 6px 18px -6px rgba(var(--shadow-rgb), 0.45);
-    --shadow-lg: 0 24px 50px -18px rgba(var(--shadow-rgb), 0.6);
+    --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), 0.3);
+    --shadow-lg: 0 24px 60px -24px rgba(var(--shadow-rgb), 0.7);
 
     /* --- Motion --------------------------------------------------------- */
     --ease-out: cubic-bezier(0.22, 0.72, 0.28, 1);
     --dur-fast: 130ms;
     --dur-base: 220ms;
 
-    /* --- Layout --------------------------------------------------------- */
-    --container-max: 72rem;
-    --header-height: 4rem;
-    --sidebar-width: 15.5rem;
+    /* --- Layout ---------------------------------------------------------
+       Narrow enough that the rules end near the text they organise. */
+    --container-max: 58rem;
+    --header-height: 3.5rem;
+    --sidebar-width: 14.5rem;
+    /* Left rail holding the publication date beside each archive entry. */
+    --rail-width: 7rem;
 }
 
 /* Light theme */
 [data-theme="light"] {
     color-scheme: light;
 
-    --bg-primary: #f6f7fb;
-    --bg-secondary: #ffffff;
-    --bg-tertiary: #eef0f6;
+    --bg-primary: #fcfcfd;
+    --bg-secondary: #f6f7f8;
+    --bg-tertiary: #f2f3f5;
     --bg-card: #ffffff;
-    --bg-highlight: #e5e9f5;
+    --bg-highlight: #eef0f2;
 
-    --bg-primary-rgb: 246, 247, 251;
-    --bg-secondary-rgb: 255, 255, 255;
+    --bg-primary-rgb: 252, 252, 253;
 
-    --border-primary: #e3e6ef;
-    --border-strong: #ccd2e2;
+    --border-primary: #e5e7ea;
+    --border-strong: #ccced3;
 
-    --text-primary: #141726;
-    --text-body: #3c4359;
-    --text-secondary: #5a6280;
-    --text-muted: #6d7591;
+    --text-primary: #14161a;
+    --text-body: #3d424a;
+    --text-secondary: #565b64;
+    --text-muted: #6b7078;
 
-    --accent-primary: #2f5fd0;
-    --accent-primary-soft: #1f47ab;
-    --accent-secondary: #8b3fe0;
-    --accent-success: #4a7a2b;
-    --accent-warning: #8a6420;
-    --accent-error: #d51f52;
-    --accent-cyan: #0b6f97;
-    --accent-teal: #0f7d68;
-    --accent-orange: #a5551a;
+    --accent-primary: #1a56c4;
+    --accent-primary-soft: #123f96;
     --on-accent: #ffffff;
 
-    --accent-primary-rgb: 47, 95, 208;
-    --accent-secondary-rgb: 139, 63, 224;
-    --accent-success-rgb: 74, 122, 43;
-    --accent-warning-rgb: 138, 100, 32;
-    --accent-error-rgb: 213, 31, 82;
-    --accent-cyan-rgb: 11, 111, 151;
-    --accent-teal-rgb: 15, 125, 104;
-    --accent-orange-rgb: 165, 85, 26;
+    --accent-primary-rgb: 26, 86, 196;
 
-    --shadow-rgb: 27, 39, 84;
-    --halo-rgb: 238, 240, 246;
+    --shadow-rgb: 16, 24, 40;
+    --halo-rgb: 242, 243, 245;
 
-    --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), 0.08);
-    --shadow-md: 0 8px 20px -8px rgba(var(--shadow-rgb), 0.16);
-    --shadow-lg: 0 24px 50px -20px rgba(var(--shadow-rgb), 0.22);
+    --shadow-sm: 0 1px 2px rgba(var(--shadow-rgb), 0.06);
+    --shadow-lg: 0 24px 60px -24px rgba(var(--shadow-rgb), 0.18);
 }

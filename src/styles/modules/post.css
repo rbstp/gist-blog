@@ -4,7 +4,7 @@
    ========================================================================== */
 
 .post-container {
-    padding-block: var(--space-10) var(--space-16);
+    padding-block: var(--space-8) var(--space-16);
 }
 
 .article-nav {
@@ -21,8 +21,7 @@
     align-items: center;
     gap: var(--space-2);
     color: var(--text-secondary);
-    font-size: var(--text-md);
-    font-weight: 500;
+    font-size: var(--text-sm);
     transition: color var(--dur-fast) var(--ease-out);
 }
 
@@ -42,37 +41,34 @@
 .article-header {
     max-width: var(--measure);
     margin-bottom: var(--space-10);
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .article-kicker {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: baseline;
     gap: var(--space-2);
-    margin-bottom: var(--space-4);
-    font-size: var(--text-md);
-    font-weight: 500;
+    margin-bottom: var(--space-3);
     color: var(--text-muted);
+    font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
 }
 
-.article-kicker .meta-sep {
-    color: var(--border-strong);
-}
-
 .article-title {
-    font-size: clamp(var(--text-3xl), 4.5vw, var(--text-4xl));
-    font-weight: 800;
-    line-height: 1.1;
-    letter-spacing: -0.028em;
+    font-size: clamp(var(--text-2xl), 4vw, var(--text-3xl));
+    font-weight: 600;
+    line-height: var(--leading-tight);
+    letter-spacing: -0.018em;
     color: var(--text-primary);
 }
 
 .article-tags {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2);
-    margin-top: var(--space-5);
+    gap: var(--space-1) var(--space-4);
+    margin-top: var(--space-4);
 }
 
 /* --- Reading layout ------------------------------------------------------ */
@@ -108,7 +104,7 @@
     margin-bottom: var(--space-3);
     color: var(--text-muted);
     font-size: var(--text-2xs);
-    font-weight: 650;
+    font-weight: 600;
     letter-spacing: var(--tracking-wide);
     text-transform: uppercase;
 }
@@ -140,8 +136,8 @@
 
 .toc-link.active {
     border-left-color: var(--accent-primary);
-    color: var(--accent-primary);
-    font-weight: 550;
+    color: var(--text-primary);
+    font-weight: 500;
 }
 
 .toc-level-3 .toc-link { padding-left: var(--space-6); }
@@ -152,10 +148,8 @@
 /* --- Topic graph panel --------------------------------------------------- */
 
 .graph-panel {
-    padding: var(--space-4);
-    background: var(--bg-card);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-lg);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border-primary);
 }
 
 .graph-content {
@@ -168,7 +162,7 @@
     display: block;
     background: var(--bg-tertiary);
     border: 1px solid var(--border-primary);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     cursor: grab;
     user-select: none;
     -webkit-user-select: none;
@@ -184,19 +178,21 @@
 #topic-graph .graph-node.dragging { cursor: grabbing; }
 #topic-graph.dragging-node { cursor: grabbing; }
 
+/* Nodes are neutral by default; the accent marks only what is being looked at
+   — the topics of the current post, or the node under the pointer. */
 .graph-node circle {
-    fill: var(--accent-primary);
-    stroke: rgba(var(--accent-primary-rgb), 0.35);
+    fill: var(--text-muted);
+    stroke: var(--border-strong);
     stroke-width: 1;
 }
 
-.graph-node:hover {
-    filter: drop-shadow(0 0 8px rgba(var(--accent-primary-rgb), 0.5));
+.graph-node:hover circle {
+    fill: var(--accent-primary);
 }
 
 /* Topics belonging to the current post */
 .graph-node.topic circle {
-    fill: var(--accent-secondary);
+    fill: var(--accent-primary);
 }
 
 .graph-node text {
@@ -216,7 +212,7 @@
     transition: stroke-opacity var(--dur-fast) var(--ease-out), stroke-width var(--dur-fast) var(--ease-out);
 }
 
-.graph-node.active circle { stroke: var(--accent-secondary); stroke-width: 2; }
+.graph-node.active circle { stroke: var(--accent-primary); stroke-width: 2; }
 .graph-node.dimmed circle,
 .graph-node.dimmed text,
 .graph-link.dimmed { opacity: 0.25; }
@@ -235,10 +231,10 @@
     padding: 0.1rem var(--space-2);
     border: 1px solid var(--border-primary);
     border-radius: var(--radius-sm);
-    background: var(--bg-card);
+    background: var(--bg-primary);
     color: var(--text-muted);
     font-size: var(--text-2xs);
-    font-weight: 600;
+    font-weight: 500;
     transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
@@ -256,14 +252,14 @@
 .graph-page-canvas {
     position: relative;
     margin-top: var(--space-6);
-    padding: var(--space-4);
-    background: var(--bg-card);
     border: 1px solid var(--border-primary);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-sm);
+    border-radius: var(--radius-md);
 }
 
+/* The canvas frame supplies the hairline, so the SVG inside drops its own. */
 .graph-page-canvas .graph-svg {
     width: 100%;
     height: auto;
+    border: none;
+    border-radius: inherit;
 }

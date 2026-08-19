@@ -240,16 +240,16 @@ interface Point {
 
   // Client-side pagination and filtering (index page only)
   function initIndexFilteringAndPagination(): void {
-    const section = document.querySelector('.posts-section');
+    const section = document.querySelector('.archive');
     const isIndexPage = !!section; if (!isIndexPage) return;
     const POSTS_PER_PAGE = 6;
-    const allPosts = Array.from(document.querySelectorAll<HTMLElement>('.post-card'));
+    const allPosts = Array.from(document.querySelectorAll<HTMLElement>('.post-item'));
     let activeTags: string[] = []; let currentPage = 1;
     const paginationSection = document.getElementById('pagination-section');
     const paginationCommand = document.getElementById('pagination-command');
     const paginationPages = document.getElementById('pagination-pages');
     const prevBtn = document.getElementById('prev-btn') as HTMLButtonElement | null; const nextBtn = document.getElementById('next-btn') as HTMLButtonElement | null;
-    const filterStatus = document.createElement('div'); filterStatus.className = 'filter-status'; filterStatus.style.display = 'none'; section!.insertBefore(filterStatus, section!.querySelector('.posts-grid'));
+    const filterStatus = document.createElement('div'); filterStatus.className = 'filter-status'; filterStatus.style.display = 'none'; section!.insertBefore(filterStatus, section!.querySelector('.post-list'));
 
     // Escape HTML for safe insertion
     function escapeHTML(str: string): string {
@@ -277,11 +277,12 @@ interface Point {
       if (paginationSection && (totalPages > 1 || activeTags.length > 0)) {
         paginationSection.style.display = '';
         if (paginationCommand) paginationCommand.textContent = totalPages > 1 ? `Page ${currentPage} of ${totalPages}` : `${filtered.length} post${filtered.length !== 1 ? 's' : ''}`;
-        if (prevBtn) { if (totalPages > 1) { prevBtn.style.display = 'flex'; prevBtn.disabled = currentPage === 1; } else { prevBtn.style.display = 'none'; } }
-        if (nextBtn) { if (totalPages > 1) { nextBtn.style.display = 'flex'; nextBtn.disabled = currentPage === totalPages; } else { nextBtn.style.display = 'none'; } }
+        // Clearing the inline value restores whatever the stylesheet sets.
+        if (prevBtn) { if (totalPages > 1) { prevBtn.style.display = ''; prevBtn.disabled = currentPage === 1; } else { prevBtn.style.display = 'none'; } }
+        if (nextBtn) { if (totalPages > 1) { nextBtn.style.display = ''; nextBtn.disabled = currentPage === totalPages; } else { nextBtn.style.display = 'none'; } }
         if (paginationPages) {
           if (totalPages > 1) {
-            paginationPages.style.display = 'flex'; paginationPages.innerHTML = '';
+            paginationPages.style.display = ''; paginationPages.innerHTML = '';
             const maxVisible = 5; let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2)); const endPage = Math.min(totalPages, startPage + maxVisible - 1);
             if (endPage - startPage + 1 < maxVisible) startPage = Math.max(1, endPage - maxVisible + 1);
             for (let i = startPage; i <= endPage; i++) { const pageBtn = document.createElement('button'); pageBtn.className = 'pagination-page' + (i === currentPage ? ' current' : ''); pageBtn.textContent = String(i); pageBtn.addEventListener('click', () => { currentPage = i; updatePagination(); }); paginationPages.appendChild(pageBtn); }
@@ -292,9 +293,7 @@ interface Point {
     function updateFilterStatus(): void {
       if (activeTags.length === 0) { filterStatus.style.display = 'none'; return; }
       const filteredCount = getFilteredPosts().length;
-      // Reuse the hue the generator assigned to this topic so the summary chips match the cards.
-      const hueOf = (tag: string): string => document.querySelector(`.tag[data-tag="${CSS.escape(tag)}"]`)?.getAttribute('data-hue') ?? '0';
-      const tagsDisplay = activeTags.map(tag => `<span class="tag clickable-filter-tag" data-tag="${escapeHTML(tag)}" data-hue="${escapeHTML(hueOf(tag))}">${escapeHTML(tag)}</span>`).join(' ');
+      const tagsDisplay = activeTags.map(tag => `<span class="tag clickable-filter-tag" data-tag="${escapeHTML(tag)}">${escapeHTML(tag)}</span>`).join(' ');
       filterStatus.innerHTML = `<div class="filter-info"><span class="filter-label">Filtered by</span>${tagsDisplay}<span class="filter-count">${filteredCount} result${filteredCount !== 1 ? 's' : ''}</span><button class="clear-filter" data-clear>Clear</button></div>`;
       filterStatus.style.display = '';
       filterStatus.querySelector('[data-clear]')?.addEventListener('click', () => { activeTags = []; currentPage = 1; document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); updateFilterStatus(); updatePagination(); });

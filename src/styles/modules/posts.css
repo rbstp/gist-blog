@@ -1,0 +1,153 @@
+/* ==========================================================================
+   The archive: a dated list of posts, and its pager
+   Entries are rows separated by hairlines rather than cards. On wide screens
+   the date sits in a left rail so titles align on a single optical edge; the
+   rail collapses above the title on narrow screens.
+   ========================================================================== */
+
+.post-list {
+    list-style: none;
+}
+
+.post-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--rail-width) minmax(0, 1fr);
+    gap: 0 var(--space-6);
+    padding-block: var(--space-6);
+    border-bottom: 1px solid var(--border-primary);
+}
+
+.post-date {
+    /* Nudged onto the title's cap height rather than its line box. */
+    padding-top: 0.15rem;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+.post-body {
+    min-width: 0;
+}
+
+.post-title {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    line-height: var(--leading-snug);
+}
+
+.post-title a {
+    color: var(--text-primary);
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+/* The whole row is the link target; interactive children opt back in below. */
+.post-title a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+}
+
+.post-item:hover .post-title a,
+.post-title a:focus-visible {
+    color: var(--accent-primary);
+}
+
+/* Enough feedback to show the whole row is the target, and no more. */
+.post-item:hover .post-date {
+    color: var(--text-secondary);
+}
+
+.post-summary {
+    margin-top: var(--space-2);
+    max-width: 62ch;
+    color: var(--text-secondary);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    text-wrap: pretty;
+}
+
+.post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-3);
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+}
+
+.post-reading {
+    font-variant-numeric: tabular-nums;
+}
+
+.post-topics,
+.tags-container {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-1) var(--space-3);
+    list-style: none;
+}
+
+.meta-sep {
+    color: var(--border-strong);
+}
+
+/* --- Pager --------------------------------------------------------------
+   Text controls on a rule, not a row of buttons. */
+
+.pagination-section {
+    margin-top: var(--space-8);
+}
+
+.pager {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-4);
+}
+
+.pagination-link,
+.pagination-page {
+    color: var(--text-secondary);
+    font-size: var(--text-md);
+    font-variant-numeric: tabular-nums;
+    transition: color var(--dur-fast) var(--ease-out);
+}
+
+.pagination-link:hover:not(:disabled),
+.pagination-page:hover:not(.current) {
+    color: var(--text-primary);
+    text-decoration: underline;
+}
+
+.pagination-link:disabled {
+    color: var(--text-muted);
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.pagination-pages {
+    display: flex;
+    gap: var(--space-3);
+}
+
+.pagination-page.current {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-decoration: underline;
+    text-decoration-color: var(--accent-primary);
+    text-decoration-thickness: 2px;
+    cursor: default;
+}
+
+.pager-status {
+    margin-left: auto;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+    font-variant-numeric: tabular-nums;
+}

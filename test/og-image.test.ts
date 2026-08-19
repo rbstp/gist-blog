@@ -12,7 +12,6 @@ import OgImageGenerator, {
   wrapText,
   fitTitle,
 } from '../src/lib/OgImageGenerator.ts';
-import { tagColor } from '../src/lib/TagPalette.ts';
 
 describe('escapeXml', () => {
   it('escapes the five XML entities', () => {
@@ -101,16 +100,21 @@ describe('OgImageGenerator.buildSvg', () => {
     assert.ok(svg.includes('Nov 2, 2025'));
   });
 
-  it('colours the card from the first tag and renders one pill per tag', () => {
+  it('sets the topics as one quiet line of text', () => {
     const svg = og.buildSvg({ title: 'Tagged', tags: ['ai', 'devops', 'testing'] });
-    assert.ok(svg.includes(tagColor('ai')), 'accent should come from the first tag');
-    assert.ok(svg.includes(tagColor('devops')));
-    assert.strictEqual((svg.match(/class="tag"/g) ?? []).length, 3);
+    assert.strictEqual((svg.match(/class="tag"/g) ?? []).length, 1);
+    assert.match(svg, /class="tag">ai\s+·\s+devops\s+·\s+testing</);
   });
 
-  it('caps the pill row at four tags', () => {
+  it('caps the topic line at four names', () => {
     const svg = og.buildSvg({ title: 'Many tags', tags: ['a', 'b', 'c', 'd', 'e', 'f'] });
-    assert.strictEqual((svg.match(/class="tag"/g) ?? []).length, 4);
+    const line = /class="tag">([^<]+)</.exec(svg)?.[1] ?? '';
+    assert.strictEqual(line.split('·').length, 4);
+  });
+
+  it('stays flat: no gradients, glows or pills', () => {
+    const svg = og.buildSvg({ title: 'Flat', subtitle: 'No decoration', tags: ['ai'], meta: 'Nov 2, 2025' });
+    assert.ok(!/Gradient|filter=|<rect[^>]*rx=/.test(svg), 'the card must stay flat');
   });
 
   it('omits optional rows when unset', () => {

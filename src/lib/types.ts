@@ -88,14 +88,13 @@ export interface Pagination {
   postsPerPage: number;
 }
 
-/** A tag rendered as a coloured chip; `hue` indexes the shared tag palette. */
+/** A topic name in the shape the template engine iterates over. */
 export interface TagChip {
   [key: string]: unknown;
   name: string;
-  hue: number;
 }
 
-/** A tag chip in the index filter bar, carrying how many posts use it. */
+/** A topic in the index filter row, carrying how many posts use it. */
 export interface TagFilterChip extends TagChip {
   count: number;
 }
@@ -121,19 +120,13 @@ export interface PostTemplateData extends Post {
 /** A post shaped for rendering within the index listing. */
 export interface IndexPostData extends Post {
   [key: string]: unknown;
+  /** Publication date, formatted identically for every entry in the archive. */
   formattedDate: string;
-  /** Relative age for recent posts, absolute date for older ones. */
-  displayDate: string;
-  isNew: boolean;
   excerpt: string;
   shortId: string;
   lastUpdate: string;
   hasTags: boolean;
   tagList: TagChip[];
-  /** Palette index of the post's primary topic, used to tint the card. */
-  hue: number;
-  /** True for the newest post, which renders as a wide hero card. */
-  isFeatured: boolean;
 }
 
 /** Data shaped for the index template. */
@@ -144,10 +137,8 @@ export interface IndexTemplateData {
   lastUpdate: string;
   allTags: string[];
   hasAnyTags: boolean;
-  /** Most-used tags, capped for the filter bar. */
+  /** Most-used topics, capped for the filter row. */
   topTags: TagFilterChip[];
-  tagCount: number;
-  latestPostDate: string;
   tagline: string;
   role: string;
   author: string;

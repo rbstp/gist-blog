@@ -156,18 +156,18 @@ describe('generated site', () => {
     assert.ok(!postHtml.includes('{{'), 'post page has an unresolved tag');
   });
 
-  it('renders the redesigned index and article shells', () => {
-    assert.ok(indexHtml.includes('class="hero"'));
-    assert.ok(indexHtml.includes('class="topic-bar"'));
-    assert.strictEqual((indexHtml.match(/class="post-card is-featured"/g) ?? []).length, 1);
+  it('renders the index and article shells', () => {
+    assert.ok(indexHtml.includes('class="masthead"'));
+    assert.ok(indexHtml.includes('class="topic-filter"'));
+    assert.strictEqual((indexHtml.match(/class="post-item"/g) ?? []).length, 3);
     assert.ok(postHtml.includes('class="article-body"'));
     assert.ok(postHtml.includes('class="toc-sidebar"'));
   });
 
-  it('bundles the stylesheet with the design tokens and no terminal chrome', () => {
+  it('bundles the stylesheet with the design tokens and none of the retired chrome', () => {
     assert.ok(css.includes('--bg-primary'), 'design tokens missing from the bundle');
-    assert.ok(css.includes('.post-card'), 'card styles missing from the bundle');
-    assert.ok(!/terminal-window|status-bar|prompt-symbol/.test(css));
+    assert.ok(css.includes('.post-item'), 'archive styles missing from the bundle');
+    assert.ok(!/terminal-window|status-bar|prompt-symbol|post-card|--tag-hue/.test(css));
   });
 
   it('writes a newest-first search index for the client search dialog', async () => {

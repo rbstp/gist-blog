@@ -104,7 +104,7 @@
 }
 
 .hljs-deletion {
-    color: var(--accent-error);
+    color: var(--syntax-tag);
 }
 
 .hljs-variable,
@@ -154,7 +154,7 @@
 /* Shell/Bash: the `$` prompt inside a copied command line. */
 .hljs-meta.hljs-prompt {
     color: var(--syntax-string);
-    font-weight: 700;
+    font-weight: 600;
 }
 
 /* Python specific */

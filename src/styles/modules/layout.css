@@ -1,42 +1,23 @@
 /* ==========================================================================
-   Layout: page frame, header, hero, section headings, footer
+   Layout: page frame, header, masthead, section headings, footer
    ========================================================================== */
 
 .container {
     width: 100%;
     max-width: var(--container-max);
     margin-inline: auto;
-    padding-inline: clamp(var(--space-4), 4vw, var(--space-10));
+    padding-inline: clamp(var(--space-4), 5vw, var(--space-8));
 }
 
-/* Soft colour wash behind the page. Anchored to the top so it reads as light
-   falling on the header and hero rather than a full-page gradient. */
-.page-aura {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: -1;
-    background:
-        radial-gradient(1100px 520px at 12% -8%, rgba(var(--accent-primary-rgb), 0.16), transparent 70%),
-        radial-gradient(900px 480px at 88% -12%, rgba(var(--accent-secondary-rgb), 0.13), transparent 70%);
-}
-
-/* --- Header ------------------------------------------------------------- */
+/* --- Header -------------------------------------------------------------
+   A plain bar: solid background, one hairline, no blur and no elevation. */
 
 .site-header {
     position: sticky;
     top: 0;
     z-index: 100;
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     border-bottom: 1px solid var(--border-primary);
-}
-
-@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
-    .site-header {
-        background: rgba(var(--bg-secondary-rgb), 0.72);
-        -webkit-backdrop-filter: blur(14px) saturate(150%);
-        backdrop-filter: blur(14px) saturate(150%);
-    }
 }
 
 .site-header .container {
@@ -48,86 +29,52 @@
 }
 
 .brand {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
     color: var(--text-primary);
-    font-weight: 650;
-    letter-spacing: var(--tracking-tight);
-}
-
-.brand-mark {
-    display: grid;
-    place-items: center;
-    width: 1.875rem;
-    height: 1.875rem;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(140deg, var(--accent-primary), var(--accent-secondary));
-    color: var(--on-accent);
     font-size: var(--text-md);
-    font-weight: 800;
-    line-height: 1;
-    box-shadow: 0 2px 10px -2px rgba(var(--accent-primary-rgb), 0.55);
-}
-
-.brand-name {
-    font-size: var(--text-lg);
+    font-weight: 600;
+    letter-spacing: var(--tracking-tight);
 }
 
 .site-nav {
     display: flex;
     align-items: center;
-    gap: var(--space-1);
+    gap: var(--space-5);
 }
 
 .nav-link {
-    position: relative;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius-md);
+    padding-block: var(--space-2);
+    border-bottom: 1px solid transparent;
     color: var(--text-secondary);
     font-size: var(--text-md);
-    font-weight: 500;
-    transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out), border-color var(--dur-fast) var(--ease-out);
 }
 
 .nav-link:hover {
     color: var(--text-primary);
-    background: var(--bg-highlight);
+    border-bottom-color: var(--border-strong);
 }
 
 .nav-link[aria-current="page"] {
     color: var(--text-primary);
-}
-
-.nav-link[aria-current="page"]::after {
-    content: "";
-    position: absolute;
-    left: var(--space-3);
-    right: var(--space-3);
-    bottom: 0.15rem;
-    height: 2px;
-    border-radius: var(--radius-pill);
-    background: var(--accent-primary);
+    border-bottom-color: var(--text-primary);
 }
 
 .icon-btn {
     display: grid;
     place-items: center;
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: var(--radius-md);
+    width: 1.5rem;
+    height: 1.5rem;
     color: var(--text-secondary);
-    transition: color var(--dur-fast) var(--ease-out), background var(--dur-fast) var(--ease-out);
+    transition: color var(--dur-fast) var(--ease-out);
 }
 
 .icon-btn:hover {
     color: var(--text-primary);
-    background: var(--bg-highlight);
 }
 
 .icon-btn svg {
-    width: 1.125rem;
-    height: 1.125rem;
+    width: 1rem;
+    height: 1rem;
 }
 
 /* Theme toggle icon swap */
@@ -139,77 +86,36 @@
     transform: rotate(180deg);
 }
 
-/* --- Hero --------------------------------------------------------------- */
+/* --- Masthead -----------------------------------------------------------
+   Name, one line of context. No badge, no counters, no call to action. */
 
-.hero {
-    padding: clamp(var(--space-12), 9vw, var(--space-20)) 0 var(--space-12);
-    max-width: 46rem;
+.masthead {
+    max-width: 36rem;
+    padding-block: var(--space-16) var(--space-12);
 }
 
-.hero-eyebrow {
-    display: inline-block;
-    margin-bottom: var(--space-5);
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--border-primary);
-    border-radius: var(--radius-pill);
-    background: var(--bg-card);
-    color: var(--text-secondary);
-    font-size: var(--text-sm);
-    font-weight: 550;
-}
-
-.hero-name {
-    font-size: clamp(2.25rem, 6vw, 3.25rem);
-    font-weight: 800;
+.masthead-name {
+    font-size: var(--text-3xl);
+    font-weight: 600;
     line-height: var(--leading-tight);
-    letter-spacing: -0.03em;
     color: var(--text-primary);
 }
 
-.hero-tagline {
-    margin-top: var(--space-5);
-    max-width: 34rem;
-    font-size: clamp(var(--text-lg), 2.2vw, var(--text-xl));
+.masthead-lede {
+    margin-top: var(--space-4);
+    font-size: var(--text-lg);
     line-height: var(--leading-normal);
     color: var(--text-secondary);
-    text-wrap: pretty;
+    /* Two even lines read better here than one long line and a stub. */
+    text-wrap: balance;
 }
 
-.hero-meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-4);
-    margin-top: var(--space-8);
-    font-size: var(--text-md);
-    color: var(--text-muted);
-}
+/* --- Section headings ---------------------------------------------------
+   A small uppercase label sitting on a rule, the way a print section opener
+   works: it labels the list below without competing with the entries. */
 
-.hero-meta li {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    list-style: none;
-}
-
-.hero-meta li + li::before {
-    content: "";
-    width: 3px;
-    height: 3px;
-    border-radius: 50%;
-    background: var(--border-strong);
-}
-
-.hero-meta strong {
-    color: var(--text-primary);
-    font-weight: 650;
-    font-variant-numeric: tabular-nums;
-}
-
-/* --- Section headings --------------------------------------------------- */
-
-.posts-section {
-    padding-bottom: var(--space-16);
+.archive {
+    padding-bottom: var(--space-8);
 }
 
 .section-header {
@@ -217,18 +123,21 @@
     align-items: baseline;
     justify-content: space-between;
     gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border-primary);
 }
 
 .section-title {
-    font-size: var(--text-xl);
-    font-weight: 650;
-    color: var(--text-primary);
+    color: var(--text-secondary);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
 }
 
 .section-meta {
-    font-size: var(--text-md);
     color: var(--text-muted);
+    font-size: var(--text-sm);
     font-variant-numeric: tabular-nums;
 }
 
@@ -237,26 +146,25 @@
 .site-footer {
     margin-top: var(--space-16);
     border-top: 1px solid var(--border-primary);
-    background: var(--bg-secondary);
 }
 
 .site-footer .container {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
+    align-items: baseline;
     justify-content: space-between;
     gap: var(--space-4);
-    padding-block: var(--space-8);
+    padding-block: var(--space-6);
 }
 
 .footer-note {
-    font-size: var(--text-md);
+    font-size: var(--text-sm);
     color: var(--text-muted);
 }
 
 .footer-note strong {
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 500;
 }
 
 .footer-links {
@@ -267,27 +175,28 @@
 
 .footer-link {
     color: var(--text-secondary);
-    font-size: var(--text-md);
+    font-size: var(--text-sm);
     transition: color var(--dur-fast) var(--ease-out);
 }
 
 .footer-link:hover {
-    color: var(--accent-primary);
+    color: var(--text-primary);
+    text-decoration: underline;
 }
 
-/* "I ♥ RSS" tip of the hat, centred under the listing. */
+/* "I ♥ RSS" tip of the hat, kept to the size of a footnote. */
 .rss-badge {
-    margin-top: var(--space-8);
-    text-align: center;
-    font-size: var(--text-md);
+    margin-top: var(--space-10);
     color: var(--text-muted);
+    font-size: var(--text-sm);
+    text-align: center;
 }
 
 .rss-badge a {
-    color: var(--text-secondary);
+    color: var(--text-muted);
     transition: color var(--dur-fast) var(--ease-out);
 }
 
 .rss-badge a:hover {
-    color: var(--accent-primary);
+    color: var(--text-primary);
 }
