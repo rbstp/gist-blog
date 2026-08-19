@@ -1,6 +1,7 @@
-<!-- Flat monogram: the site background as the plate, the one accent as the mark.
-     Both colours come from the palette in styles/modules/variables.css. -->
+<!-- Flat monogram: the site background as the plate, the primary text colour as
+     the mark. Both come from the palette in styles/modules/variables.css.
+     Sized so the widest fallback face still clears the plate edges. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
   <rect width="32" height="32" rx="4" fill="#0d0e10"/>
-  <text x="16" y="23" text-anchor="middle" fill="#8ab4f8" font-family="Inter, Helvetica Neue, DejaVu Sans, sans-serif" font-size="21" font-weight="600">R</text>
+  <text x="16" y="23" text-anchor="middle" fill="#f2f3f5" font-family="Inter, Helvetica Neue, DejaVu Sans, sans-serif" font-size="18" font-weight="600" letter-spacing="-0.4">rb</text>
 </svg>
