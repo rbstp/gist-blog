@@ -1,5 +1,10 @@
+/* ==========================================================================
+   Base: reset, self-hosted fonts, global element defaults
+   ========================================================================== */
 
-* {
+*,
+*::before,
+*::after {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
@@ -7,22 +12,172 @@
 
 html {
     scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
 }
 
 /* --------------------------------------------------
-   Local self-hosted fonts
-   Place variable font files in /src/fonts (copied to /dist/fonts)
-   Expected filenames (see src/fonts/README.md):
-     - InterVariable.woff2
-     - JetBrainsMono-Variable.woff2
-   We only declare variable fonts to minimize payload.
+   Self-hosted variable fonts (copied from /src/fonts to /dist/fonts).
+   Inter carries the interface and body text; JetBrains Mono is reserved for
+   code and numeric metadata. Latin is split from latin-ext so most visitors
+   only download ~48KB.
    -------------------------------------------------- */
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Variable-latin.woff2') format('woff2-variations');
+    font-weight: 400 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+        U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Inter';
+    src: url('/fonts/Inter-Variable-latin-ext.woff2') format('woff2-variations');
+    font-weight: 400 800;
+    font-style: normal;
+    font-display: swap;
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+        U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
 @font-face {
     font-family: 'JetBrains Mono';
     src: url('/fonts/JetBrainsMono-Variable.woff2') format('woff2-variations');
     font-weight: 400 700;
-    font-display: swap;
     font-style: normal;
+    font-display: swap;
 }
 
-/* Optional: fallback monospace already in stack; no explicit system fallback required */
+body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    background: var(--bg-primary);
+    color: var(--text-body);
+    min-height: 100vh;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+    color: var(--text-primary);
+    font-weight: 700;
+    line-height: var(--leading-snug);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+}
+
+a {
+    color: var(--accent-primary);
+    text-decoration: none;
+}
+
+img,
+svg,
+video {
+    max-width: 100%;
+    height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+    font: inherit;
+    color: inherit;
+}
+
+button {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+code,
+kbd,
+pre,
+samp {
+    font-family: var(--font-mono);
+}
+
+::selection {
+    background: rgba(var(--accent-primary-rgb), 0.28);
+    color: var(--text-primary);
+}
+
+/* A single, consistent focus ring for keyboard users everywhere. */
+:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+/* Themed, unobtrusive scrollbars. */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: var(--radius-pill);
+    border: 2px solid transparent;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+    background-clip: content-box;
+}
+
+/* Visible only to assistive technology. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Keyboard shortcut to jump past the header straight into the content. */
+.skip-link {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+    z-index: 200;
+    padding: var(--space-2) var(--space-4);
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    transform: translateY(-160%);
+    transition: transform var(--dur-fast) var(--ease-out);
+}
+
+.skip-link:focus-visible {
+    transform: translateY(0);
+}

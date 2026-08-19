@@ -1,8 +1,8 @@
-// UX enhancements module
+// Reading affordances
 // - Copy button for code blocks
-// - Jump to top button
+// - Back to top button
 // - Reading progress indicator
-// - Keyboard shortcuts help dialog
+// - Keyboard shortcuts dialog
 
 export {};
 
@@ -27,6 +27,7 @@ declare global {
       const btn = document.createElement('button');
       btn.className = 'copy-btn';
       btn.innerHTML = '<span class="copy-text">Copy</span>';
+      btn.type = 'button';
       btn.setAttribute('aria-label', 'Copy code to clipboard');
       btn.title = 'Copy code';
 
@@ -57,15 +58,11 @@ declare global {
   function initJumpToTop(): void {
     const btn = document.createElement('button');
     btn.className = 'jump-to-top';
-    btn.innerHTML = '<span class="jump-text">↑ Top</span>';
-    btn.setAttribute('aria-label', 'Jump to top');
-    btn.title = 'Jump to top';
+    btn.type = 'button';
+    btn.innerHTML = '<span class="jump-text">Back to top</span>';
+    btn.setAttribute('aria-label', 'Back to top');
+    btn.title = 'Back to top';
     btn.style.display = 'none';
-
-    // Move to left on pages with ToC to avoid overlap with sidebar
-    if (document.querySelector('.toc-sidebar')) {
-      btn.classList.add('has-toc');
-    }
 
     document.body.appendChild(btn);
 
@@ -94,7 +91,7 @@ declare global {
   // 3. Reading Progress Indicator (for post pages)
   function initReadingProgress(): void {
     // Only show on post pages
-    const postContent = document.querySelector('.post-content-advanced');
+    const postContent = document.querySelector('.article-body');
     if (!postContent) return;
 
     const progressBar = document.createElement('div');
@@ -135,6 +132,7 @@ declare global {
     // Create help button
     const helpBtn = document.createElement('button');
     helpBtn.className = 'keyboard-help-btn';
+    helpBtn.type = 'button';
     helpBtn.textContent = '?';
     helpBtn.setAttribute('aria-label', 'Show keyboard shortcuts');
     helpBtn.title = 'Keyboard shortcuts';
@@ -146,46 +144,39 @@ declare global {
     dialog.style.display = 'none';
     dialog.innerHTML = `
       <div class="keyboard-help-content">
-        <div class="terminal-header-small">
-          <div class="terminal-title-small">Keyboard shortcuts</div>
-          <button class="help-close" aria-label="Close help">&times;</button>
+        <div class="help-header">
+          <h2 class="help-title">Keyboard shortcuts</h2>
+          <button class="help-close" type="button" aria-label="Close help">&times;</button>
         </div>
         <div class="keyboard-help-body">
           <div class="shortcut-section">
             <h3>Navigation</h3>
             <div class="shortcut-item">
-              <kbd>Cmd/Ctrl</kbd> + <kbd>K</kbd>
-              <span>Open command palette</span>
+              <span>Search posts and topics</span>
+              <span><kbd>Cmd</kbd><kbd>K</kbd></span>
             </div>
             <div class="shortcut-item">
+              <span>Focus topic search</span>
               <kbd>/</kbd>
-              <span>Focus search (on graph page)</span>
             </div>
             <div class="shortcut-item">
-              <kbd>Esc</kbd>
               <span>Close dialogs</span>
-            </div>
-          </div>
-          <div class="shortcut-section">
-            <h3>Theme</h3>
-            <div class="shortcut-item">
-              <kbd>T</kbd>
-              <span>Toggle dark/light theme</span>
+              <kbd>Esc</kbd>
             </div>
           </div>
           <div class="shortcut-section">
             <h3>Reading</h3>
             <div class="shortcut-item">
-              <kbd>↑</kbd> / <kbd>↓</kbd>
-              <span>Scroll page</span>
+              <span>Toggle light / dark</span>
+              <kbd>T</kbd>
             </div>
             <div class="shortcut-item">
+              <span>Back to top</span>
               <kbd>Home</kbd>
-              <span>Jump to top</span>
             </div>
             <div class="shortcut-item">
+              <span>End of page</span>
               <kbd>End</kbd>
-              <span>Jump to bottom</span>
             </div>
           </div>
         </div>
@@ -237,38 +228,6 @@ declare global {
     });
   }
 
-  // 5. Breadcrumb Navigation (for post pages)
-  function initBreadcrumbs(): void {
-    const postContainer = document.querySelector('.post-container');
-    if (!postContainer) return;
-
-    const postNav = postContainer.querySelector('.post-navigation');
-    if (!postNav) return;
-
-    // Get the post title for the breadcrumb
-    const titleEl = document.querySelector('.post-title-compact');
-    const title = titleEl ? (titleEl.textContent ?? '').trim() : 'post';
-
-    // Create breadcrumb
-    const breadcrumb = document.createElement('div');
-    breadcrumb.className = 'breadcrumb-nav';
-
-    const esc = (s: string): string => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-    breadcrumb.innerHTML = `
-      <span class="breadcrumb-path">
-        <a href="/" class="breadcrumb-link">Home</a>
-        <span class="breadcrumb-sep">/</span>
-        <a href="/" class="breadcrumb-link">Posts</a>
-        <span class="breadcrumb-sep">/</span>
-        <span class="breadcrumb-current">${esc(title)}</span>
-      </span>
-    `;
-
-    // Insert breadcrumb before the post navigation
-    postNav.parentNode?.insertBefore(breadcrumb, postNav);
-  }
-
   // Initialize all enhancements when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
@@ -281,6 +240,5 @@ declare global {
     initJumpToTop();
     initReadingProgress();
     initKeyboardHelp();
-    initBreadcrumbs();
   }
 })();

@@ -1,196 +1,101 @@
-/* Tablet and smaller desktop screens - Hide ToC on narrower layouts
-   Note: JS will also dynamically hide the ToC if there's not enough space next to content. */
-@media (max-width: 1080px) {
+/* ==========================================================================
+   Responsive adjustments and motion preferences
+   Layout is fluid by default (grid + clamp); these are the few places that
+   need explicit breakpoints.
+   ========================================================================== */
+
+/* Hide the article sidebar before the reading grid becomes two columns. */
+@media (max-width: 63.999rem) {
     .toc-sidebar {
         display: none;
     }
 
-    /* Ensure main content uses full width when ToC is hidden */
-    .post-content-wrapper {
-        margin-right: 0;
-    }
-
-    .content-terminal {
-        max-width: none;
+    /* Hanging heading anchors need gutter space that narrow screens do not have,
+       and they are a hover affordance anyway. */
+    .article-body .permalink {
+        display: none;
     }
 }
 
-/* Wider post content on larger screens */
-@media (min-width: 1281px) {
-    .post-container {
-        max-width: 1400px;
-    }
-}
-
-@media (min-width: 1601px) {
-    .post-container {
-        max-width: 1600px;
-    }
-}
-
-/* Optional: Intermediate breakpoint for smaller ToC */
-@media (min-width: 1401px) and (max-width: 1600px) {
-    .toc-sidebar {
-        width: 240px;
-        /* Smaller ToC width */
-        /* Maintain consistent edge gap (JS may override dynamically) */
-        right: 3rem;
+@media (max-width: 48rem) {
+    .site-header .container {
+        gap: var(--space-2);
     }
 
-    .toc-content {
-        padding: 1rem;
-        /* Reduced padding */
+    .brand-name {
+        font-size: var(--text-md);
     }
 
-    .table-of-contents {
-        font-size: 0.8rem;
-        /* Smaller font */
-    }
-}
-
-@media (max-width: 768px) {
-    .container {
-        padding: 0 1rem;
+    /* Links that also live in the footer make room for the essentials. */
+    .hide-sm {
+        display: none;
     }
 
-    nav {
-        flex-direction: column;
-        gap: 1rem;
+    .nav-link {
+        padding: var(--space-2);
+        font-size: var(--text-md);
     }
 
-    .nav-links {
-        justify-content: space-between;
-        align-items: center;
+    .hero {
+        padding-top: var(--space-10);
     }
 
-    .section-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
+    .hero-meta {
+        margin-top: var(--space-6);
     }
 
-    .posts-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .post-title-compact {
-        font-size: 1.5rem;
-    }
-
-    .post-header-compact {
-        padding: 0.75rem 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .post-meta-line {
-        flex-direction: column;
-        gap: 0.5rem;
-        align-items: flex-start;
-    }
-
-    .terminal-window {
-        margin: 0 1rem;
-    }
-
-    .post-navigation {
-        flex-direction: column;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-
-    .post-card {
-        min-height: auto;
-    }
-
-    .card-actions {
-        flex-direction: row;
-        gap: 0.5rem;
-    }
-
-    .pagination-nav {
-        flex-direction: row;
-        gap: 0.5rem;
+    .article-nav {
         flex-wrap: wrap;
+        gap: var(--space-2);
     }
 
-    .pagination-pages {
-        justify-content: center;
+    .article-body {
+        font-size: var(--text-base);
     }
 
-    /* Fix filter container overflow on mobile */
-    .filter-info {
-        flex-wrap: wrap;
+    .article-body > p:first-of-type {
+        font-size: var(--text-lg);
     }
 
-    .pagination-tags {
-        width: 100%;
-        overflow: hidden;
+    .article-body blockquote {
+        font-size: var(--text-lg);
     }
 
-    .pagination-terminal {
-        min-width: 0;
+    .article-body pre {
+        padding: var(--space-4);
     }
 
-    /* Mobile table styles */
-    table {
-        font-size: 0.75rem;
+    .article-body table {
         display: block;
         overflow-x: auto;
-        white-space: nowrap;
-        border-radius: 4px;
     }
 
-    th,
-    td {
-        padding: 0.5rem 0.75rem;
+    .jump-to-top {
+        right: var(--space-4);
+        bottom: var(--space-4);
     }
 
-    /* Mobile typography improvements */
-    .post-content h1 {
-        font-size: 1.75rem;
+    .keyboard-help-btn {
+        display: none;
     }
 
-    .post-content h2 {
-        font-size: 1.5rem;
-    }
-
-    .post-content h3 {
-        font-size: 1.25rem;
-    }
-
-    .post-content p {
-        font-size: 0.95rem;
-        line-height: 1.6;
-    }
-
-    .post-content p:first-of-type {
-        font-size: 1rem;
-    }
-
-    .post-content pre {
-        padding: 0.75rem 1rem;
-        margin: 1rem 0;
-    }
-
-    .post-content pre code {
-        font-size: 0.8rem;
-    }
-
-    /* Permalink mobile styles */
-    .post-content-advanced .permalink {
-        left: -1.2rem;
-        font-size: 0.75em;
+    .site-footer .container {
+        flex-direction: column;
+        align-items: flex-start;
     }
 }
 
-/* Respect users who prefer reduced motion */
+/* Respect users who prefer reduced motion. */
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
     }
 
-    * {
-        animation: none !important;
-        transition: none !important;
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001ms !important;
     }
 }

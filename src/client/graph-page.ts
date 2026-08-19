@@ -332,33 +332,26 @@ interface PanZoomAPI {
     helpOverlay.innerHTML = `
       <div class="graph-help-content">
         <div class="help-header">
-          <span class="help-title">$ man graph-controls</span>
-          <button class="help-close" aria-label="Close help">✕</button>
+          <h2 class="help-title">Graph controls</h2>
+          <button class="help-close" type="button" aria-label="Close help">✕</button>
         </div>
         <div class="help-body">
           <div class="help-section">
-            <h3>Navigation</h3>
-            <div class="help-item"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd>Move between tags</div>
-            <div class="help-item"><kbd>Home</kbd>First tag</div>
-            <div class="help-item"><kbd>End</kbd>Last tag</div>
-            <div class="help-item"><kbd>Enter</kbd>View posts with tag</div>
-            <div class="help-item"><kbd>Ctrl</kbd>+<kbd>Enter</kbd>Add tag to selection</div>
+            <h3>Keyboard</h3>
+            <div class="help-item"><span>Move between topics</span><span><kbd>←</kbd><kbd>→</kbd></span></div>
+            <div class="help-item"><span>First / last topic</span><span><kbd>Home</kbd><kbd>End</kbd></span></div>
+            <div class="help-item"><span>View posts with topic</span><kbd>↵</kbd></div>
+            <div class="help-item"><span>Add topic to selection</span><span><kbd>Ctrl</kbd><kbd>↵</kbd></span></div>
+            <div class="help-item"><span>Focus search</span><kbd>/</kbd></div>
+            <div class="help-item"><span>Close / clear</span><kbd>Esc</kbd></div>
           </div>
           <div class="help-section">
-            <h3>Actions</h3>
-            <div class="help-item"><kbd>/</kbd>Focus search</div>
-            <div class="help-item"><kbd>Esc</kbd>Close help / Clear search</div>
-            <div class="help-item"><kbd>?</kbd>Toggle this help</div>
-            <div class="help-item"><kbd>T</kbd>Toggle theme</div>
-          </div>
-          <div class="help-section">
-            <h3>Mouse</h3>
-            <div class="help-item">Click tag to view posts</div>
-            <div class="help-item"><kbd>Ctrl</kbd>+Click to add to selection</div>
-            <div class="help-item">Drag nodes to reposition</div>
-            <div class="help-item">Scroll to zoom</div>
-            <div class="help-item">Drag background to pan</div>
-            <div class="help-item">Hover to highlight connections</div>
+            <h3>Pointer</h3>
+            <div class="help-item"><span>Click a topic to view posts</span></div>
+            <div class="help-item"><span>Ctrl-click to multi-select</span></div>
+            <div class="help-item"><span>Drag a topic to reposition</span></div>
+            <div class="help-item"><span>Scroll to zoom, drag to pan</span></div>
+            <div class="help-item"><span>Hover to highlight links</span></div>
           </div>
         </div>
       </div>
@@ -459,13 +452,12 @@ interface PanZoomAPI {
           const t = document.createElementNS('http://www.w3.org/2000/svg', 'text'); t.setAttribute('x', '50%'); t.setAttribute('y', '50%'); t.setAttribute('text-anchor', 'middle'); t.textContent = 'No graph data'; t.setAttribute('class', 'graph-empty'); svg.appendChild(t); return;
         }
 
-        // Populate terminal widgets with live stats if present
-        try {
-          const nodesEl = document.getElementById('ee-nodes'); const edgesEl = document.getElementById('ee-edges'); if (nodesEl) nodesEl.textContent = String(graph.nodes.length); if (edgesEl) edgesEl.textContent = String(graph.edges.length);
-          const tfNodes1 = document.getElementById('ee-tf-nodes'); const tfEdges1 = document.getElementById('ee-tf-edges'); const tfNodes2 = document.getElementById('ee-tf-nodes2'); const tfEdges2 = document.getElementById('ee-tf-edges2'); const sloEl = document.getElementById('ee-slo'); const ebEl = document.getElementById('ee-eb');
-          const n = graph.nodes.length, e = graph.edges.length; if (tfNodes1) tfNodes1.textContent = String(n); if (tfEdges1) tfEdges1.textContent = String(e); if (tfNodes2) tfNodes2.textContent = String(n); if (tfEdges2) tfEdges2.textContent = String(e);
-          const density = n > 1 ? Math.min(1, (2 * e) / (n * (n - 1))) : 0; const slo = (99.5 + 0.49 * density).toFixed(2) + '%'; const eb = Math.max(0.01, 1 - (parseFloat(slo) / 100)).toFixed(2) + '%'; if (sloEl) sloEl.textContent = slo; if (ebEl) ebEl.textContent = eb;
-        } catch { }
+        // Caption the canvas with the size of the graph
+        const statsEl = document.getElementById('graph-stats');
+        if (statsEl) {
+          const n = graph.nodes.length, e = graph.edges.length;
+          statsEl.textContent = `${n} topic${n === 1 ? '' : 's'} · ${e} connection${e === 1 ? '' : 's'}`;
+        }
 
         const width = 800, height = 520, cx = width / 2, cy = height / 2; svg.setAttribute('viewBox', `0 0 ${width} ${height}`); while (svg.firstChild) svg.removeChild(svg.firstChild);
         const root = document.createElementNS('http://www.w3.org/2000/svg', 'g'); root.setAttribute('id', 'global-graph-root'); svg.appendChild(root);
@@ -568,8 +560,7 @@ interface PanZoomAPI {
         const searchAPI = setupGraphSearch(nodes, nodeRefs, highlight, clear);
         setupKeyboardNavigation(nodes, nodeRefs, positions);
 
-        // Terminal title update
-        try { const titleEl = document.querySelector('.terminal-title'); if (titleEl) { const n = graph.nodes.length; const e = graph.edges.length; titleEl.textContent = `graph • ${n} nodes • ${e} edges`; } } catch { }
+
       })
       .catch(() => {
         loadingDiv.remove();

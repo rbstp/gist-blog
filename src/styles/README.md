@@ -1,72 +1,49 @@
-# Styles Directory
+# Styles
 
-This directory contains the CSS styles for the Gist Blog Generator, organized into modular files for easier maintenance.
+CSS for the blog, split into focused modules under `modules/`. The build
+concatenates them (in the order below) into a single `dist/styles.css`.
 
-## Structure
+## Design system
 
-The CSS is split into focused modules in the `modules/` directory:
+All colour, type, spacing, radius, elevation and motion values live in
+`modules/variables.css` as custom properties. Modules never hardcode a colour or
+a spacing value — they reference tokens, so the whole site can be retuned from
+one file, and the light theme is a single block of overrides.
 
-### Core Styles
-- **`variables.css`** - CSS custom properties for theming (colors, fonts, spacing)
-- **`base.css`** - Reset rules, font-face declarations, and utility classes
-- **`layout.css`** - Base page layout, navigation, header, and container styles
+Topic chips are coloured from the shared palette in `src/lib/TagPalette.ts`:
+the generator hashes each tag name to a hue index and emits it as `data-hue`,
+which `modules/tags.css` maps onto `--tag-hue-*`. A unit test keeps the CSS
+tokens and the TypeScript palette in sync.
 
-### Component Styles
-- **`terminal.css`** - Terminal window component styles (headers, controls, body)
-- **`tags.css`** - Tag and filter UI components
-- **`cards.css`** - Post card grid layouts and styling
-- **`post.css`** - Post content layout, table of contents sidebar, and topic graph
-- **`typography.css`** - Content typography, headings, paragraphs, lists, and links
-- **`syntax.css`** - Code block and syntax highlighting styles
+## Modules
 
-### Feature Styles
-- **`dev-mode.css`** - Development mode easter egg styles
-- **`command-palette.css`** - Command palette UI (Cmd/Ctrl+K)
-- **`graph.css`** - Graph page enhancements, search, and help overlay
-- **`ux.css`** - UX enhancements (copy buttons, jump to top, progress indicators)
+### Core
+- **`variables.css`** - design tokens (colour, type scale, space, radii, shadows, motion)
+- **`base.css`** - reset, self-hosted variable fonts, element defaults, focus ring, selection, scrollbars
+- **`layout.css`** - page frame, sticky header, hero, section headings, footer
+
+### Components
+- **`tags.css`** - topic chips and the index filter bar
+- **`cards.css`** - post cards, the listing grid, featured card, buttons, pager
+- **`post.css`** - article page layout, outline sidebar, topic graph panels
+- **`typography.css`** - article body typography (headings, prose, quotes, code, tables)
+- **`syntax.css`** - highlight.js token colours
+
+### Features
+- **`command-palette.css`** - search dialog (Cmd/Ctrl+K)
+- **`graph.css`** - topic graph page, search, legend, dialogs
+- **`ux.css`** - copy buttons, reading progress, back to top, shortcut hint button
 
 ### Responsive
-- **`responsive.css`** - Media queries and mobile/tablet responsive styles
+- **`responsive.css`** - breakpoints and `prefers-reduced-motion` (last for specificity)
 
-## Build Process
+## Working on styles
 
-During the build process (`npm run build`):
+1. Edit the relevant module in `modules/`.
+2. Run `npm run build` (or `npm run dev` to serve `dist` on port 3000).
+3. `npm run lint` covers the CSS with `@eslint/css`.
 
-1. The `BlogGenerator.copyStyles()` method concatenates all modules in the correct order
-2. The combined CSS is written to `dist/styles.css`
-3. The minification step (`npm run minify`) then compresses the output
-
-## Development
-
-### Editing Styles
-
-To modify styles, edit the appropriate module file in `modules/`:
-- Find the component or feature you want to change
-- Edit the corresponding module file
-- Run `npm run build` to see your changes
-
-### Adding New Modules
-
-If you need to add a new module:
-1. Create a new `.css` file in the `modules/` directory
-2. Update the `moduleOrder` array in `src/lib/BlogGenerator.js`
-3. Document it in this README
-
-### Import Order
-
-The modules are concatenated in a specific order to ensure:
-- Variables are available to all other modules
-- Base styles and utilities come before components
-- Responsive styles come last for proper specificity
-
-## Migration Note
-
-The original monolithic `main.css` file (3,367 lines) has been split into 14 focused modules averaging ~240 lines each.
-
-## Benefits
-
-- **Maintainability** - Easier to find and modify specific features
-- **Organization** - Clear separation of concerns
-- **Readability** - Smaller, focused files are easier to understand
-- **Performance** - Build process still produces a single optimized CSS file
-- **Collaboration** - Reduces merge conflicts with separate modules
+Adding a module means creating the file, adding it to `STYLE_MODULES` in
+`src/lib/config.ts`, listing it in `main-imports.css`, and documenting it here.
+`test/styles.test.ts` asserts those lists stay in agreement, that every `var()`
+resolves to a declared token, and that no token is left unused.

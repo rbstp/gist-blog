@@ -1,106 +1,38 @@
 <section class="graph-page">
+  <div class="graph-intro">
+    <h1>Topics</h1>
+    <p>Every tag across the archive, connected where posts share them. Drag to explore, click a topic to filter the
+      writing page.</p>
+  </div>
+
   <div class="graph-controls">
     <div class="graph-search-container">
-      <div class="graph-search-prompt">
-        <span class="prompt-symbol">$</span>
-        <input 
-          type="text" 
-          id="graph-search-input" 
-          placeholder="grep --tag ..."
+      <div class="graph-search-field">
+        <svg aria-hidden="true"><use href="#icon-search"/></svg>
+        <input
+          type="search"
+          id="graph-search-input"
+          placeholder="Search topics"
           autocomplete="off"
           spellcheck="false"
-          aria-label="Search tags"
+          aria-label="Search topics"
         />
       </div>
       <div id="graph-search-results" class="graph-search-results"></div>
     </div>
-    
+
     <div class="graph-legend">
-      <div class="legend-item">
-        <span class="legend-key">/</span>
-        <span>search</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-key">?</span>
-        <span>help</span>
-      </div>
-      <div class="legend-item">
-        <span class="legend-key">↑↓←→</span>
-        <span>navigate</span>
-      </div>
+      <span class="legend-item"><kbd>/</kbd> search</span>
+      <span class="legend-item"><kbd>?</kbd> shortcuts</span>
+      <span class="legend-item"><kbd>&larr;</kbd><kbd>&rarr;</kbd> move between topics</span>
     </div>
   </div>
 
   <div class="graph-page-canvas">
-    <button class="graph-reset-btn" data-target="global-tag-graph" title="Reset view">reset</button>
+    <button class="graph-reset-btn" data-target="global-tag-graph" title="Reset view">Reset</button>
     <svg id="global-tag-graph" class="graph-svg" viewBox="0 0 800 520" width="800" height="520"
       aria-label="Global tag graph"></svg>
   </div>
 
-  <div class="hero-terminal">
-    <div class="terminal-window">
-      <div class="terminal-header">
-        <div class="terminal-controls">
-          <span class="control close"></span>
-          <span class="control minimize"></span>
-          <span class="control maximize"></span>
-        </div>
-        <div class="terminal-title"></div>
-      </div>
-      <div class="terminal-body">
-        <div class="terminal-line">
-          <span class="prompt">rbstp@devops:~$</span>
-          <span class="command">man graph</span>
-        </div>
-        <div class="terminal-output">
-          <pre class="output-text" aria-label="man page for graph" style="margin: .25rem 0 0;">GRAPH(1)                           User Commands                           GRAPH(1)
-
-NAME
-    graph - interactive tag graph viewer for the blog
-
-SYNOPSIS
-    graph [--global] [--tags] | view
-
-DESCRIPTION
-    Renders an interactive graph of tags across all posts.
-    Scroll to zoom, drag to pan. Hover to highlight neighbors.
-    Click a tag to filter posts on the homepage.
-    
-    Press ? for keyboard shortcuts and navigation help.
-          </pre>
-        </div>
-
-        <!-- Easter egg: revealed when the terminal is maximized (same behavior as whoami on index) -->
-        <div id="hero-terminal-expanded" style="display: none;">
-          <div class="terminal-line">
-            <span class="prompt">rbstp@devops:~$</span>
-            <span class="command">graph --stats</span>
-          </div>
-          <div class="terminal-output">
-            <span class="output-text">nodes: <span id="ee-nodes">…</span>, edges: <span id="ee-edges">…</span></span>
-          </div>
-          <div class="terminal-line">
-            <span class="prompt">rbstp@devops:~$</span>
-            <span class="command">grep -E 'top|pair' tags.log</span>
-          </div>
-          <div class="terminal-output">
-            <span class="output-text">top tag: <span id="ee-top-tag">…</span> • top pair: <span
-                id="ee-top-pair">…</span></span>
-          </div>
-          <div class="terminal-line">
-            <span class="prompt">rbstp@devops:~$</span>
-            <span class="command">kubectl get deploy -n platform</span>
-          </div>
-          <div class="terminal-output">
-            <pre class="output-text" style="margin: .25rem 0 0;">NAME                 READY   UP-TO-DATE   AVAILABLE   AGE
-tag-graph            1/1     1            1           42d
-feed-generator       1/1     1            1           42d
-static-site          1/1     1            1           42d
-content-indexer      1/1     1            1           42d
-            </pre>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <p class="graph-stats" id="graph-stats"></p>
 </section>

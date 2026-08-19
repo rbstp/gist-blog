@@ -2,10 +2,10 @@ export {};
 /* eslint-disable no-empty */
 // Main client script: shared behaviors across pages
 // - Theme management and toggle
-// - Index page: filtering, pagination, terminal controls
-// - Post page: small topic graph rendering (base)
-// - ToC active highlighting and sidebar layout adjustments
-// - Tag preselection bridging from graph page
+// - Index page: topic filtering and pagination
+// - Post page: small topic graph rendering (base) and topic links back to the index
+// - Article outline: active-section highlighting (layout itself is pure CSS grid)
+// - Tag preselection bridging from the topics page
 
 // Runtime-injected globals (theme toggle bridge)
 declare global {
@@ -240,7 +240,7 @@ interface Point {
 
   // Client-side pagination and filtering (index page only)
   function initIndexFilteringAndPagination(): void {
-    const section = document.querySelector('.pipeline-section');
+    const section = document.querySelector('.posts-section');
     const isIndexPage = !!section; if (!isIndexPage) return;
     const POSTS_PER_PAGE = 6;
     const allPosts = Array.from(document.querySelectorAll<HTMLElement>('.post-card'));
@@ -272,9 +272,10 @@ interface Point {
     function updatePagination(): void {
       const filtered = getFilteredPosts(); const totalPages = Math.ceil(filtered.length / POSTS_PER_PAGE);
       allPosts.forEach(p => p.style.display = 'none');
-      const startIndex = (currentPage - 1) * POSTS_PER_PAGE; const endIndex = startIndex + POSTS_PER_PAGE; filtered.slice(startIndex, endIndex).forEach(p => { p.style.display = 'block'; });
+      // Clearing the inline value restores whatever the stylesheet sets (flex).
+      const startIndex = (currentPage - 1) * POSTS_PER_PAGE; const endIndex = startIndex + POSTS_PER_PAGE; filtered.slice(startIndex, endIndex).forEach(p => { p.style.display = ''; });
       if (paginationSection && (totalPages > 1 || activeTags.length > 0)) {
-        paginationSection.style.display = 'block';
+        paginationSection.style.display = '';
         if (paginationCommand) paginationCommand.textContent = totalPages > 1 ? `Page ${currentPage} of ${totalPages}` : `${filtered.length} post${filtered.length !== 1 ? 's' : ''}`;
         if (prevBtn) { if (totalPages > 1) { prevBtn.style.display = 'flex'; prevBtn.disabled = currentPage === 1; } else { prevBtn.style.display = 'none'; } }
         if (nextBtn) { if (totalPages > 1) { nextBtn.style.display = 'flex'; nextBtn.disabled = currentPage === totalPages; } else { nextBtn.style.display = 'none'; } }
@@ -290,9 +291,12 @@ interface Point {
     }
     function updateFilterStatus(): void {
       if (activeTags.length === 0) { filterStatus.style.display = 'none'; return; }
-      const filteredCount = getFilteredPosts().length; const tagsDisplay = activeTags.map(tag => `<span class="filter-tag clickable-filter-tag" data-tag="${escapeHTML(tag)}">#${escapeHTML(tag)}</span>`).join(' ');
-      filterStatus.innerHTML = `<div class="filter-info"><span class="filter-label">Filtered by</span>${tagsDisplay}<span class="filter-count">${filteredCount} result${filteredCount !== 1 ? 's' : ''}</span><button class="clear-filter" data-clear>clear</button></div>`;
-      filterStatus.style.display = 'block';
+      const filteredCount = getFilteredPosts().length;
+      // Reuse the hue the generator assigned to this topic so the summary chips match the cards.
+      const hueOf = (tag: string): string => document.querySelector(`.tag[data-tag="${CSS.escape(tag)}"]`)?.getAttribute('data-hue') ?? '0';
+      const tagsDisplay = activeTags.map(tag => `<span class="tag clickable-filter-tag" data-tag="${escapeHTML(tag)}" data-hue="${escapeHTML(hueOf(tag))}">${escapeHTML(tag)}</span>`).join(' ');
+      filterStatus.innerHTML = `<div class="filter-info"><span class="filter-label">Filtered by</span>${tagsDisplay}<span class="filter-count">${filteredCount} result${filteredCount !== 1 ? 's' : ''}</span><button class="clear-filter" data-clear>Clear</button></div>`;
+      filterStatus.style.display = '';
       filterStatus.querySelector('[data-clear]')?.addEventListener('click', () => { activeTags = []; currentPage = 1; document.querySelectorAll('.tag').forEach(t => t.classList.remove('active')); updateFilterStatus(); updatePagination(); });
       filterStatus.querySelectorAll('.clickable-filter-tag').forEach(el => {
         el.addEventListener('click', () => {
@@ -325,33 +329,30 @@ interface Point {
     })();
   }
 
-  // Terminal controls (close/minimize/maximize) for the graph page terminal
-  function initTerminalsAndEasterEgg(): void {
-    const themeToggle = document.getElementById('theme-toggle'); if (themeToggle && window.toggleTheme) themeToggle.addEventListener('click', window.toggleTheme);
-    const terminals = document.querySelectorAll<HTMLElement>('.hero-terminal, .pagination-section');
-    terminals.forEach(terminal => {
-      const closeBtn = terminal.querySelector('.control.close') as HTMLElement | null; const minimizeBtn = terminal.querySelector('.control.minimize') as HTMLElement | null; const maximizeBtn = terminal.querySelector('.control.maximize') as HTMLElement | null; const terminalWindow = terminal.querySelector('.terminal-window, .pagination-terminal') as HTMLElement | null;
-      if (closeBtn) { closeBtn.style.cursor = 'pointer'; closeBtn.addEventListener('click', () => { terminal.style.display = 'none'; }); }
-      if (minimizeBtn && terminalWindow) {
-        minimizeBtn.style.cursor = 'pointer'; minimizeBtn.addEventListener('click', () => {
-          const body = terminalWindow.querySelector('.terminal-body, .pagination-body') as HTMLElement | null; if (!body) return; const isMin = terminalWindow.dataset.minimized === 'true';
-          body.style.display = isMin ? 'block' : 'none'; terminalWindow.dataset.minimized = isMin ? 'false' : 'true';
-        });
-      }
-      if (maximizeBtn && terminalWindow) {
-        maximizeBtn.style.cursor = 'pointer'; maximizeBtn.addEventListener('click', () => {
-          const tagsSection = terminal.querySelector('#pagination-tags-section') as HTMLElement | null; const heroExpanded = terminal.querySelector('#hero-terminal-expanded') as HTMLElement | null;
-          const isMax = terminalWindow.dataset.maximized === 'true';
-          if (isMax) { terminalWindow.style.width = ''; terminalWindow.style.maxWidth = ''; terminalWindow.dataset.maximized = 'false'; if (tagsSection) tagsSection.style.display = 'none'; if (heroExpanded) heroExpanded.style.display = 'none'; }
-          else { terminalWindow.style.width = '100%'; terminalWindow.style.maxWidth = 'none'; terminalWindow.dataset.maximized = 'true'; if (tagsSection) tagsSection.style.display = 'block'; if (heroExpanded) heroExpanded.style.display = 'block'; }
-        });
-      }
+  // Theme toggle button
+  function initThemeToggle(): void {
+    const themeToggle = document.getElementById('theme-toggle');
+    if (themeToggle && window.toggleTheme) themeToggle.addEventListener('click', window.toggleTheme);
+  }
+
+  // Post page: topic chips jump to the index with that topic preselected
+  function initPostTagLinks(): void {
+    const tags = document.querySelectorAll<HTMLElement>('.post-tag');
+    if (!tags.length) return;
+    tags.forEach(tagEl => {
+      tagEl.addEventListener('click', () => {
+        const name = tagEl.getAttribute('data-tag');
+        if (!name) return;
+        try { localStorage.setItem('preselectedTags', JSON.stringify([name])); } catch { }
+        window.location.href = '/';
+      });
     });
   }
 
-  // ToC active section highlighting and sidebar layout adjustments (post pages)
+  // Article outline: highlight the section currently being read.
+  // The sidebar itself is laid out by CSS (sticky grid column), so there is no
+  // measurement/positioning code here any more.
   function initTocBehaviors(): void {
-    // Active highlighting
     const tocLinks = document.querySelectorAll('.toc-link'); if (!tocLinks.length) return;
     const headings = Array.from(document.querySelectorAll<HTMLElement>('h2[id], h3[id], h4[id], h5[id], h6[id]')); if (!headings.length) return;
     const sidebar = document.querySelector('.toc-sidebar') as HTMLElement | null;
@@ -366,76 +367,24 @@ interface Point {
       const scrollPosition = window.scrollY + 100; let activeHeading: HTMLElement | null = null; for (const h of headings) { if (h.offsetTop <= scrollPosition) activeHeading = h; else break; }
       tocLinks.forEach(l => l.classList.remove('active'));
       if (activeHeading) {
-        const activeLink = document.querySelector(`.toc-link[href="#${activeHeading.id}"]`); if (activeLink) { activeLink.classList.add('active'); const up = window.scrollY < lastScrollY; ensureVisible(activeLink, up);
-          if (!up && sidebar) {
-            const arr = Array.from(tocLinks); const idx = arr.indexOf(activeLink); if (idx === arr.length - 1) { const tocTerminal = document.querySelector('.toc-terminal'); const sbRect = sidebar.getBoundingClientRect(); const margin = 8; sidebar.scrollTop = sidebar.scrollHeight; if (tocTerminal) { const tRect = tocTerminal.getBoundingClientRect(); if (tRect.bottom > sbRect.bottom - margin) { const delta = tRect.bottom - (sbRect.bottom - margin); sidebar.scrollTop += Math.max(0, delta); } } }
-          }
+        const activeLink = document.querySelector(`.toc-link[href="#${activeHeading.id}"]`);
+        if (activeLink) {
+          activeLink.classList.add('active');
+          // Keep the active entry in view when the outline itself is scrollable.
+          ensureVisible(activeLink, window.scrollY < lastScrollY);
         }
       }
       lastScrollY = window.scrollY;
     }
     let ticking = false; function throttledUpdate(): void { if (!ticking) { requestAnimationFrame(() => { updateActiveLink(); ticking = false; }); ticking = true; } }
     window.addEventListener('scroll', throttledUpdate, { passive: true }); updateActiveLink();
-
-    // Sidebar position/height responsive adjustments
-    function adjustTocSidebar(): void {
-      const sidebar = document.querySelector('.toc-sidebar') as HTMLElement | null; const header = document.querySelector('header'); if (!sidebar) return;
-      const gap = 16; // vertical + general spacing
-      const horizontalGap = 40; // increased breathing room from viewport right edge
-      const container = document.querySelector('main.container');
-      const headerRect = header ? header.getBoundingClientRect() : null; const headerBottom = headerRect ? Math.ceil(headerRect.bottom) : 0; const top = Math.max(gap, headerBottom + gap); sidebar.style.top = top + 'px';
-      let maxH = Math.max(120, window.innerHeight - top - gap); const footer = document.querySelector('footer'); if (footer) { const fRect = footer.getBoundingClientRect(); if (fRect.top < window.innerHeight) { const available = Math.max(80, fRect.top - top - gap); maxH = Math.max(80, Math.min(maxH, available)); } }
-      sidebar.style.maxHeight = maxH + 'px';
-      if (container) {
-        const cRect = container.getBoundingClientRect();
-        const postContainer = document.querySelector('.post-container') as HTMLElement | null;
-        const minW = 240; const maxW = 360; const desiredWidth = 340; // preferred width before shrinking
-        const ideal = Math.round(Math.min(maxW, Math.max(minW, window.innerWidth * 0.22)));
-        // Available horizontal space between container right edge and viewport right edge minus enforced viewport gap
-        const rawSpace = window.innerWidth - horizontalGap - cRect.right;
-        const availableSpace = Math.max(0, rawSpace);
-        let fitWidth = Math.max(minW, Math.min(ideal, availableSpace));
-        // Ensure we can also keep gap between container and sidebar (content gap)
-        const contentGap = gap; // readability alias
-        // If there's room for min width plus both gaps, position floating next to content
-        const spaceForSidebar = window.innerWidth - (cRect.right + contentGap) - horizontalGap;
-        const roomForSidebar = spaceForSidebar >= desiredWidth; // require enough space for desired width (prevents overly narrow bar at large screens)
-        if (postContainer) postContainer.style.marginRight = '';
-        if (roomForSidebar) {
-          fitWidth = Math.min(fitWidth, window.innerWidth - (cRect.right + contentGap) - horizontalGap);
-          fitWidth = Math.max(minW, Math.min(fitWidth, maxW));
-          const left = Math.max(contentGap, Math.min(cRect.right + contentGap, window.innerWidth - horizontalGap - fitWidth));
-          sidebar.style.display = 'block';
-          sidebar.style.right = 'auto';
-          sidebar.style.left = left + 'px';
-          sidebar.style.width = fitWidth + 'px';
-          sidebar.style.minWidth = minW + 'px';
-          sidebar.style.maxWidth = maxW + 'px';
-        } else {
-          // Fallback: stick to right edge with viewport gap and push post content
-            const fallbackWidth = Math.round(Math.min(maxW, Math.max(220, ideal)));
-            if (window.innerWidth >= 1160) {
-              sidebar.style.display = 'block';
-              sidebar.style.left = '';
-              sidebar.style.right = horizontalGap + 'px';
-              sidebar.style.width = fallbackWidth + 'px';
-              sidebar.style.minWidth = '220px';
-              sidebar.style.maxWidth = maxW + 'px';
-              if (postContainer) postContainer.style.marginRight = (fallbackWidth + horizontalGap) + 'px';
-            } else { sidebar.style.display = 'none'; }
-        }
-      }
-      if ((window.scrollY || document.documentElement.scrollTop || 0) <= 2) sidebar.scrollTop = 0;
-      const docEl = document.documentElement; const atBottom = (window.innerHeight + window.scrollY) >= (docEl.scrollHeight - 2); if (atBottom) sidebar.scrollTop = sidebar.scrollHeight;
-    }
-    let rafId: number | null = null; function scheduleAdjust(): void { if (rafId) return; rafId = requestAnimationFrame(() => { rafId = null; adjustTocSidebar(); }); }
-    adjustTocSidebar(); window.addEventListener('resize', scheduleAdjust, { passive: true }); window.addEventListener('scroll', scheduleAdjust, { passive: true });
   }
 
   // Page-specific dynamic loaders (keep templates clean)
   document.addEventListener('DOMContentLoaded', () => {
     initIndexFilteringAndPagination();
-    initTerminalsAndEasterEgg();
+    initThemeToggle();
+    initPostTagLinks();
     initTocBehaviors();
     initTopicGraph();
 
