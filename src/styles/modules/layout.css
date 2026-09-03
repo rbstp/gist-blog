@@ -187,10 +187,8 @@
 
 /* "I ♥ RSS" tip of the hat, kept to the size of a footnote. */
 .rss-badge {
-    margin-top: var(--space-10);
     color: var(--text-muted);
     font-size: var(--text-sm);
-    text-align: center;
 }
 
 .rss-badge a {
@@ -202,10 +200,20 @@
     color: var(--text-primary);
 }
 
-/* Omarchy patron badge: its own row under the footer note, at footnote scale.
-   The PNG is an octagon on transparent corners, so it needs no frame. */
+/* Closing row under the footer note: patron badge left, RSS footnote right.
+   width rather than flex-basis so it claims its own line in both the row
+   layout and the stacked one the narrow breakpoint switches to. */
+.footer-outro {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+/* Omarchy patron badge, at footnote scale. The PNG is an octagon on
+   transparent corners, so it needs no frame. */
 .omarchy-badge {
-    flex-basis: 100%;
     display: block;
     line-height: 0;
     opacity: 0.85;
