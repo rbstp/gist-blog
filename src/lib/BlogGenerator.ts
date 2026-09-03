@@ -43,6 +43,7 @@ export default class BlogGenerator {
   templatesDir: string;
   stylesDir: string;
   fontsDir: string;
+  imagesDir: string;
   clientDir: string;
   templateEngine: TemplateEngine;
   templateLoader: TemplateLoader;
@@ -60,6 +61,7 @@ export default class BlogGenerator {
     this.templatesDir = 'src/templates';
     this.stylesDir = 'src/styles';
     this.fontsDir = 'src/fonts';
+    this.imagesDir = 'src/images';
     this.clientDir = 'src/client';
 
     this.templateEngine = new TemplateEngine(this.templatesDir);
@@ -162,7 +164,7 @@ export default class BlogGenerator {
   async generateIndex(posts: Post[], buildTs: number): Promise<void> {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
-    const templateData = this.shaper.buildIndexData(posts);
+    const templateData = this.shaper.buildIndexData(posts, buildTs);
 
     const indexContent = this.templateEngine.render(indexTemplate ?? '', templateData);
 
@@ -334,6 +336,29 @@ export default class BlogGenerator {
     }
   }
 
+  async copyImages(): Promise<void> {
+    // Copy static images (badges and the like) verbatim; they ship pre-sized.
+    try {
+      const source = this.imagesDir;
+      const stat = await fs.stat(source).catch(() => null);
+      if (!stat || !stat.isDirectory()) return;
+      const destDir = path.join(this.distDir, 'images');
+      await fs.mkdir(destDir, { recursive: true });
+      const entries = await fs.readdir(source);
+      await Promise.all(entries.map(async (name) => {
+        const srcPath = path.join(source, name);
+        const destPath = path.join(destDir, name);
+        const s = await fs.stat(srcPath);
+        if (s.isFile()) {
+          await fs.copyFile(srcPath, destPath);
+        }
+      }));
+    } catch (error) {
+      console.error('Error copying images:', error instanceof Error ? error.message : String(error));
+      throw error;
+    }
+  }
+
   async copyRobotsTxt(): Promise<void> {
     // Copy robots.txt to dist directory
     try {
@@ -456,6 +481,8 @@ export default class BlogGenerator {
       this.copyFonts(),
       // Copy favicon
       this.copyFavicon(),
+      // Copy static images
+      this.copyImages(),
       // Copy robots.txt
       this.copyRobotsTxt(),
       // Bundle/copy client scripts

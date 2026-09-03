@@ -187,10 +187,8 @@
 
 /* "I ♥ RSS" tip of the hat, kept to the size of a footnote. */
 .rss-badge {
-    margin-top: var(--space-10);
     color: var(--text-muted);
     font-size: var(--text-sm);
-    text-align: center;
 }
 
 .rss-badge a {
@@ -200,4 +198,33 @@
 
 .rss-badge a:hover {
     color: var(--text-primary);
+}
+
+/* Homepage closing row, above the footer: patron badge left, RSS footnote
+   right. Lives in index.html rather than the layout, so post and topic
+   pages end on the footer alone. */
+.page-outro {
+    margin-top: var(--space-10);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+}
+
+/* Omarchy patron badge, at footnote scale. The PNG is an octagon on
+   transparent corners, so it needs no frame. */
+.omarchy-badge {
+    display: block;
+    line-height: 0;
+    opacity: 0.85;
+    transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.omarchy-badge:hover {
+    opacity: 1;
+}
+
+.omarchy-badge img {
+    width: 116px;
+    height: auto;
 }

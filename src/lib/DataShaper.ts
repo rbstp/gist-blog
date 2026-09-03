@@ -101,7 +101,7 @@ class DataShaper {
     };
   }
 
-  buildIndexData(sortedPosts: Post[]): IndexTemplateData {
+  buildIndexData(sortedPosts: Post[], timestamp: number = this.nowMs()): IndexTemplateData {
     const lastUpdateFormatted = this.now('MMM d, HH:mm');
 
     const acc = sortedPosts.reduce((state: { posts: IndexPostData[]; tagCounts: Map<string, number> }, post) => {
@@ -143,6 +143,7 @@ class DataShaper {
       tagline: SITE_TAGLINE,
       role: SITE_ROLE,
       author: SITE_AUTHOR,
+      timestamp,
       pagination: totalPages > 1 ? { totalPages, postsPerPage: POSTS_PER_PAGE } : null
     };
   }

@@ -142,6 +142,8 @@ export interface IndexTemplateData {
   tagline: string;
   role: string;
   author: string;
+  /** Build timestamp, for the assets the index body versions itself. */
+  timestamp: number;
   pagination: Pagination | null;
 }
 
