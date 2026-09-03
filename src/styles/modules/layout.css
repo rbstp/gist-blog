@@ -200,11 +200,11 @@
     color: var(--text-primary);
 }
 
-/* Closing row under the footer note: patron badge left, RSS footnote right.
-   width rather than flex-basis so it claims its own line in both the row
-   layout and the stacked one the narrow breakpoint switches to. */
-.footer-outro {
-    width: 100%;
+/* Homepage closing row, above the footer: patron badge left, RSS footnote
+   right. Lives in index.html rather than the layout, so post and topic
+   pages end on the footer alone. */
+.page-outro {
+    margin-top: var(--space-10);
     display: flex;
     align-items: center;
     justify-content: space-between;

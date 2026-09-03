@@ -164,7 +164,7 @@ export default class BlogGenerator {
   async generateIndex(posts: Post[], buildTs: number): Promise<void> {
     const { 'layout.html': layoutTemplate, 'index.html': indexTemplate } =
       await this.loadTemplatesCached(['layout.html', 'index.html']);
-    const templateData = this.shaper.buildIndexData(posts);
+    const templateData = this.shaper.buildIndexData(posts, buildTs);
 
     const indexContent = this.templateEngine.render(indexTemplate ?? '', templateData);
 
