@@ -201,3 +201,22 @@
 .rss-badge a:hover {
     color: var(--text-primary);
 }
+
+/* Omarchy patron badge: its own row under the footer note, at footnote scale.
+   The PNG is an octagon on transparent corners, so it needs no frame. */
+.omarchy-badge {
+    flex-basis: 100%;
+    display: block;
+    line-height: 0;
+    opacity: 0.85;
+    transition: opacity var(--dur-fast) var(--ease-out);
+}
+
+.omarchy-badge:hover {
+    opacity: 1;
+}
+
+.omarchy-badge img {
+    width: 116px;
+    height: auto;
+}
