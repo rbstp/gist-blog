@@ -247,6 +247,11 @@
     animation: riseIn var(--dur-base) var(--ease-out);
 }
 
+/* Roomier so shortcut labels stay on one line. */
+.keyboard-help-content {
+    max-width: 42rem;
+}
+
 .help-header {
     display: flex;
     align-items: center;
@@ -279,10 +284,16 @@
     background: var(--bg-highlight);
 }
 
-.help-body,
-.keyboard-help-body {
+.help-body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: var(--space-6);
+    padding: var(--space-5);
+}
+
+.keyboard-help-body {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
     gap: var(--space-6);
     padding: var(--space-5);
 }
@@ -306,4 +317,12 @@
     padding: var(--space-1) 0;
     color: var(--text-body);
     font-size: var(--text-md);
+}
+
+/* Keep multi-key combos on a single line, right-aligned like the rest. */
+.shortcut-item > :last-child {
+    display: inline-flex;
+    flex-shrink: 0;
+    gap: var(--space-1);
+    white-space: nowrap;
 }
